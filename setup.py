@@ -29,5 +29,5 @@ setup(name='sfeprapy',
 
       long_description=long_description,
 
-      packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls', 'sfeprapy.test'],
+      packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls'],
       )
