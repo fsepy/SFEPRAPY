@@ -9,16 +9,21 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 sns.set_style("ticks", {'axes.grid': True,})
 
-try:
-    from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
-    from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
-    from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
-    from sfeprapy.func_core import calc_time_equiv_worker, mc_inputs_generator
-except ModuleNotFoundError:
-    from .func.temperature_fires import standard_fire_iso834 as _fire_standard
-    from .func.temperature_fires import parametric_eurocode1 as _fire_param
-    from .func.tfm_alt import travelling_fire as _fire_travelling
-    from .func_core import calc_time_equiv_worker, mc_inputs_generator
+from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
+from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
+from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
+from sfeprapy.time_equivalence_core import calc_time_equiv_worker, mc_inputs_generator
+
+# try:
+#     from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
+#     from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
+#     from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
+#     from sfeprapy.time_equivalence_core import calc_time_equiv_worker, mc_inputs_generator
+# except ModuleNotFoundError:
+#     from .func.temperature_fires import standard_fire_iso834 as _fire_standard
+#     from .func.temperature_fires import parametric_eurocode1 as _fire_param
+#     from .func.tfm_alt import travelling_fire as _fire_travelling
+#     from .time_equivalence_core import calc_time_equiv_worker, mc_inputs_generator
 
 # OUTPUT STRING FORMAT
 # ====================
@@ -136,7 +141,7 @@ def step2_calc(df_input, dict_pref, progress_print_interval=5):
     while progress_print_interval:
         if jobs.ready():
             time_count_simulation = time.perf_counter() - time_count_simulation
-            print("{}{} {:03.0f}% ({:.1f})".format('#'*round(n_steps), '-'*round(0), 100., time_count_simulation))
+            print("{}{} {:03.0f}% ({:.1f}s)".format('#'*round(n_steps), '-'*round(0), 100., time_count_simulation))
             break
         else:
             p_ = q.qsize() / count_total_simulations * n_steps

@@ -11,9 +11,16 @@
 /venv
 
 # Pycharm development files
-/.idea
+*.idea
 
 # Visual Studio Code development files
 /.vscode
 
-/~
+# Environment files
+*.env
+
+# distutils generated files
+/MANIFEST
+
+# Testing files
+sfeprapy/benchmarks

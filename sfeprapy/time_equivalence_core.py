@@ -6,18 +6,24 @@ from scipy.interpolate import interp1d
 from scipy.stats.distributions import norm, gumbel_r
 from pandas import DataFrame as df
 
-try:
-    from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
-    from sfeprapy.dat.steel_carbon import Thermal
-    from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
-    from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
-    from sfeprapy.func.kwargs_from_text import kwargs_from_text
-except ImportError:
-    from .func.tfm_alt import travelling_fire as _fire_travelling
-    from .dat.steel_carbon import Thermal
-    from .func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
-    from .func.temperature_fires import parametric_eurocode1 as _fire_param
-    from .func.kwargs_from_text import kwargs_from_text
+from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
+from sfeprapy.dat.steel_carbon import Thermal
+from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
+from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
+from sfeprapy.func.kwargs_from_text import kwargs_from_text
+
+# try:
+#     from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
+#     from sfeprapy.dat.steel_carbon import Thermal
+#     from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
+#     from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
+#     from sfeprapy.func.kwargs_from_text import kwargs_from_text
+# except ImportError:
+#     from .func.tfm_alt import travelling_fire as _fire_travelling
+#     from .dat.steel_carbon import Thermal
+#     from .func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
+#     from .func.temperature_fires import parametric_eurocode1 as _fire_param
+#     from .func.kwargs_from_text import kwargs_from_text
 
 
 def trunc_lognorm_cfd(a, b, size, sigma, loc, scale, cdf_y=None):

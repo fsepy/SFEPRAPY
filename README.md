@@ -1,4 +1,4 @@
-# sfeprapy
+# SFEPraPy
 
 Introduction is on the way.
 
@@ -17,8 +17,16 @@ scipy==1.1.0
 seaborn==0.9.0
 ```
 
-### Installing
+### Installation
 
+#### Installation through `pip`
+
+The package can be installed through `pip` by the following command.
+```python
+pip install sfeprapy
+```
+
+#### Alternative local installation
 Download the entire project folder to your computer, change current working directory to the project folder then install PraPy by using pip:
 
 ```
@@ -35,13 +43,13 @@ from prapy import time_equivalence as app
 app.run()
 ```
 
-Copy your inputs file folder and paste into the terminal window, where the directory `D:\\test` should be a folder containing all input files ending with `.txt` which all input files will be run. Input file template can be found at the end of this section. 
+Copy your inputs file folder directory and paste into the terminal window, where the directory `D:\\test` should be a folder containing all input files ending with `.txt` which all input files will be run. Input file template can be found at `problem_definition` folder. 
 
 ```shell
 Work directory: C:\test
 ```
 
-After the correct input files folder being provided, time equivalence analysis will proceed as below.
+After correct folder directory being provided, time equivalence analysis will proceed as below.
 
 ```shell
 Input file:              test1
@@ -54,8 +62,7 @@ Number of threads:       4
 ######################## 100% (83.9)
 >>>
 ```
-
-Simulation output files will be saved under the input file directory.
+The code will identify all input files contained in the folder directory provided and run them one by one until all input files are complete. Simulation output files will be saved under the input file directory.
 
 ## Authors
 
@@ -65,27 +72,3 @@ Simulation output files will be saved under the input file directory.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
-
-## Notes
-
-**KNOWN ISSUES**
-- [ ] Test with travelling fire curve `travelling_fire` in `sfeprapy.func.temperature_fires`
-- [ ] Graphical user interface, with multiprocessing capability
-- [ ] Make validation procedures
-- [ ] Make verification procedures
-- [ ] Publish on PyPI
-
-**04/08/2018 VERSION: 0.0.1 (alpha)**
-- Renamed the packaged from `sfepy` to `sfeprapy` (Structural Fire Engineering Probabilistic Risk Assessment Python);
-- Github repository created;
-- Updated progress bar appearance in `sfeprapy.time_equivalence.run()`;
-- Implemented new window opening fraction distribution `window_open_fraction`, linear distribution is now replaced by inverse truncated log normal distribution;
-- Updated plot appearance; and
-- Code published on PyPI.
-
-**02/01/2018 VERSION: 0.0.0 (pre-alpha)**
-- Implemented Latin hypercube sampling function, `pyDOE` external library is no longer required;
-- Boundary for `q_fd`, defined as `q_fd_ubound` and `q_fd_lbound` (upper and lower limit). DEPRECIATED;
-- Now output plot for peak steel temperature according to input 'protection_thickness';
-- Inputs arguments are packed in a pandas `DataFrame` object instead of a list;
-- Automatically generate fires inline with selected percentile `select_fires_teq` ±tolerance `select_fires_teq_tol` and save as .png and .csv.
