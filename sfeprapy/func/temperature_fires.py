@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-# import logging
-# logging.basicConfig(filename="log.txt", level=logging.DEBUG)
-# log = logging.getLogger(__name__)
-
 
 def parametric_eurocode1(A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, time_end=7200, time_step=1, time_start=0, time_padding = (0, 0),temperature_initial=293.15, is_more_return=False):
     """Function Description: (SI UNITS ONLY)
@@ -111,7 +107,7 @@ def parametric_eurocode1(A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, time
         fire_type = "fuel controlled"
 
     T_g = np.minimum(T_heating_g, T_cooling_g)
-    T_g[T_g<0] = 0
+    T_g[T_g < 0] = 0
 
     data_all = {"fire_type": fire_type}
 

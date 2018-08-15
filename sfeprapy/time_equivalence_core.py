@@ -12,23 +12,38 @@ from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as 
 from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
 from sfeprapy.func.kwargs_from_text import kwargs_from_text
 
-# try:
-#     from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
-#     from sfeprapy.dat.steel_carbon import Thermal
-#     from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
-#     from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
-#     from sfeprapy.func.kwargs_from_text import kwargs_from_text
-# except ImportError:
-#     from .func.tfm_alt import travelling_fire as _fire_travelling
-#     from .dat.steel_carbon import Thermal
-#     from .func.temperature_steel_section import protected_steel_eurocode as _steel_temperature
-#     from .func.temperature_fires import parametric_eurocode1 as _fire_param
-#     from .func.kwargs_from_text import kwargs_from_text
 
-
-def trunc_lognorm_cfd(a, b, size, sigma, loc, scale, cdf_y=None):
+def lognorm_parameters_true_to_inv(miu, sigma):
     """
-    NAME: trunc_lognorm_cfd
+    NAME: lognorm_parameters_true_to_inv
+    VERSION: 0.0.1
+    AUTHOR: Yan Fu, Ruben Coline
+    DESCRIPTION:
+    Converts the mean and standard deviation of distribution from x to ln(x).
+
+    PARAMETERS:
+    :param miu: True mean of the x
+    :param sigma: True standard deviation of x
+    :return: (miu, sigma) where miu and sigma are based on ln(x)
+
+    USAGE:
+    >>> print(lognorm_parameters_true_to_inv(0.2, 0.2))
+    >>> (-1.9560115027140728, 0.8325546111576977)
+    """
+    cov = sigma / miu
+
+    sigma_ln = np.sqrt(np.log(1 + cov ** 2))
+    miu_ln = np.log(miu) - 1 / 2 * sigma_ln ** 2
+
+    return miu_ln, sigma_ln
+
+# if __name__ == '__main__':
+#     print(lognorm_parameters_true_to_inv(0.2, 0.2))
+
+
+def lognorm_trunc_ppf(a, b, n_rv, sigma, loc, scale, cdf_y=None):
+    """
+    NAME: lognorm_trunc_ppf
     VERSION: 0.0.1
     AUTHOR: Yan Fu
     DATE: 3 Aug 2018
@@ -39,7 +54,7 @@ def trunc_lognorm_cfd(a, b, size, sigma, loc, scale, cdf_y=None):
     PARAMETERS:
     :param a: float, Lower boundary
     :param b: float, Upper boundary
-    :param size: integer, sets of data points used for interpolate the function
+    :param n_rv: integer, total number of
     :param sigma: float, standard deviation of log normal distribution
     :param loc: float, location of log normal distribution
     :param scale: float, scale of the log normal distribution
@@ -50,23 +65,27 @@ def trunc_lognorm_cfd(a, b, size, sigma, loc, scale, cdf_y=None):
 
     USAGE:
     >>> import numpy as np
-    >>> a = 0                     # lower boundary
-    >>> b = 1                     # upper boundary
-    >>> size = 100                # accuracy (i.e. sample size for interpolation
-    >>> sigma = 0.2               # standard deviation
-    >>> loc = np.exp(0.2)         # distribution mean is 0.2 (i.e. loc = np.exp(miu))
-    >>> scale = 1                 # default
-    >>> cdf_y=[0, 0.25, 0.50, 0.75, 1.0]
-    >>> result = trunc_lognorm_cfd(cdf_y, a, b, size, sigma, loc, scale)
+    >>> a = 0                   # lower boundary
+    >>> b = 1                   # upper boundary
+    >>> n_rv = 5                # number of random variables
+    >>> sigma = 0.2             # standard deviation
+    >>> miu = 0.2               # mean
+
+    # Convert true mean and sigma to ln(x) based mean and sigma
+    >>> miu, sigma = lognorm_parameters_true_to_inv(miu, sigma)
+
+    >>> loc = np.exp(miu)       # distribution mean is 0.2 (i.e. loc = np.exp(miu))
+    >>> scale = 1               # default
+    >>> result = lognorm_trunc_ppf(a, b, n_rv, sigma, loc, scale)
     >>> print(result)
-    >>> [0., 0.847, 0.917, 0.965, 1.]
+    [0.14142136 0.49653783 0.65783987 0.81969479 1.        ]
     """
 
     # Generate a linear spaced array inline with lower and upper boundary of log normal cumulative probability density.
     sampled_cfd = np.linspace(
         stats.lognorm.cdf(x=a, s=sigma, loc=loc, scale=scale),
         stats.lognorm.cdf(x=b, s=sigma, loc=loc, scale=scale),
-        size
+        n_rv
     )
 
     # Sample log normal distribution
@@ -75,7 +94,7 @@ def trunc_lognorm_cfd(a, b, size, sigma, loc, scale, cdf_y=None):
     # Work out cumulative probability function from 'sampled', output in forms of x y.
     # Interpolate x and y are processed to be capable to cope with two extreme values. y[0] (cumulative probability,
     # initial boundary) is manually set to 0.
-    x = np.linspace(a, b, int(size), endpoint=True)
+    x = np.linspace(a, b, int(n_rv), endpoint=False)
     x += (x[1] - x[0]) / 2
     x[-1] -= (x[1] - x[0]) / 2
     x = np.append([0], x)
@@ -91,7 +110,83 @@ def trunc_lognorm_cfd(a, b, size, sigma, loc, scale, cdf_y=None):
         return f(cdf_y)
 
 
-def latin_hypercube_sampling(num_samples, num_arguments=1, sample_min=0, sample_max=1):
+def gumbel_parameter_converter(miu, sigma):
+    # parameters Gumbel W&S
+    alpha = 1.282 / sigma
+    u = miu - 0.5772 / alpha
+
+    # parameters Gumbel scipy
+    scale = 1 / alpha
+    loc = u
+
+    return loc, scale
+
+
+def gumbel_r_trunc_ppf(a, b, n_rv, loc, scale, cdf_y=None):
+    """
+    NAME:
+    VERSION:
+    AUTHOR:
+    DATE:
+    DESCRIPTION:
+
+    PARAMETERS:
+    :param a:
+    :param b:
+    :param n_rv:
+    :param loc:
+    :param scale:
+    :param cdf_y:
+    :return:
+
+    USAGE:
+
+    """
+
+    # Generate a linear spaced array inline with lower and upper boundary of log normal cumulative probability density.
+    sampled_cfd = np.linspace(
+        stats.gumbel_r.cdf(x=a, loc=loc, scale=scale),
+        stats.gumbel_r.cdf(x=b, loc=loc, scale=scale),
+        n_rv
+    )
+
+    # Following three lines are used to check the validity of the distribution
+    # print("511 (0.80): {:.4f}".format(stats.gumbel_r.cdf(x=510, loc=loc, scale=scale)))
+    # print("584 (0.90): {:.4f}".format(stats.gumbel_r.cdf(x=584, loc=loc, scale=scale)))
+    # print("655 (0.95): {:.4f}".format(stats.gumbel_r.cdf(x=655, loc=loc, scale=scale)))
+
+    # Sample log normal distribution
+    sampled = stats.gumbel_r.ppf(q=sampled_cfd, loc=loc, scale=scale)
+
+    # Work out cumulative probability function from 'sampled', output in forms of x y.
+    # Interpolate x and y are processed to be capable to cope with two extreme values. y[0] (cumulative probability,
+    # initial boundary) is manually set to 0.
+    x = np.linspace(a, b, int(n_rv)+1, endpoint=False)
+    x += (x[1] - x[0]) / 2
+    x = x[0:-2]
+    # x[-1] -= (x[1] - x[0]) / 2
+    # x = np.append([0], x)
+    y = np.array([np.sum(sampled <= i) for i in x]) / len(sampled)
+    # y[0] = 0
+
+    # Interpolate
+    f = interp1d(y, x, bounds_error=False, fill_value=(np.min(y), np.max(y)))
+
+    if cdf_y is None:
+        return sampled
+    else:
+        return f(cdf_y)
+
+
+# if __name__ == '__main__':
+#     import seaborn as sns
+#     import matplotlib.pyplot as plt
+#     loc, scale = gumbel_parameter_converter(600, 180)
+#     sns.distplot(gumbel_r_trunc_ppf(0, 1800, 10000, loc, scale))
+#     plt.show()
+
+
+def latin_hypercube_sampling(num_samples, num_arguments=1, sample_lbound=0, sample_ubound=1):
     """
     NAME: latin_hypercube_sampling
     AUTHOR: Yan Fu
@@ -104,12 +199,12 @@ def latin_hypercube_sampling(num_samples, num_arguments=1, sample_min=0, sample_
     PARAMETERS:
     :param num_samples: Number of samples (i.e. rows)
     :param num_arguments: Number of arguments (i.e. columns)
-    :param sample_min: Lower sampling boundary
-    :param sample_max: Upper sampling boundary
+    :param sample_lbound: Lower sampling boundary
+    :param sample_ubound: Upper sampling boundary
     :return: An array with shape (num_samples, num_arguments)
 
     EXAMPLE:
-    >>> result = latin_hypercube_sampling(num_samples=10, num_arguments=3, sample_min=0, sample_max=0.001)
+    >>> result = latin_hypercube_sampling(num_samples=10, num_arguments=3, sample_lbound=0, sample_ubound=0.001)
     This example yields an array with shape of (100, 3), with each column filled 100 linear spaced numbers (shuffled)
     from 1 to 0.001 (i.e. shuffled [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]).
     An example output:
@@ -128,13 +223,13 @@ def latin_hypercube_sampling(num_samples, num_arguments=1, sample_min=0, sample_
 
     """
 
-    if sample_min > sample_max:
-        sample_max += sample_min
-        sample_min = sample_max - sample_min
-        sample_max = sample_max - sample_min
+    if sample_lbound > sample_ubound:
+        sample_ubound += sample_lbound
+        sample_lbound = sample_ubound - sample_lbound
+        sample_ubound = sample_ubound - sample_lbound
 
     # Generate sorted integers with correct shape
-    mat_random_num = np.linspace(sample_min, sample_max, num_samples+1, dtype=float)
+    mat_random_num = np.linspace(sample_lbound, sample_ubound, num_samples + 1, dtype=float)
     mat_random_num += (mat_random_num[1] - mat_random_num[0]) * 0.5
     mat_random_num = mat_random_num[0:-1]
     mat_random_num = np.reshape(mat_random_num, (len(mat_random_num), 1))
@@ -185,11 +280,11 @@ def calc_time_equivalence(
         protection_protected_perimeter,
         iso834_time,
         iso834_temperature,
-        temperature_max_near_field=1200,
-        seek_max_iter=20,
+        nft_ubound=1200,
+        seek_ubound_iter=20,
         seek_ubound=0.1,
         seek_lbound=0.0001,
-        seek_tol_y=1,
+        seek_tol_y=1.,
         index=-1,
         is_return_dict=False,
         **kwargs
@@ -228,8 +323,8 @@ def calc_time_equivalence(
     :param protection_protected_perimeter:
     :param iso834_time:
     :param iso834_temperature:
-    :param temperature_max_near_field:
-    :param seek_max_iter:
+    :param nft_ubound:
+    :param seek_ubound_iter:
     :param seek_ubound:
     :param seek_lbound:
     :param seek_tol_y:
@@ -259,26 +354,26 @@ def calc_time_equivalence(
     # print("opening factor:", opening_factor)
     # burnout_m2 = -1
     if sp_time < burnout_m2 and 0.02 < opening_factor <= 0.2:  # If fire spreads throughout compartment and ventilation is within EC limits = Parametric fire
-        tsec, temps = _fire_param(**{"A_t": room_area,
-                                     "A_f": room_floor_area,
-                                     "A_v": window_area,
-                                     "h_eq": window_height,
-                                     "q_fd": fire_load_density * 1e6,
-                                     "lambda_": room_wall_thermal_inertia**2,
-                                     "rho": 1,
-                                     "c": 1,
-                                     "t_lim": time_limiting,
-                                     "time_end": fire_duration,
-                                     "time_step": time_step,
-                                     "time_start": time_start,
-                                     # "time_padding": (0, 0),
-                                     "temperature_initial": 20+273.15,})
+        fire_time, fire_temp = _fire_param(**{"A_t": room_area,
+                                              "A_f": room_floor_area,
+                                              "A_v": window_area,
+                                              "h_eq": window_height,
+                                              "q_fd": fire_load_density * 1e6,
+                                              "lambda_": room_wall_thermal_inertia ** 2,
+                                              "rho": 1,
+                                              "c": 1,
+                                              "t_lim": time_limiting,
+                                              "time_end": fire_duration,
+                                              "time_step": time_step,
+                                              "time_start": time_start,
+                                              # "time_padding": (0, 0),
+                                              "temperature_initial": 20 + 273.15, })
 
         fire_type = 0  # parametric fire
 
     else:  # Otherwise, it is a travelling fire
         #   Get travelling fire curve
-        tsec, temps, heat_release, distance_to_element = _fire_travelling(
+        fire_time, fire_temp, heat_release, distance_to_element = _fire_travelling(
             fire_load_density,
             fire_hrr_density,
             room_depth,
@@ -289,24 +384,18 @@ def calc_time_equivalence(
             time_start,
             fire_duration,
             time_step,
-            temperature_max_near_field,
+            nft_ubound,
             window_width,
             window_height,
             window_open_fraction,
         )
-        temps += 273.15
+        fire_temp += 273.15
         fire_type = 1  # travelling fire
-
-    # print("fire type:", fire_type)
-    #   Optional unprotected steel code
-    # tempsteel, temprate, hf, c_s = ht. make_temperature_eurocode_unprotected_steel(tsec,temps+273.15,Hp,beam_cross_section_area,0.1,7850,beam_c,35,0.625)
-    # tempsteel -= 273.15
-    # max_temp = np.amax(tempsteel)
 
     # Solve heat transfer using EC3 correlations
     # SI UNITS FOR INPUTS!
-    inputs_steel_heat_transfer = {"time": tsec,
-                                  "temperature_ambient": temps,
+    inputs_steel_heat_transfer = {"time": fire_time,
+                                  "temperature_ambient": fire_temp,
                                   "rho_steel": beam_rho,
                                   "c_steel_T": beam_c,
                                   "area_steel_section": beam_cross_section_area,
@@ -319,35 +408,39 @@ def calc_time_equivalence(
 
     # Find maximum steel temperature for the static protection layer thickness
     if protection_thickness > 0:
-        temperature_steel_max = np.max(_steel_temperature(**inputs_steel_heat_transfer)[1])
+        temperature_steel_ubound = np.max(_steel_temperature(**inputs_steel_heat_transfer)[1])
     else:
-        temperature_steel_max = -1
+        temperature_steel_ubound = -1
 
     # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
+    # ====================================================================
 
-    seek_count_iter = 0
-    seek_status = False
+    seek_count_iter = 0  # count how many iterations for  the seeking process
+    seek_status = False  # flag used to indicate when the seeking is successful
 
-    # default values
+    # Default values
     time_fire_resistance = -1
-    sought_temperature_steel_max = -1
+    sought_temperature_steel_ubound = -1
     sought_protection_thickness = -1
-    if beam_temperature_goal > 0:
-        while seek_count_iter < seek_max_iter and seek_status is False:
+
+    if beam_temperature_goal > 0:  # check seeking temperature, opt out if less than 0
+        # Seeking process
+        while seek_count_iter < seek_ubound_iter and seek_status is False:
             seek_count_iter += 1
             sought_protection_thickness = np.average([seek_ubound, seek_lbound])
             inputs_steel_heat_transfer["thickness_protection"] = sought_protection_thickness
             t_, T_, d_ = _steel_temperature(**inputs_steel_heat_transfer)
-            sought_temperature_steel_max = np.max(T_)
-            y_diff_seek = sought_temperature_steel_max - beam_temperature_goal
+            sought_temperature_steel_ubound = np.max(T_)
+            y_diff_seek = sought_temperature_steel_ubound - beam_temperature_goal
             if abs(y_diff_seek) <= seek_tol_y:
                 seek_status = True
-            elif sought_temperature_steel_max > beam_temperature_goal:  # steel too hot, increase protect thickness
+            elif sought_temperature_steel_ubound > beam_temperature_goal:  # steel too hot, increase protect thickness
                 seek_lbound = sought_protection_thickness
             else:  # steel is too cold, increase intrumescent paint thickness
                 seek_ubound = sought_protection_thickness
 
         # BEAM FIRE RESISTANCE PERIOD IN ISO 834
+        # ======================================
 
         # Make steel time-temperature curve when exposed to the given ambient temperature, i.e. ISO 834.
         inputs_steel_heat_transfer["time"] = iso834_time
@@ -371,16 +464,16 @@ def calc_time_equivalence(
             "fire_load_density": fire_load_density,
             "fire_spread_speed": fire_spread_speed,
             "beam_position": beam_position,
-            "temperature_max_near_field": temperature_max_near_field,
+            "nft_ubound": nft_ubound,
             "fire_type": fire_type,
-            "sought_temperature_steel_max": sought_temperature_steel_max,
+            "sought_temperature_steel_ubound": sought_temperature_steel_ubound,
             "sought_protection_thickness": sought_protection_thickness,
             "seek_count_iter": seek_count_iter,
-            "temperature_steel_max": temperature_steel_max,
+            "temperature_steel_ubound": temperature_steel_ubound,
             "index": index
         }
     else:
-        return time_fire_resistance, seek_status, window_open_fraction, fire_load_density, fire_spread_speed, beam_position, temperature_max_near_field, fire_type, sought_temperature_steel_max, sought_protection_thickness, seek_count_iter, temperature_steel_max, index
+        return time_fire_resistance, seek_status, window_open_fraction, fire_load_density, fire_spread_speed, beam_position, nft_ubound, fire_type, sought_temperature_steel_ubound, sought_protection_thickness, seek_count_iter, temperature_steel_ubound, index
 
 
 def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
@@ -413,8 +506,11 @@ def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
     simulations = dict_vars_0["simulations"]
 
     # Variable group definition
-    list_setting_vars = ["simulations", "steel_temp_failure", "n_proc", "building_height", "select_fires_teq", "select_fires_teq_tol"]
-    list_interim_vars = ["qfd_std", "qfd_mean", "qfd_ubound", "qfd_lbound", "glaz_min", "glaz_max", "beam_min", "beam_max", "com_eff_min", "com_eff_max", "spread_min", "spread_max", "avg_nft"]
+    list_setting_vars = ["simulations", "steel_temp_failure", "n_proc", "building_height", "select_fires_teq",
+                         "select_fires_teq_tol"]
+    list_interim_vars = ["qfd_std", "qfd_mean", "qfd_ubound", "qfd_lbound", "opening_fraction_lbound", "opening_fraction_ubound", 'opening_fraction_std', 'opening_fraction_mean',
+                         "beam_loc_ratio_lbound",
+                         "beam_loc_ratio_ubound", "com_eff_lbound", "com_eff_ubound", "spread_lbound", "spread_ubound", "nft_average"]
 
     # Extract separated
     df_pref = {k: None for k in list_setting_vars}
@@ -443,45 +539,72 @@ def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
     # lhs_mat = lhs(n=6, samples=simulations, criterion=dict_setting_vars["lhs_criterion"])
     lhs_mat = latin_hypercube_sampling(num_samples=simulations, num_arguments=6)
 
-    #   Set distribution mean and standard dev
+    # Near field standard deviation
+    avg_nft = dict_dist_vars["nft_average"]  # TFM near field temperature - Norm distribution - mean [C]
+    std_nft = (1.939 - (np.log(avg_nft) * 0.266)) * avg_nft
 
+    # Convert LHS probabilities to distribution invariants
+    # todo: check why this is not used
+    com_eff_lbound = dict_dist_vars["com_eff_lbound"]  # Min combustion efficiency [-]  - Linear dist
+    com_eff_ubound = dict_dist_vars["com_eff_ubound"]  # Max combustion efficiency [-]  - Linear dist
+    comb_lhs = linear_distribution(com_eff_lbound, com_eff_ubound, lhs_mat[:, 0])
+    # comb_lhs = np.linspace(com_eff_lbound, com_eff_ubound, simulations+1)
+    # comb_lhs += (comb_lhs[1] - comb_lhs[0])
+    # comb_lhs = comb_lhs[0:-2]
+    # np.random.shuffle(comb_lhs)
+
+    # Fuel load density
+    # -----------------
     qfd_std = dict_dist_vars["qfd_std"]  # Fire load density - Gumbel distribution - standard dev [MJ/sq.m]
     qfd_mean = dict_dist_vars["qfd_mean"]  # Fire load density - Gumbel distribution - mean [MJ/sq.m]
     qfd_ubound = dict_dist_vars["qfd_ubound"]  # Fire load density - Gumbel distribution - upper limit [MJ/sq.m]
     qfd_lbound = dict_dist_vars["qfd_lbound"]  # Fire load density - Gumbel distribution - lower limit [MJ/sq.m]
-    # glaz_min = dict_dist_vars["glaz_min"]  # Min glazing fall-out fraction [-] - Linear dist
-    # glaz_max = dict_dist_vars["glaz_max"]  # Max glazing fall-out fraction [-]  - Linear dist
-    beam_min = dict_dist_vars["beam_min"]  # Min beam location relative to compartment length for TFM [-]  - Linear dist
-    beam_max = dict_dist_vars["beam_max"]  # Max beam location relative to compartment length for TFM [-]  - Linear dist
-    com_eff_min = dict_dist_vars["com_eff_min"]  # Min combustion efficiency [-]  - Linear dist
-    com_eff_max = dict_dist_vars["com_eff_max"]  # Max combustion efficiency [-]  - Linear dist
-    spread_min = dict_dist_vars["spread_min"]  # Min spread rate for TFM [m/s]  - Linear dist
-    spread_max = dict_dist_vars["spread_max"]  # Max spread rate for TFM [m/s]  - Linear dist
-    avg_nft = dict_dist_vars["avg_nft"]  # TFM near field temperature - Norm distribution - mean [C]
+    qfd_loc, qfd_scale = gumbel_parameter_converter(qfd_mean, qfd_std)
+    qfd_lhs = gumbel_r_trunc_ppf(qfd_lbound, qfd_ubound, simulations, qfd_loc, qfd_scale) * comb_lhs
+    np.random.shuffle(qfd_lhs)
+    # DEPRECIATED 14 Aug 2018 - Following codes calculate gumbel parameters for qfd
+    # qfd_scale = qfd_std * (6 ** 0.5) / np.pi
+    # qfd_loc = qfd_mean - (0.57722 * qfd_scale)
+    # qfd_dist = gumbel_r(loc=qfd_loc, scale=qfd_scale)
+    # qfd_p_l, qfd_p_u = qfd_dist.cdf(qfd_lbound), qfd_dist.cdf(qfd_ubound)
+    # qfd_lhs = gumbel_r(loc=qfd_loc, scale=qfd_scale).ppf(lhs_mat[:, 1]) * comb_lhs
 
-    #   Calculate gumbel parameters for qfd
-    qfd_scale = qfd_std * (6 ** 0.5) / np.pi
-    qfd_loc = qfd_mean - (0.57722 * qfd_scale)
-    qfd_dist = gumbel_r(loc=qfd_loc, scale=qfd_scale)
-    qfd_p_l, qfd_p_u = qfd_dist.cdf(qfd_lbound), qfd_dist.cdf(qfd_ubound)
-    # todo: do limits for qfd
-
-    lhs_mat[:, 1] = latin_hypercube_sampling(num_samples=simulations, sample_min=qfd_p_l, sample_max=qfd_p_u).flatten()
-
-    #   Near field standard deviation
-    std_nft = (1.939 - (np.log(avg_nft) * 0.266)) * avg_nft
-
-    #   Convert LHS probabilities to distribution invariants
-    comb_lhs = linear_distribution(com_eff_min, com_eff_max, lhs_mat[:, 0])
-    qfd_lhs = gumbel_r(loc=qfd_loc, scale=qfd_scale).ppf(lhs_mat[:, 1]) * comb_lhs
-    # glaz_lhs = linear_distribution(glaz_min, glaz_max, lhs_mat[:, 2])
-    # glaz_lhs = 1-trunc_lognorm_cfd(0, 1, 100, 0.2, 0, np.exp(0.2), lhs_mat[:, 2])
-    glaz_lhs = 1 - trunc_lognorm_cfd(0, 1, simulations, 0.2, 0, np.exp(0.2))
+    # Opening fraction factor (glazing fall-out fraction)
+    # ---------------------------------------------------
+    opening_fraction_std = dict_dist_vars['opening_fraction_std']  # Glazing fall-out fraction - log normal distribution - standard deviation
+    opening_fraction_mean = dict_dist_vars['opening_fraction_mean']  # Glazing fall-out fraction - log normal distribution - mean
+    opening_fraction_lbound = dict_dist_vars['opening_fraction_lbound']  # Minimum glazing fall-out fraction
+    opening_fraction_ubound = dict_dist_vars['opening_fraction_ubound']  # Maximum glazing fall-out fraction
+    opening_fraction_mean, opening_fraction_std = lognorm_parameters_true_to_inv(opening_fraction_mean, opening_fraction_std)
+    glaz_lhs = 1 - lognorm_trunc_ppf(opening_fraction_lbound, opening_fraction_ubound, simulations, opening_fraction_std, 0, np.exp(opening_fraction_mean))
     np.random.shuffle(glaz_lhs)
-    beam_lhs = linear_distribution(beam_min, beam_max, lhs_mat[:, 3]) * dict_vars_0["room_depth"]
-    spread_lhs = linear_distribution(spread_min, spread_max, lhs_mat[:, 4])
-    nft_lhs = norm(loc=avg_nft, scale=std_nft).ppf(lhs_mat[:, 5])
+    # DEPRECIATED 14 Aug 2018 - Following two lines calculates linear distributed opening fraction
+    # glaz_lhs = linear_distribution(glaz_lbound, glaz_ubound, lhs_mat[:, 2])
+    # glaz_lhs = 1-lognorm_trunc_ppf(0, 1, 100, 0.2, 0, np.exp(0.2), lhs_mat[:, 2])
 
+    # Beam location
+    # -------------
+    beam_lbound = dict_dist_vars["beam_loc_ratio_lbound"]  # Min beam location relative to compartment length for TFM [-]  - Linear dist
+    beam_ubound = dict_dist_vars["beam_loc_ratio_ubound"]  # Max beam location relative to compartment length for TFM [-]  - Linear dist
+    beam_lhs = linear_distribution(beam_lbound, beam_ubound, lhs_mat[:, 3]) * dict_vars_0["room_depth"]
+    # beam_lhs = np.linspace(beam_lbound, beam_ubound, simulations+1)
+    # beam_lhs += (beam_lhs[1] - beam_lhs[0])
+    # beam_lhs = beam_lhs[0:-2] * dict_vars_0["room_depth"]
+    # np.random.shuffle(beam_lhs)
+
+    # Fire spread speed (travelling fire)
+    # -----------------------------------
+    spread_lbound = dict_dist_vars["spread_lbound"]  # Min spread rate for TFM [m/s]  - Linear dist
+    spread_ubound = dict_dist_vars["spread_ubound"]  # Max spread rate for TFM [m/s]  - Linear dist
+    spread_lhs = linear_distribution(spread_lbound, spread_ubound, lhs_mat[:, 4])
+    # spread_lhs = np.linspace(spread_lbound, spread_ubound, simulations+1)
+    # spread_lhs += (spread_lhs[1] - spread_lhs[0])
+    # spread_lhs = spread_lhs[0:-2]
+    # np.random.shuffle(spread_lhs)
+
+    # Near field temperature (travelling fire)
+    # ----------------------------------------
+    nft_lhs = norm(loc=avg_nft, scale=std_nft).ppf(lhs_mat[:, 5])
     nft_lhs[nft_lhs > 1200] = 1200  # todo: reference?
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -497,49 +620,18 @@ def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
                    "fire_load_density": qfd_lhs[i],
                    "fire_spread_speed": spread_lhs[i],
                    "beam_position": beam_lhs[i],
-                   "temperature_max_near_field": nft_lhs[i],
-                   "index": i},)
+                   "nft_ubound": nft_lhs[i],
+                   "index": i}, )
         list_kwargs.append(x_)
 
     dict_vars_0_["window_open_fraction"] = glaz_lhs
     dict_vars_0_["fire_load_density"] = qfd_lhs
     dict_vars_0_["fire_spread_speed"] = spread_lhs
     dict_vars_0_["beam_position"] = beam_lhs
-    dict_vars_0_["temperature_max_near_field"] = nft_lhs
+    dict_vars_0_["nft_ubound"] = nft_lhs
     dict_vars_0_["index"] = np.arange(0, simulations, 1, int)
 
     df_input = df(dict_vars_0_)
     df_input.set_index("index", inplace=True)
 
     return df_input, df_pref
-
-
-# DEPRECIATED
-# 4 AUG 2018
-# def mc_post_processing(x, x_find=None, y_find=None):
-#     # work out x_sorted, y
-#     x_raw = np.sort(x)
-#     y_raw = np.arange(1, len(x_raw) + 1) / len(x_raw)
-#
-#     cdf_x = interp1d(x_raw, y_raw)
-#     cdf_y = interp1d(y_raw, x_raw)
-#
-#     # work out pdf
-#     pdf_x = stats.gaussian_kde(x_raw, bw_method="scott")
-#     x_f = np.linspace(x_raw.min() - 1, x_raw.max() + 1, 2000)
-#
-#     y_pdf = pdf_x.evaluate(x_f)
-#     y_cdf = np.cumsum(y_pdf) * ((x_raw.max()-x_raw.min()+2) / 2000)
-#
-#     # find y according x_find and/ or x according y_find
-#     xy_found = []
-#     if x_find is not None:
-#         y_found = cdf_x(x_find)
-#         xy_found.append(*list(zip(x_find, y_found)))
-#     if y_find is not None:
-#         x_found = cdf_y(y_find)
-#         xy_found.append(*list(zip(x_found, y_find)))
-#
-#     xy_found = np.asarray(xy_found)
-#
-#     return x_raw, y_raw, x_f, y_cdf, xy_found

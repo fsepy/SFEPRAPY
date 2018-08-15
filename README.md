@@ -19,15 +19,15 @@ seaborn==0.9.0
 
 ### Installation
 
-#### Installation through `pip`
+#### Installation using `pip install`
 
-The package can be installed through `pip` by the following command.
+`sfeprapy` is published on PyPI and therefore can be installed by using `pip install`. Please ensure you have `pip` packaged available. It is recommended to install Anaconda Python distribution as it packs few very useful libraries, including `pip`. Type the following command in a command-line terminal will install let you `sfeprapy`.
 ```python
 pip install sfeprapy
 ```
 
-#### Alternative local installation
-Download the entire project folder to your computer, change current working directory to the project folder then install PraPy by using pip:
+#### Local installation
+For any reasons that you do not want to install `sfeprapy` as a Python library, download the entire project folder to your computer, change current working directory to the project folder then install `sfeprapy` by using pip:
 
 ```
 pip install .
@@ -35,38 +35,33 @@ pip install .
 
 The installation process should be able to install all required libraries listed in Prerequisites.
 
-### Example
+### Usage
 
 In Python, enter the following code will run the time equivalence (Monte Carlo) analysis which will ask for input files directory.
 ```python
-from prapy import time_equivalence as app
+from sfeprapy import time_equivalence as app
 app.run()
 ```
 
-Copy your inputs file folder directory and paste into the terminal window, where the directory `D:\\test` should be a folder containing all input files ending with `.txt` which all input files will be run. Input file template can be found at `problem_definition` folder. 
-
-```shell
-Work directory: C:\test
-```
-
-After correct folder directory being provided, time equivalence analysis will proceed as below.
+A dialog box will pop out for you to select folders containing problem definition files. The dialog box will only let you select one folder at a time, but you can select more folders after you click **Select Folder** button. Click **Cancel** to finish selecting folders and the time equivalence analysis will proceed. The program will be paused when all problem definition files are complete. Example console output is shown below.
 
 ```shell
 Input file:              test1
 Total simulations:       500
 Number of threads:       4
-######################## 100% (74.8)
+######################## 74.8s
 Input file:              test2
 Total simulations:       500
 Number of threads:       4
-######################## 100% (83.9)
->>>
+######################## 83.9s
+Press Enter to let me disappear
 ```
-The code will identify all input files contained in the folder directory provided and run them one by one until all input files are complete. Simulation output files will be saved under the input file directory.
+
+`sfeprapy.time_equivalence.run()` will identify all input files contained in the folder directory and run them one by one until all input files are complete. Simulation output files will be saved under the input file directory.
 
 ## Authors
 
-* **Ian Fu** - *fuyans@gmail.com*
+* **Yan Fu** - *fuyans@gmail.com*
 * **Danny Hopkin** - *danny.hopkin@olssonfire.com*
 
 ## License

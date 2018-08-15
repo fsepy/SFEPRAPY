@@ -10,13 +10,21 @@ from distutils.core import setup
 #     long_description = file.read()
 
 setup(name='sfeprapy',
-      version='0.0.1',
+
+      version='0.0.2',
+
       description='Structural fire safety engineering - probabilistic reliability assessment',
+
       author='Yan Fu',
+
       author_email='fuyans@gmail.com',
+
       url='https://github.com/fsepy/sfeprapy',
+
       download_url="https://github.com/fsepy/sfeprapy/archive/master.zip",
+
       keywords=["fire safety", "structural fire engineering"],
+
       classifiers=[
           "Programming Language :: Python :: 3",
           "Development Status :: 3 - Alpha",
@@ -30,4 +38,11 @@ setup(name='sfeprapy',
       long_description='Structural fire safety engineering - probabilistic reliability assessment',
 
       packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls'],
+
+      install_requires=[
+          'matplotlib>=2.2.2',
+          'numpy>=1.15.0',
+          'pandas>=0.23.3',
+          'scipy>=1.1.0',
+          'seaborn>=0.9.0',]
       )

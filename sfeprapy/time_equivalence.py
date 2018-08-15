@@ -1,4 +1,5 @@
-import os, copy, time
+﻿import os
+import time
 import multiprocessing as mp
 import numpy as np
 import pandas as pd
@@ -47,7 +48,7 @@ __fn_plot_te_all = "plot_teq_all.png"
 __fn_plot_temp = "plot_temp.png"
 
 __fn_selected_plot = "selected.png"
-__fn_selected_numerical = "selected.csv"
+__fn_fires_numerical = "selected.csv"
 
 
 def init_global_variables(_id, dir_work):
@@ -99,7 +100,6 @@ def step1_inputs_maker(path_input_file):
 
 
 def step2_calc(df_input, dict_pref, progress_print_interval=5):
-    plot_dist('test', df_input, '')
     # LOCAL SETTINGS
     # ==============
 
@@ -131,17 +131,17 @@ def step2_calc(df_input, dict_pref, progress_print_interval=5):
     print(__strformat_1_1.format("Total simulations:", len(list_kwargs)))
     print(__strformat_1_1.format("Number of threads:", n_proc))
 
-    time_count_simulation = time.perf_counter()
+    time_simulation_start = time.perf_counter()
     m = mp.Manager()
     q = m.Queue()
     p = mp.Pool(n_proc, maxtasksperchild=mp_maxtasksperchild)
     jobs = p.map_async(calc_time_equiv_worker, [(kwargs, q) for kwargs in list_kwargs])
     count_total_simulations = len(list_kwargs)
-    n_steps = 24  #
+    n_steps = 24  # length of the progress bar
     while progress_print_interval:
         if jobs.ready():
-            time_count_simulation = time.perf_counter() - time_count_simulation
-            print("{}{} {:03.0f}% ({:.1f}s)".format('#'*round(n_steps), '-'*round(0), 100., time_count_simulation))
+            time_simulation_consumed = time.perf_counter() - time_simulation_start
+            print("{}{} {:.1f}s".format('#'*round(n_steps), '-'*round(0), time_simulation_consumed))
             break
         else:
             p_ = q.qsize() / count_total_simulations * n_steps
@@ -177,24 +177,38 @@ def step2_calc(df_input, dict_pref, progress_print_interval=5):
 
 
 def plot_dist(id_, df_input, headers):
-    headers = ['window_open_fraction', 'fire_load_density', 'fire_spread_speed', 'beam_position', 'temperature_max_near_field']
+    # print(df_input)
 
-    fig, ax = plt.subplots(figsize=(2.5, 2))
+    # headers = ['window_open_fraction', 'fire_load_density', 'fire_spread_speed', 'beam_position', 'temperature_max_near_field']
+    # headers = ['WINDOW OPEN FRACTION [%]', 'FIRE LOAD DENSITY [MJ/m2]', 'FIRE SPREAD SPEED [m/s]', 'BEAM POSITION [m]', 'MAX. NEAR FIELD TEMPERATURE [C]']
+    names = {'WINDOW OPEN FRACTION [%]': 'Ao',
+             'FIRE LOAD DENSITY [MJ/m2]': 'qfd',
+             'FIRE SPREAD SPEED [m/s]': 'spread',
+             'BEAM POSITION [m]': 'beam_loc',
+             'MAX. NEAR FIELD TEMPERATURE [C]': 'nft'}
 
-    for each_header in headers:
-        x = df_input[each_header].values
+    # fig, ax = plt.subplots(figsize=(3.94, 2.76))
 
-        if each_header == 'temperature_max_near_field':
-            x = x[x<1200]
-        # if each_header == 'window_open_fraction':
-        #     x = trunc_lognorm_cfd(0,1,10000,0.2,0,np.exp(0.2))
+    fig, ax = plt.subplots(figsize=(2.5, 2))  # for smaller figures
+
+    for k, v in names.items():
+        x = df_input[k].values
+
+        if k == 'MAX. NEAR FIELD TEMPERATURE [C]':
+            x = x[x < 1200]
 
         sns.distplot(x, kde=False, rug=True, bins=50, ax=ax, norm_hist=True)
-        ax.set(ylabel='', yticklabels=[])
-        # ax.set_xticklabels([])
-        # ax.set_y_label
 
-        plt.savefig(os.path.join(__dir_work, '{} - dist - {}.png'.format(id_, each_header)), ppi=300)
+        # Normal plot parameters
+        # ax.set_ylabel('PDF')
+        # ax.set_xlabel('x')
+
+        # Small simple plot parameters
+        ax.set_ylabel('')
+        ax.set_yticklabels([])
+        ax.set_xlabel('')
+
+        plt.savefig(os.path.join(__dir_work, '{} - dist - {}.png'.format(id_, v)), ppi=300)
         plt.cla()
 
     plt.clf()
@@ -205,30 +219,14 @@ def select_fires_teq(df_input, dict_pref, df_output):
     # INPUT ARGUMENTS VALIDATION
     # ==========================
 
-    if dict_pref["select_fires_teq"] <= 0 or dict_pref["select_fires_teq_tol"] <= 0:
-        return 0
-
-    # Load settings
+    if dict_pref["select_fires_teq"] <= 0 or dict_pref["select_fires_teq_tol"] <= 0: return 0
 
     percentile = dict_pref["select_fires_teq"]
     tolerance = dict_pref["select_fires_teq_tol"]
-
     df_output.sort_values(by=["TIME EQUIVALENCE [min]"], inplace=True)
 
-    # Convert 'percentile_ubound' and 'percentile_lbound' to integers according to actual range i.e. 'index=1000'
-
-    index_max = int(max(df_output.index.values))
-
-    percentile_selected_bounds = np.array([percentile - abs(tolerance), percentile + abs(tolerance)])
-    if percentile_selected_bounds[0] < 0: percentile_selected_bounds[0] = 0
-    if percentile_selected_bounds[1] > 1: percentile_selected_bounds[1] = 1
-
-    index_selected_bounds = np.round(percentile_selected_bounds * index_max, 0).astype(dtype=int)
-    if index_selected_bounds[0] == index_selected_bounds[1]: return 0
-
-    indices_selected = np.arange(index_selected_bounds[0], index_selected_bounds[1], 1, dtype=int)
-
-    list_index_selected_fires = df_output.iloc[indices_selected].index.values
+    # list_index_selected_fires = df_output.iloc[indices_selected].index.values
+    list_index_selected_fires = df_output.index.values
 
     # iterate through all selected fires, store time and temperature
 
@@ -236,12 +234,15 @@ def select_fires_teq(df_input, dict_pref, df_output):
     dict_fires = {}
     list_fire_name = ["TEMPERATURE {} (INDEX {}) [C]".format(str(i), str(int(v))) for i, v in enumerate(list_index_selected_fires)]
 
-    for i,v in enumerate(list_index_selected_fires):
+    # for i,v in enumerate(list_index_selected_fires) :
+    for i, v in df_output.iterrows():
         # get input arguments
         args = df_input.loc[i].to_dict()
+        # args = v.to_dict()
 
         # get fire type
-        fire_type = int(df_output.loc[i]["FIRE TYPE [0:P., 1:T.]"])
+        # fire_type = int(df_output.loc[i]["FIRE TYPE [0:P., 1:T.]"])
+        fire_type = int(v["FIRE TYPE [0:P., 1:T.]"])
 
         if fire_type == 0:  # parametric fire
             w, l, h = args["room_breadth"], args["room_depth"], args["room_height"]
@@ -274,7 +275,7 @@ def select_fires_teq(df_input, dict_pref, df_output):
                 "time_start_s": args["time_start"],
                 "time_end_s": args["fire_duration"],
                 "time_interval_s": args["time_step"],
-                "nft_max_C": args["temperature_max_near_field"],
+                "nft_max_C": args["nft_ubound"],
                 "win_width_m": args["window_width"],
                 "win_height_m": args["window_height"],
                 "open_fract": args["window_open_fraction"]
@@ -283,8 +284,8 @@ def select_fires_teq(df_input, dict_pref, df_output):
             temps += 273.15
         else:
             print("FIRE TYPE UNKOWN.")
-
-        dict_fires[list_fire_name[i]] = temps - 273.15
+        # print(i)
+        dict_fires[list_fire_name[int(i)]] = temps - 273.15
         # plt.plot2(tsec/60., temps-273.15, alpha=.6)
 
     dict_fires["TIME [min]"] = np.arange(args["time_start"], args["fire_duration"], args["time_step"]) / 60.
@@ -298,7 +299,7 @@ def select_fires_teq(df_input, dict_pref, df_output):
 
     # Save numerical data to a .csv file
     # ----------------------------------
-    file_name = "{} - {}".format(__id, __fn_selected_numerical)
+    file_name = "{} - {}".format(__id, __fn_fires_numerical)
     df_fires.to_csv(os.path.join(__dir_work, file_name))
 
 
@@ -335,6 +336,9 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
         # update global varibles for file name and word path directory
         init_global_variables(id_, dir_work_)
 
+        # Save selected fires
+        select_fires_teq(input_, pref_, output_)
+
         # Save numerical values (inputs and outputs, i.e. everything)
         # -----------------------------------------------------------
 
@@ -343,7 +347,7 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
 
         # Plot distribution
         # -----------------
-        plot_dist(id_, input_, [])
+        plot_dist(id_, output_, [])
 
         # Plot and save time equivalence for individual output
         # ----------------------------------------------------
@@ -416,347 +420,9 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
         bbox_inches='tight', dpi=300)
     plt.clf()
     plt.close()
-        #
-    # plt.format(**plt_format_)
-    #
-    # plt.plot_vertical_line(x=x__)
-    # plt.plot_horizontal_line(y=line_horizontal)
-    # plt.axes_primary.text(x=x_end, y=line_horizontal, s="{:.4f}".format(line_horizontal), va="center", ha="left", fontsize=6)
-    #
-    # plt.save_figure2(os.path.join(dir_work_, "{} - {}".format(os.path.basename(dir_work_), __fn_plot_te)))
-    #
-    # plt.self_delete()
 
 
-# def step4_results_visulisation(dict_pref, df_output):
-#
-#     # # Load settings
-#
-#     dict_settings = dict_pref
-#     height_building = dict_settings["building_height"]
-#
-#     # Load the dataframe obj file
-#
-#     df_results = df_output
-#
-#     # Define horizontal line(s) to plot
-#
-#     if height_building > 0:
-#         y__ = 1 - 64.8 / height_building ** 2
-#     else:
-#         y__ = 0.5
-#
-#     # Obtain time equivalence, in minutes, as x-axis values
-#
-#     x = np.sort(df_results["TIME EQUIVALENCE [min]"].values * 60.)
-#     y = np.arange(1, len(x) + 1) / len(x)
-#     f_interp = interp1d(y, x)
-#     if height_building > 0:
-#         y_line = 1 - 64.8 / height_building ** 2
-#         x_line = f_interp(y_line)
-#     else:
-#         x_line = y_line = 0
-#
-#     plt = Scatter2D()
-#     plt_format = {"figure_size_scale": __plot_scale,
-#                   "axis_lim_y1": (0, 1),
-#                   "axis_lim_x": __plot_x_limit,
-#                   "legend_is_shown": False,
-#                   "axis_label_x": "Time Equivalence [min]",
-#                   "axis_label_y1": "Fractile",
-#                   "marker_size": __plot_mark_size,
-#                   "mark_every": __plot_mark_every}
-#     plt.plot2(x/60, y, "Simulation results")
-#
-#     plt.format(**plt_format)
-#
-#     if height_building > 0:
-#         x_end = plt.axes_primary.get_xlim()[1]
-#         y_end = plt.axes_primary.get_ylim()[1]
-#
-#         x_line_ = x_line/60.
-#         y_line_ = y_line
-#         plt.plot_vertical_line(x=x_line_)
-#         plt.axes_primary.text(x=x_line_, y=y_end, s="{:.0f}".format(x_line_), va="bottom", ha="center", fontsize=6)
-#         plt.plot_horizontal_line(y=y_line_)
-#         plt.axes_primary.text(x=x_end, y=y_line_, s="{:.4f}".format(y_line_), va="center", ha="left", fontsize=4)
-#
-#     file_path = os.path.join(__dir_work, "{} - {}".format(__id, __fn_plot_te))
-#     plt.save_figure2(file_path)
-#     plt.self_delete()
-
-
-# def step5_results_visulisation_all(list_id, list_pref, list_output):
-#
-#     # INPUT VALIDATION
-#
-#     # list_id, list_pref, list_output must be lists with the same length and each contains at least 1 item.
-#
-#     if len(list_pref) <= 1:
-#         return 0
-#     elif len(list_pref) != len(list_output):
-#         return 0
-#
-#
-#     # ------------------------------------------------------------------------------------------------------------------
-#     # Plot a Graph for All Data
-#     # ------------------------------------------------------------------------------------------------------------------
-#
-#     # instantiate plotting object
-#     plt = Scatter2D()
-#
-#     # format parameters for figure
-#     plt_format = {"figure_size_scale": __plot_scale,
-#                   "axis_lim_y1": (0, 1),
-#                   "axis_lim_x": __plot_x_limit,
-#                   "legend_is_shown": True,
-#                   "axis_label_x": "Time Equivalence [min]",
-#                   "axis_label_y1": "Fractile",
-#                   "marker_size": __plot_mark_size,
-#                   "mark_every": __plot_mark_every}
-#
-#     # format parameters for additional texts which indicate the x_line and y_line values
-#     # plt_format_text = {"fontsize": 6, "bbox": dict(boxstyle="square", fc="w", ec="b")}
-#
-#     # container for x_line and y_line
-#     x_line, y_line = [], []
-#     height_building = 0
-#
-#     # iterate through all result files and plot lines accordingly
-#     for i, dict_pref in enumerate(list_pref):
-#         df_output = list_output[i]
-#
-#         # Load settings
-#
-#         dict_settings = dict_pref
-#         height_building = dict_settings["building_height"]
-#
-#         df_results = df_output
-#
-#         # obtain values: x, y, x_line (vertical line) and y_line (horizontal line)
-#
-#         x = df_results["TIME EQUIVALENCE [min]"].values
-#         x = np.sort(x)
-#         y = np.arange(1, len(x) + 1) / len(x)
-#         f_interp = interp1d(y, x)
-#         if height_building == 0:
-#             y_line_ = 0
-#         else:
-#             y_line_ = 1 - 64.8 / height_building ** 2
-#             x_line_ = f_interp(y_line_)
-#
-#         # plot line f(x)
-#
-#         plt.plot2(x, y, list_id[i])
-#         plt.format(**plt_format)
-#
-#         # obtain x_line and y_line for later use
-#
-#         if height_building > 0:
-#             x_line.append(round(float(x_line_), 0))
-#             y_line.append(round(float(y_line_), 4))
-#
-#     plt.format(**plt_format)
-#
-#     if height_building > 0:
-#         x_line = set(x_line)
-#         y_line = set(y_line)
-#         x_end = plt.axes_primary.get_xlim()[1]
-#         y_end = plt.axes_primary.get_ylim()[1]
-#
-#         x_line = [max(x_line)]
-#
-#         for x_line_ in x_line:
-#             plt.plot_vertical_line(x=x_line_)
-#             plt.add_text(x=x_line_, y=y_end, s="{:.0f}".format(x_line_), va="bottom", ha="center", fontsize=6)
-#
-#         for y_line_ in y_line:
-#             plt.plot_horizontal_line(y=y_line_)
-#             plt.add_text(x=x_end, y=y_line_, s="{:.4f}".format(y_line_), va="center", ha="left", fontsize=4)
-#
-#     file_name = "{} - {}".format(os.path.basename(__dir_work), __fn_plot_te_all)
-#     file_path = os.path.join(__dir_work, file_name)
-#     plt.save_figure2(path_file=file_path)
-#     plt.self_delete()
-
-
-# def step6_results_visualization_temperature(df_input, dict_pref, df_output):
-#
-#     if np.sum(df_input["protection_thickness"].values) <= 0:
-#         return 0
-#
-#     dict_settings = dict_pref
-#     height_building = dict_settings["building_height"]
-#
-#     # Load the dataframe obj file
-#
-#     df_results = df_output
-#
-#     # Define horizontal line(s) to plot
-#
-#     if height_building > 0:
-#         y__ = 1 - 64.8 / height_building ** 2
-#     else:
-#         y__ = 0.5
-#
-#     # Obtain time equivalence, in minutes, as x-axis values
-#
-#     x = df_results["PEAK STEEL TEMPERATURE TO FIXED PROTECTION [C]"].values
-#     x = np.sort(x)
-#     y = np.arange(1, len(x) + 1) / len(x)
-#
-#     plt = Scatter2D()
-#
-#     plt_format = {"figure_size_scale": 0.7,
-#                   "axis_lim_y1": (0, 1),
-#                   # "axis_lim_x": __plot_x_limit,
-#                   "legend_is_shown": False,
-#                   "axis_label_x": "Peak Steel Temperature [$^\circ$C]",
-#                   "axis_label_y1": "Fractile",
-#                   "marker_size": __plot_mark_size,
-#                   "mark_every": __plot_mark_every}
-#     plt.plot2(x, y, "Simulation results")
-#
-#     plt.format(**plt_format)
-#
-#     file_name = "{} - {}".format(__id, __fn_selected_plot)
-#     file_path = os.path.join(__dir_work, file_name)
-#     plt.save_figure2(file_path)
-
-
-# def step7_select_fires_teq(df_input, dict_pref, df_output):
-#
-#     if dict_pref["select_fires_teq"] < 0:
-#         return 0
-#
-#     # Load settings
-#
-#     dict_settings = dict_pref
-#     height_building = dict_settings["building_height"]
-#     percentile = dict_settings["select_fires_teq"]
-#     tolerance = dict_settings["select_fires_teq_tol"]
-#
-#     # Load results and input arguments
-#     df_results = df_output
-#     df_input_arguments = df_input
-#     df_results.sort_values(by=["TIME EQUIVALENCE [min]"], inplace=True)
-#
-#     if tolerance < 0:
-#         tolerance = 0
-#
-#     # Convert 'percentile_ubound' and 'percentile_lbound' to integers according to actual range i.e. 'index=1000'
-#
-#     index_max = int(max(df_results.index.values))
-#
-#     percentile_ubound = percentile + abs(tolerance)
-#     percentile_lbound = percentile - abs(tolerance)
-#
-#     percentile_ubound *= index_max
-#     percentile_lbound *= index_max
-#
-#     percentile_ubound = int(round(percentile_ubound, 0))
-#     percentile_lbound = int(round(percentile_lbound, 0))
-#
-#     if percentile_lbound <= percentile_ubound:
-#         range_selected = np.arange(percentile_lbound, percentile_ubound+1, 1)
-#     else:
-#         print("NO FIRES ARE SELECTED.")
-#         return 0
-#
-#     list_index_selected_fires = df_results.iloc[range_selected].index.values
-#     df_results_selected = df_results.iloc[range_selected]
-#
-#     # iterate through all selected fires, store time and temperature
-#
-#     plt = Scatter2D()
-#     dict_fires = {}
-#     list_fire_name = ["TEMPERATURE {} [C]".format(str(i)) for i,v in enumerate(list_index_selected_fires)]
-#     for i,v in enumerate(list_index_selected_fires):
-#         # get input arguments
-#         args = df_input_arguments.loc[i].to_dict()
-#
-#         # get fire type
-#         fire_type = int(df_results.loc[i]["FIRE TYPE [0:P., 1:T.]"])
-#
-#         if fire_type == 0:  # parametric fire
-#             w, l, h = args["room_breadth"], args["room_depth"], args["room_height"]
-#             inputs_parametric_fire = {
-#                 "A_t": 2*(w*l+w*h+h*l),
-#                 "A_f": w*l,
-#                 "A_v": args["window_height"] * args["window_width"] * args["window_open_fraction"],
-#                 "h_eq": args["window_height"],
-#                 "q_fd": args["fire_load_density"] * 1e6,
-#                 "lambda_": args["room_wall_thermal_inertia"] ** 2,  # thermal inertia is used instead of k rho c.
-#                 "rho": 1,  # see comment for lambda_
-#                 "c": 1,  # see comment for lambda_
-#                 "t_lim": args["time_limiting"],
-#                 "time_end": args["fire_duration"],
-#                 "time_step": args["time_step"],
-#                 "time_start": args["time_start"],
-#                 # "time_padding": (0, 0),
-#                 "temperature_initial": 20 + 273.15,
-#             }
-#             tsec, temps = _fire_param(**inputs_parametric_fire)
-#         elif fire_type == 1:  # travelling fire
-#             inputs_travelling_fire = {
-#                 "fire_load_density_MJm2": args["fire_load_density"],
-#                 "heat_release_rate_density_MWm2": args["fire_hrr_density"],
-#                 "length_compartment_m": args["room_depth"],
-#                 "width_compartment_m": args["room_breadth"],
-#                 "fire_spread_rate_ms": args["fire_spread_speed"],
-#                 "height_fuel_to_element_m": args["room_height"],
-#                 "length_element_to_fire_origin_m": args["beam_position"],
-#                 "time_start_s": args["time_start"],
-#                 "time_end_s": args["fire_duration"],
-#                 "time_interval_s": args["time_step"],
-#                 "nft_max_C": args["temperature_max_near_field"],
-#                 "win_width_m": args["window_width"],
-#                 "win_height_m": args["window_height"],
-#                 "open_fract": args["window_open_fraction"]
-#             }
-#             tsec, temps, hrr, r = _fire_travelling(**inputs_travelling_fire)
-#             temps += 273.15
-#         else:
-#             print("FIRE TYPE UNKOWN.")
-#
-#         dict_fires[list_fire_name[i]] = temps-273.15
-#         plt.plot2(tsec/60., temps-273.15, alpha=.6)
-#
-#     dict_fires["TIME [min]"] = np.arange(args["time_start"],args["fire_duration"],args["time_step"]) / 60.
-#
-#     df_fires = pd.DataFrame(dict_fires)
-#     list_names = ["TIME [min]"] + list_fire_name
-#     df_fires = df_fires[list_names]
-#
-#     # ------------------------------------------------------------------------------------------------------------------
-#     # Save graphical plot to a .png file
-#     # ------------------------------------------------------------------------------------------------------------------
-#     # format parameters for figure
-#     plt_format = {
-#         "figure_size_scale": 0.4,
-#         "axis_lim_y1": (0, 1400),
-#         "axis_lim_x": __plot_x_limit,
-#         "legend_is_shown": False,
-#         "axis_label_x": "Time [min]",
-#         "axis_label_y1": "Gas Temperature [$^\circ$C]",
-#         "marker_size": __plot_mark_size,
-#         "mark_every": __plot_mark_every,
-#         "axis_xtick_major_loc": np.arange(0, 181, 20),
-#         "line_colours": [(0, 0, 0)]
-#     }
-#     plt.format(**plt_format)
-#     file_name = "{} - {}".format(__id, __fn_selected_plot)
-#     file_path = os.path.join(__dir_work, file_name)
-#
-#     plt.save_figure2(path_file=file_path)
-#     # saveprint(os.path.basename(file_path))
-#
-#     # ------------------------------------------------------------------------------------------------------------------
-#     # Save numerical data to a .csv file
-#     # ------------------------------------------------------------------------------------------------------------------
-#     file_name = "{} - {}".format(__id, __fn_selected_numerical)
-#     df_fires.to_csv(os.path.join(__dir_work, file_name))
-#     # saveprint(file_name)
+__run_count = 0
 
 
 def run(project_full_paths=list()):
@@ -764,18 +430,19 @@ def run(project_full_paths=list()):
     _strfmt_1_1 = "{:25}{}"
     __fn_output = "res.p"
 
-    if len(project_full_paths) == 0:
+    global __run_count
+    __run_count += 1
+
+    if len(project_full_paths) == 0 or __run_count > 1:
+        from tkinter import filedialog, Tk, StringVar
+        root = Tk()
+        root.withdraw()
+        folder_path = StringVar()
         while True:
-            project_full_path = input("Work directory: ")
-
-            if project_full_path == "" and len(project_full_paths) != 0:
-                break
-
-            project_full_path.replace('"', '')
-            project_full_path.replace("'", '')
-            project_full_path = os.path.abspath(os.path.realpath(project_full_path))
-
-            project_full_paths.append(project_full_path)
+            file_name = filedialog.askdirectory(title='Select problem definitions folder')
+            if not file_name: break
+            folder_path.set(file_name)
+            project_full_paths.append(file_name)
 
     # MAIN BODY
     # =========
@@ -813,6 +480,8 @@ def run(project_full_paths=list()):
         # -------------------------------------------------------------------
 
         step3_calc_post(list_files, list_input, list_pref, list_output)
+
+        input("Press Enter to finish")
 
 
 if __name__ == '__main__':

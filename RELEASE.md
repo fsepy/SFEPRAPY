@@ -5,7 +5,15 @@
 - [ ] Graphical user interface, with multiprocessing capability
 - [ ] Make validation procedures
 - [ ] Make verification procedures
-- [ ] Publish on PyPI
+- [ ] Upgrade `sfeprapy.time_equivalence_core.mc_inputs_generator2` with `scipy.stats.norm.ppf` and `scipy.stats.gumbel_r.ppf` to generate Monte Carlo input samples.
+- [ ] Add array input variable feature which input files will be automatically populated based on variables arrays.
+- [ ] Additional argument `is_distplot_naked` for distribution variable data visulisation.
+- [ ] Generate report about generated random variables, i.e. to calculate miu and sigma and compare with input values.
+
+**15/08/2018 VERSION 0.0.2**
+- Graphical folder select dialog is available to select folders;
+- Fixed an issue associated with `sfeprapy.time_equivalence.run()` where would not ask for new input folder directory when run more than once without re-import the module;
+- Fixed window opening fraction factor distribution. Previously the mean $\mu$ and standard deviation $\sigma$ are adopted based on $x$, however, the `scipy.stats.lognorm` module takes $\mu$ and $\sigma$ based on $ln(x)$. This has been corrected;
 
 **04/08/2018 VERSION: 0.0.1**
 - Renamed the packaged from `sfepy` to `sfeprapy` (Structural Fire Engineering Probabilistic Risk Assessment Python);
