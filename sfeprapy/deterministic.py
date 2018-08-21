@@ -12,14 +12,9 @@ import copy
 import os
 import json
 import numpy as np
-try:
-    from sfeprapy.func import func_core
-    from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
-    from sfeprapy.dat.steel_carbon import Thermal
-except ImportError:
-    from .func import func_core
-    from .func.temperature_fires import standard_fire_iso834 as _fire_standard
-    from .dat.steel_carbon import Thermal
+from sfeprapy import time_equivalence_core as func_core
+from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
+from sfeprapy.dat.steel_carbon import Thermal
 
 
 def main(dir_wd_list=list()):
@@ -84,9 +79,9 @@ def main(dir_wd_list=list()):
                 kwargs["beam_c"] = beam_c
                 kwargs["is_return_dict"] = True
 
-            c = func_core.calculation_time_equivalence(**kwargs)
+            c = func_core.calc_time_equivalence(**kwargs)
 
-            calcs.append(func_core.calculation_time_equivalence(**kwargs))
+            calcs.append(func_core.calc_time_equivalence(**kwargs))
 
             with open(f + ".out.json", 'w') as f_:
                 json.dump(c, f_, indent=True)

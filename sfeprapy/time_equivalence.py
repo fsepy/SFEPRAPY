@@ -8,13 +8,13 @@ from pickle import dump as pdump
 from scipy.interpolate import interp1d
 import seaborn as sns
 import matplotlib.pyplot as plt
-sns.set_style("ticks", {'axes.grid': True,})
 
 from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
 from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
 from sfeprapy.func.tfm_alt import travelling_fire as _fire_travelling
-from sfeprapy.time_equivalence_core import calc_time_equiv_worker, mc_inputs_generator
+from sfeprapy.time_equivalence_core import calc_time_equiv_worker, mc_inputs_generator2
 
+sns.set_style("ticks", {'axes.grid': True, })
 # try:
 #     from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
 #     from sfeprapy.func.temperature_fires import parametric_eurocode1 as _fire_param
@@ -38,17 +38,26 @@ __strformat_1_1_1 = "{:25}{:3}{}"
 # Global variables
 # -------
 
+__app_pref = {
+    'problem id': None,
+    'problem folder directory': None,
+    'result p name': 'res.p',
+    'result csv name': 'res.csv',
+    'result png name': 'teq_all.png',
+    'result fire csv name': 'fires.csv'
+}
+
 __id = ""
 __dir_work = ""
 __fn_output = "res.p"
 __fn_output_numerical = "res.csv"
-__fn_plot_te = "plot_teq.png"
-__fn_plot_te_all = "plot_teq_all.png"
+__fn_plot_te = "teq.png"
+__fn_plot_te_all = "teq_all.png"
 
-__fn_plot_temp = "plot_temp.png"
+# __fn_plot_temp = "plot_temp.png"
 
-__fn_selected_plot = "selected.png"
-__fn_fires_numerical = "selected.csv"
+__fn_selected_plot = "fires.png"
+__fn_fires_numerical = "fires.csv"
 
 
 def init_global_variables(_id, dir_work):
@@ -90,11 +99,11 @@ def step1_inputs_maker(path_input_file):
     dir_work = os.path.dirname(path_input_file)
     __id = file_name.split(".")[0]
 
-    fire = _fire_standard(np.arange(0, 3*60*60, 1), 273.15+20)
+    fire = _fire_standard(np.arange(0, 3 * 60 * 60, 1), 273.15 + 20)
     inputs_extra = {"iso834_time": fire[0],
-                    "iso834_temperature": fire[1],}
+                    "iso834_temperature": fire[1], }
 
-    df_input, dict_pref = mc_inputs_generator(dict_extra_variables_to_add=inputs_extra, dir_file=path_input_file)
+    df_input, dict_pref = mc_inputs_generator2(dict_extra_variables_to_add=inputs_extra, dir_file=path_input_file)
 
     return df_input, dict_pref
 
@@ -141,11 +150,12 @@ def step2_calc(df_input, dict_pref, progress_print_interval=5):
     while progress_print_interval:
         if jobs.ready():
             time_simulation_consumed = time.perf_counter() - time_simulation_start
-            print("{}{} {:.1f}s".format('#'*round(n_steps), '-'*round(0), time_simulation_consumed))
+            print("{}{} {:.1f}s".format('█' * round(n_steps), '-' * round(0), time_simulation_consumed))
             break
         else:
             p_ = q.qsize() / count_total_simulations * n_steps
-            print("{}{} {:03.1f}%".format('#'*int(round(p_)), '-'*int(n_steps-round(p_)), p_/n_steps*100), end='\r')
+            print("{}{} {:03.1f}%".format('█' * int(round(p_)), '-' * int(n_steps - round(p_)), p_ / n_steps * 100),
+                  end='\r')
             time.sleep(1)
     p.close()
     p.join()
@@ -153,22 +163,73 @@ def step2_calc(df_input, dict_pref, progress_print_interval=5):
 
     # format outputs
 
-    results = np.array(results, dtype=float)
-    df_output = pd.DataFrame({"TIME EQUIVALENCE [min]": results[:, 0]/60.,
-                               "SEEK STATUS [bool]": results[:, 1],
-                               "WINDOW OPEN FRACTION [%]": results[:, 2],
-                               "FIRE LOAD DENSITY [MJ/m2]": results[:, 3],
-                               "FIRE SPREAD SPEED [m/s]": results[:, 4],
-                               "BEAM POSITION [m]": results[:, 5],
-                               "MAX. NEAR FIELD TEMPERATURE [C]": results[:, 6],
-                               "FIRE TYPE [0:P., 1:T.]": results[:, 7],
-                               "PEAK STEEL TEMPERATURE TO GOAL SEEK [C]": results[:, 8]-273.15,
-                               "PROTECTION THICKNESS [m]": results[:, 9],
-                               "SEEK ITERATIONS [-]": results[:, 10],
-                               "PEAK STEEL TEMPERATURE TO FIXED PROTECTION [C]": np.sort(results[:, 11])-273.15,
-                               "INDEX": results[:, 12]})
-    df_output = df_output[["TIME EQUIVALENCE [min]", "PEAK STEEL TEMPERATURE TO GOAL SEEK [C]", "PROTECTION THICKNESS [m]", "SEEK STATUS [bool]", "SEEK ITERATIONS [-]", "WINDOW OPEN FRACTION [%]", "FIRE LOAD DENSITY [MJ/m2]", "FIRE SPREAD SPEED [m/s]", "BEAM POSITION [m]", "MAX. NEAR FIELD TEMPERATURE [C]", "FIRE TYPE [0:P., 1:T.]", "PEAK STEEL TEMPERATURE TO FIXED PROTECTION [C]", "INDEX"]]
-    df_output.set_index("INDEX", inplace=True)
+    results = np.array(results)
+    # df_output = pd.DataFrame({"TIME EQUIVALENCE [s]": results[:, 0] / 60.,
+    #                           "SEEK STATUS [0:Fail, 1:Success]": results[:, 1],
+    #                           "WINDOW OPEN FRACTION [%]": results[:, 2],
+    #                           "FIRE LOAD DENSITY [MJ/m2]": results[:, 3],
+    #                           "FIRE SPREAD SPEED [m/s]": results[:, 4],
+    #                           "BEAM POSITION [m]": results[:, 5],
+    #                           "MAX. NEAR FIELD TEMPERATURE [C]": results[:, 6],
+    #                           "FIRE TYPE [0:P, 1:T]": results[:, 7],
+    #                           "PEAK STEEL TEMPERATURE TO GOAL SEEK [C]": results[:, 8] - 273.15,
+    #                           "PROTECTION THICKNESS [m]": results[:, 9],
+    #                           "SEEK ITERATIONS [-]": results[:, 10],
+    #                           "PEAK STEEL TEMPERATURE TO FIXED PROTECTION [C]": results[:, 11] - 273.15,
+    #                           "INDEX": results[:, 12]})
+
+    df_output = pd.DataFrame({'TIME STEP [s]': results[:, 0],
+                              'TIME START [s]': results[:, 1],
+                              'TIME LIMITING []': results[:, 2],
+                              'WINDOW HEIGHT [m]': results[:, 3],
+                              'WINDOW WIDTH [m]': results[:, 4],
+                              'WINDOW OPEN FRACTION []': results[:, 5],
+                              'ROOM BREADTH [m]': results[:, 6],
+                              'ROOM DEPTH [m]': results[:, 7],
+                              'ROOM HEIGHT [m]': results[:, 8],
+                              'ROOM WALL THERMAL INERTIA [J/m2s1/2K]': results[:, 9],
+                              'FIRE LOAD DENSITY [MJ/m2]': results[:, 10],
+                              'FIRE HRR DENSITY [MW/m2]': results[:, 11],
+                              'FIRE SPREAD SPEED [m/s]': results[:, 12],
+                              'FIRE DURATION [s]': results[:, 13],
+                              'BEAM POSITION [m]': results[:, 14],
+                              'BEAM RHO [kg/m3]': results[:, 15],
+                              'BEAM C [-]': results[:, 16],
+                              'BEAM CROSS-SECTION AREA [m2]': results[:, 17],
+                              'BEAM FAILURE TEMPERATURE [C]': results[:, 18],
+                              'PROTECTION K [W/m/K]': results[:, 19],
+                              'PROTECTION RHO [kg/m3]': results[:, 20],
+                              'PROTECTION C OBJECT []': results[:, 21],
+                              'PROTECTION THICKNESS [m]': results[:, 22],
+                              'PROTECTION PERIMETER [m]': results[:, 23],
+                              'ISO834 TIME ARRAY [s]': results[:, 24],
+                              'ISO834 TEMPERATURE ARRAY [K]': results[:, 25],
+                              'MAX. NEAR FIELD TEMPERATURE [C]': results[:, 26],
+                              'SEEK ITERATION LIMIT []': results[:, 27],
+                              'SEEK PROTECTION THICKNESS UPPER BOUND [m]': results[:, 28],
+                              'SEEK PROTECTION THICKNESS LOWER BOUND [m]': results[:, 29],
+                              'SEEK BEAM FAILURE TEMPERATURE TOLERANCE [K]': results[:, 30],
+                              'INDEX': results[:, 31],
+                              'TIME EQUIVALENCE [s]': results[:, 32],
+                              'SEEK STATUS [0:Fail, 1:Success]': results[:, 33],
+                              'FIRE TYPE [0:P, 1:T]': results[:, 34],
+                              'SOUGHT BEAM TEMPERATURE [K]': results[:, 35],
+                              'SOUGHT BEAM PROTECTION THICKNESS [m]': results[:, 36],
+                              'SOUGHT ITERATURES []': results[:, 37],
+                              'BEAM TEMPERATURE TO FIXED PROTECTION THICKNESS [K]': results[:, 38],
+                              'FIRE TIME ARRAY [s]': results[:, 39],
+                              'FIRE TEMPERATURE ARRAY [K]': results[:, 40],
+                              })
+
+    # df_output = df_output[
+    #     ["TIME EQUIVALENCE [s]", "PEAK STEEL TEMPERATURE TO GOAL SEEK [C]", "PROTECTION THICKNESS [m]",
+    #      "SEEK STATUS [0:Fail, 1:Success]", "SEEK ITERATIONS [-]", "WINDOW OPEN FRACTION [%]", "FIRE LOAD DENSITY [MJ/m2]",
+    #      "FIRE SPREAD SPEED [m/s]", "BEAM POSITION [m]", "MAX. NEAR FIELD TEMPERATURE [C]", "FIRE TYPE [0:P, 1:T]",
+    #      "PEAK STEEL TEMPERATURE TO FIXED PROTECTION [C]", "INDEX"]]
+
+    df_output.set_index("INDEX", inplace=True)  # assign 'INDEX' column as DataFrame index
+
+    df_output.sort_values('TIME EQUIVALENCE [s]', inplace=True)  # sort base on time equivalence
 
     path_results_file = os.path.join(__dir_work, "{} - {}".format(__id, __fn_output))
     pdump(df_output, open(path_results_file, "wb"))
@@ -181,18 +242,18 @@ def plot_dist(id_, df_input, headers):
 
     # headers = ['window_open_fraction', 'fire_load_density', 'fire_spread_speed', 'beam_position', 'temperature_max_near_field']
     # headers = ['WINDOW OPEN FRACTION [%]', 'FIRE LOAD DENSITY [MJ/m2]', 'FIRE SPREAD SPEED [m/s]', 'BEAM POSITION [m]', 'MAX. NEAR FIELD TEMPERATURE [C]']
-    names = {'WINDOW OPEN FRACTION [%]': 'Ao',
+    names = {'WINDOW OPEN FRACTION []': 'Ao',
              'FIRE LOAD DENSITY [MJ/m2]': 'qfd',
              'FIRE SPREAD SPEED [m/s]': 'spread',
              'BEAM POSITION [m]': 'beam_loc',
              'MAX. NEAR FIELD TEMPERATURE [C]': 'nft'}
 
-    # fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
 
-    fig, ax = plt.subplots(figsize=(2.5, 2))  # for smaller figures
+    # fig, ax = plt.subplots(figsize=(2.5, 2))  # for smaller figures
 
     for k, v in names.items():
-        x = df_input[k].values
+        x = np.array(df_input[k].values, float)
 
         if k == 'MAX. NEAR FIELD TEMPERATURE [C]':
             x = x[x < 1200]
@@ -200,13 +261,13 @@ def plot_dist(id_, df_input, headers):
         sns.distplot(x, kde=False, rug=True, bins=50, ax=ax, norm_hist=True)
 
         # Normal plot parameters
-        # ax.set_ylabel('PDF')
-        # ax.set_xlabel('x')
+        ax.set_ylabel('PDF')
+        ax.set_xlabel('x')
 
         # Small simple plot parameters
-        ax.set_ylabel('')
-        ax.set_yticklabels([])
-        ax.set_xlabel('')
+        # ax.set_ylabel('')
+        # ax.set_yticklabels([])
+        # ax.set_xlabel('')
 
         plt.savefig(os.path.join(__dir_work, '{} - dist - {}.png'.format(id_, v)), ppi=300)
         plt.cla()
@@ -214,85 +275,85 @@ def plot_dist(id_, df_input, headers):
     plt.clf()
 
 
-def select_fires_teq(df_input, dict_pref, df_output):
-
+def select_fires_teq(df_output):
     # INPUT ARGUMENTS VALIDATION
     # ==========================
-
-    if dict_pref["select_fires_teq"] <= 0 or dict_pref["select_fires_teq_tol"] <= 0: return 0
-
-    percentile = dict_pref["select_fires_teq"]
-    tolerance = dict_pref["select_fires_teq_tol"]
-    df_output.sort_values(by=["TIME EQUIVALENCE [min]"], inplace=True)
-
-    # list_index_selected_fires = df_output.iloc[indices_selected].index.values
-    list_index_selected_fires = df_output.index.values
-
-    # iterate through all selected fires, store time and temperature
-
-    # plt = Scatter2D()
-    dict_fires = {}
-    list_fire_name = ["TEMPERATURE {} (INDEX {}) [C]".format(str(i), str(int(v))) for i, v in enumerate(list_index_selected_fires)]
+    #
+    # if dict_pref["select_fires_teq"] <= 0 or dict_pref["select_fires_teq_tol"] <= 0: return 0
+    #
+    # percentile = dict_pref["select_fires_teq"]
+    # tolerance = dict_pref["select_fires_teq_tol"]
+    # df_output.sort_values(by=["TIME EQUIVALENCE [s]"], inplace=True)
+    #
+    # # list_index_selected_fires = df_output.iloc[indices_selected].index.values
+    # list_index_selected_fires = df_output.index.values
+    #
+    # # iterate through all selected fires, store time and temperature
+    #
+    # # plt = Scatter2D()
+    str_ = "TEMPERATURE {} (INDEX {}) [C]"
+    dict_fires = dict()
 
     # for i,v in enumerate(list_index_selected_fires) :
     for i, v in df_output.iterrows():
         # get input arguments
-        args = df_input.loc[i].to_dict()
-        # args = v.to_dict()
+        # args = df_input.loc[i].to_dict()
+        args = v.to_dict()
 
         # get fire type
-        # fire_type = int(df_output.loc[i]["FIRE TYPE [0:P., 1:T.]"])
-        fire_type = int(v["FIRE TYPE [0:P., 1:T.]"])
+        # fire_type = int(df_output.loc[i]["FIRE TYPE [0:P, 1:T]"])
+        fire_type = int(v["FIRE TYPE [0:P, 1:T]"])
 
         if fire_type == 0:  # parametric fire
-            w, l, h = args["room_breadth"], args["room_depth"], args["room_height"]
+            w, l, h = args["ROOM BREADTH [m]"], args["ROOM DEPTH [m]"], args["ROOM HEIGHT [m]"]
             inputs_parametric_fire = {
-                "A_t": 2*(w*l+w*h+h*l),
-                "A_f": w*l,
-                "A_v": args["window_height"] * args["window_width"] * args["window_open_fraction"],
-                "h_eq": args["window_height"],
-                "q_fd": args["fire_load_density"] * 1e6,
-                "lambda_": args["room_wall_thermal_inertia"] ** 2,  # thermal inertia is used instead of k rho c.
+                "A_t": 2 * (w * l + w * h + h * l),
+                "A_f": w * l,
+                "A_v": args["WINDOW HEIGHT [m]"] * args["WINDOW WIDTH [m]"] * args["WINDOW OPEN FRACTION []"],
+                "h_eq": args["WINDOW HEIGHT [m]"],
+                "q_fd": args["FIRE LOAD DENSITY [MJ/m2]"] * 1e6,
+                "lambda_": args["ROOM WALL THERMAL INERTIA [J/m2s1/2K]"] ** 2,  # thermal inertia is used instead of k rho c.
                 "rho": 1,  # see comment for lambda_
                 "c": 1,  # see comment for lambda_
-                "t_lim": args["time_limiting"],
-                "time_end": args["fire_duration"],
-                "time_step": args["time_step"],
-                "time_start": args["time_start"],
+                "t_lim": args["TIME LIMITING []"],
+                "time_end": args["FIRE DURATION [s]"],
+                "time_step": args["TIME STEP [s]"],
+                "time_start": args["TIME START [s]"],
                 # "time_padding": (0, 0),
                 "temperature_initial": 20 + 273.15,
             }
             tsec, temps = _fire_param(**inputs_parametric_fire)
         elif fire_type == 1:  # travelling fire
             inputs_travelling_fire = {
-                "fire_load_density_MJm2": args["fire_load_density"],
-                "heat_release_rate_density_MWm2": args["fire_hrr_density"],
-                "length_compartment_m": args["room_depth"],
-                "width_compartment_m": args["room_breadth"],
-                "fire_spread_rate_ms": args["fire_spread_speed"],
-                "height_fuel_to_element_m": args["room_height"],
-                "length_element_to_fire_origin_m": args["beam_position"],
-                "time_start_s": args["time_start"],
-                "time_end_s": args["fire_duration"],
-                "time_interval_s": args["time_step"],
-                "nft_max_C": args["nft_ubound"],
-                "win_width_m": args["window_width"],
-                "win_height_m": args["window_height"],
-                "open_fract": args["window_open_fraction"]
+                "fire_load_density_MJm2": args["FIRE LOAD DENSITY [MJ/m2]"],
+                "heat_release_rate_density_MWm2": args["FIRE HRR DENSITY [MW/m2]"],
+                "length_compartment_m": args["ROOM DEPTH [m]"],
+                "width_compartment_m": args["ROOM BREADTH [m]"],
+                "fire_spread_rate_ms": args["FIRE SPREAD SPEED [m/s]"],
+                "height_fuel_to_element_m": args["ROOM HEIGHT [m]"],
+                "length_element_to_fire_origin_m": args["BEAM POSITION [m]"],
+                "time_start_s": args["TIME START [s]"],
+                "time_end_s": args["FIRE DURATION [s]"],
+                "time_interval_s": args["TIME STEP [s]"],
+                "nft_max_C": args["MAX. NEAR FIELD TEMPERATURE [C]"],
+                "win_width_m": args["WINDOW WIDTH [m]"],
+                "win_height_m": args["WINDOW HEIGHT [m]"],
+                "open_fract": args["WINDOW OPEN FRACTION []"]
             }
             tsec, temps, hrr, r = _fire_travelling(**inputs_travelling_fire)
             temps += 273.15
         else:
             print("FIRE TYPE UNKOWN.")
         # print(i)
-        dict_fires[list_fire_name[int(i)]] = temps - 273.15
+        # list_fire_name.append('FIRE {}'.format(str(i)))
+        dict_fires['FIRE {}'.format(str(i))] = temps - 273.15
         # plt.plot2(tsec/60., temps-273.15, alpha=.6)
 
-    dict_fires["TIME [min]"] = np.arange(args["time_start"], args["fire_duration"], args["time_step"]) / 60.
+    dict_fires["TIME [min]"] = np.arange(args["TIME START [s]"], args["FIRE DURATION [s]"], args["TIME STEP [s]"]) / 60.
 
     df_fires = pd.DataFrame(dict_fires)
-    list_names = ["TIME [min]"] + list_fire_name
-    df_fires = df_fires[list_names]
+    # list_names = ["TIME [min]"] + list_fire_name
+    # df_fires = df_fires[list_names]
 
     # Save graphical plot to a .png file
     # ----------------------------------
@@ -303,8 +364,99 @@ def select_fires_teq(df_input, dict_pref, df_output):
     df_fires.to_csv(os.path.join(__dir_work, file_name))
 
 
-def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
+# def select_fires_teq_2(df_input, dict_pref, df_output, sim_indices=(35)):
+#     # INPUT ARGUMENTS VALIDATION
+#     # ==========================
+#
+#     if dict_pref["select_fires_teq"] <= 0 or dict_pref["select_fires_teq_tol"] <= 0: return 0
+#
+#     percentile = dict_pref["select_fires_teq"]
+#     tolerance = dict_pref["select_fires_teq_tol"]
+#     df_output.sort_values(by=["TIME EQUIVALENCE [s]"], inplace=True)
+#
+#     # list_index_selected_fires = df_output.iloc[indices_selected].index.values
+#     list_index_selected_fires = df_output.index.values
+#
+#     # iterate through all selected fires, store time and temperature
+#
+#     # plt = Scatter2D()
+#     dict_fires = {}
+#     list_fire_name = ["TEMPERATURE {} (INDEX {}) [C]".format(str(i), str(int(v))) for i, v in
+#                       enumerate(list_index_selected_fires)]
+#
+#     # for i,v in enumerate(list_index_selected_fires) :
+#     for i in sim_indices:
+#
+#         v = df_output.iloc(i)
+#
+#         # get input arguments
+#         args = df_input.loc[i].to_dict()
+#         # args = v.to_dict()
+#
+#         # get fire type
+#         # fire_type = int(df_output.loc[i]["FIRE TYPE [0:P, 1:T]"])
+#         fire_type = int(v["FIRE TYPE [0:P, 1:T]"])
+#
+#         if fire_type == 0:  # parametric fire
+#             w, l, h = args["room_breadth"], args["room_depth"], args["room_height"]
+#             inputs_parametric_fire = {
+#                 "A_t": 2 * (w * l + w * h + h * l),
+#                 "A_f": w * l,
+#                 "A_v": args["window_height"] * args["window_width"] * args["window_open_fraction"],
+#                 "h_eq": args["window_height"],
+#                 "q_fd": args["fire_load_density"] * 1e6,
+#                 "lambda_": args["room_wall_thermal_inertia"] ** 2,  # thermal inertia is used instead of k rho c.
+#                 "rho": 1,  # see comment for lambda_
+#                 "c": 1,  # see comment for lambda_
+#                 "t_lim": args["time_limiting"],
+#                 "time_end": args["fire_duration"],
+#                 "time_step": args["time_step"],
+#                 "time_start": args["time_start"],
+#                 # "time_padding": (0, 0),
+#                 "temperature_initial": 20 + 273.15,
+#             }
+#             tsec, temps = _fire_param(**inputs_parametric_fire)
+#         elif fire_type == 1:  # travelling fire
+#             inputs_travelling_fire = {
+#                 "fire_load_density_MJm2": args["fire_load_density"],
+#                 "heat_release_rate_density_MWm2": args["fire_hrr_density"],
+#                 "length_compartment_m": args["room_depth"],
+#                 "width_compartment_m": args["room_breadth"],
+#                 "fire_spread_rate_ms": args["fire_spread_speed"],
+#                 "height_fuel_to_element_m": args["room_height"],
+#                 "length_element_to_fire_origin_m": args["beam_position"],
+#                 "time_start_s": args["time_start"],
+#                 "time_end_s": args["fire_duration"],
+#                 "time_interval_s": args["time_step"],
+#                 "nft_max_C": args["nft_ubound"],
+#                 "win_width_m": args["window_width"],
+#                 "win_height_m": args["window_height"],
+#                 "open_fract": args["window_open_fraction"]
+#             }
+#             tsec, temps, hrr, r = _fire_travelling(**inputs_travelling_fire)
+#             temps += 273.15
+#         else:
+#             print("FIRE TYPE UNKOWN.")
+#         # print(i)
+#         dict_fires[list_fire_name[int(i)]] = temps - 273.15
+#         # plt.plot2(tsec/60., temps-273.15, alpha=.6)
+#
+#     dict_fires["TIME [min]"] = np.arange(args["time_start"], args["fire_duration"], args["time_step"]) / 60.
+#
+#     df_fires = pd.DataFrame(dict_fires)
+#     list_names = ["TIME [min]"] + list_fire_name
+#     df_fires = df_fires[list_names]
+#
+#     # Save graphical plot to a .png file
+#     # ----------------------------------
+#
+#     # Save numerical data to a .csv file
+#     # ----------------------------------
+#     file_name = "{} - {}".format(__id, __fn_fires_numerical)
+#     df_fires.to_csv(os.path.join(__dir_work, file_name))
 
+
+def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
     # OBTAIN OUTPUT FILE PATHS
     # ========================
 
@@ -312,7 +464,6 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
     # ====================================
 
     for i, output_ in enumerate(list_output):
-
         # Obtain variable of individual simulation case
         # ---------------------------------------------
 
@@ -337,13 +488,16 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
         init_global_variables(id_, dir_work_)
 
         # Save selected fires
-        select_fires_teq(input_, pref_, output_)
+        select_fires_teq(output_)
 
         # Save numerical values (inputs and outputs, i.e. everything)
         # -----------------------------------------------------------
 
         fn_ = os.path.join(dir_work_, " - ".join([id_, __fn_output_numerical]))
-        pd.concat([input_, output_], axis=1).to_csv(fn_)
+        # df_input_output = pd.concat([input_, output_], axis=1, sort=False)
+        # df_input_output.to_csv(fn_)
+
+        output_.to_csv(fn_)
 
         # Plot distribution
         # -----------------
@@ -353,15 +507,18 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
         # ----------------------------------------------------
 
         # obtain x and y values for plot
-        x = np.sort(output_["TIME EQUIVALENCE [min]"].values)
+        x = np.sort(output_["TIME EQUIVALENCE [s]"].values) / 60.
         y = np.arange(1, len(x) + 1) / len(x)
-
 
     # PLOT TIME EQUIVALENCE FOR ALL OUTPUT
     # ====================================
+
     line_vertical, line_horizontal = 0, 0
     teq_fig, teq_ax = plt.subplots(figsize=(3.94, 2.76))
+    teq_ax.set_xlim([0, 120])
     for i, output_ in enumerate(list_output):
+
+        # output_ = output_[output_['SEEK STATUS [0:Fail, 1:Success]'] == 1]
 
         # Obtain variable of individual simulation case
         # ---------------------------------------------
@@ -376,7 +533,7 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
 
         # obtain x and y values for plot
 
-        x = np.sort(output_["TIME EQUIVALENCE [min]"].values)
+        x = np.sort(output_["TIME EQUIVALENCE [s]"].values) / 60.  # to minutes
         y = np.arange(1, len(x) + 1) / len(x)
 
         # plot the x, y
@@ -387,13 +544,13 @@ def step3_calc_post(list_dir_file, list_input, list_pref, list_output):
         teq_ax.set_xticks(ticks=np.arange(0, 180.1, 30))
         # plt.plot2(x, y, id_)
         # plt.format(**plt_format_)
-        
+
         # plot horizontal and vertical lines (i.e. fractile and corresponding time euiqvalence period)
 
-        if 0 < pref_["building_height"] < 1:
-            line_horizontal = pref_["building_height"]
-        elif pref_["building_height"] > 1:
-            line_horizontal = 1 - 64.8 / pref_["building_height"] ** 2
+        if 0 < pref_["reliability_target"] < 1:
+            line_horizontal = pref_["reliability_target"]
+        elif pref_["reliability_target"] > 1:
+            line_horizontal = 1 - 64.8 / pref_["reliability_target"] ** 2
         else:
             line_horizontal = 0
 
@@ -426,7 +583,6 @@ __run_count = 0
 
 
 def run(project_full_paths=list()):
-
     _strfmt_1_1 = "{:25}{}"
     __fn_output = "res.p"
 
@@ -481,7 +637,7 @@ def run(project_full_paths=list()):
 
         step3_calc_post(list_files, list_input, list_pref, list_output)
 
-        input("Press Enter to finish")
+    input("Press Enter to finish")
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from distutils.core import setup
 
 setup(name='sfeprapy',
 
-      version='0.0.2',
+      version='0.0.3',
 
       description='Structural fire safety engineering - probabilistic reliability assessment',
 

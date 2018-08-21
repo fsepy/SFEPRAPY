@@ -37,6 +37,7 @@ def lognorm_parameters_true_to_inv(miu, sigma):
 
     return miu_ln, sigma_ln
 
+
 # if __name__ == '__main__':
 #     print(lognorm_parameters_true_to_inv(0.2, 0.2))
 
@@ -161,7 +162,7 @@ def gumbel_r_trunc_ppf(a, b, n_rv, loc, scale, cdf_y=None):
     # Work out cumulative probability function from 'sampled', output in forms of x y.
     # Interpolate x and y are processed to be capable to cope with two extreme values. y[0] (cumulative probability,
     # initial boundary) is manually set to 0.
-    x = np.linspace(a, b, int(n_rv)+1, endpoint=False)
+    x = np.linspace(a, b, int(n_rv) + 1, endpoint=False)
     x += (x[1] - x[0]) / 2
     x = x[0:-2]
     # x[-1] -= (x[1] - x[0]) / 2
@@ -286,7 +287,7 @@ def calc_time_equivalence(
         seek_lbound=0.0001,
         seek_tol_y=1.,
         index=-1,
-        is_return_dict=False,
+        return_mode=0,
         **kwargs
 ):
     """
@@ -307,7 +308,7 @@ def calc_time_equivalence(
     :param room_depth:
     :param room_height:
     :param room_wall_thermal_inertia:
-    :param fire_load_density:
+    :param fire_load_density: in [MJ/m2]
     :param fire_hrr_density:
     :param fire_spread_speed:
     :param fire_duration:
@@ -329,7 +330,7 @@ def calc_time_equivalence(
     :param seek_lbound:
     :param seek_tol_y:
     :param index:
-    :param is_return_dict:
+    :param return_mode: 0 - minimal for teq; 1 - all variables; and 3 - all variables packed in a dict
     :param kwargs:
     :return:
 
@@ -372,7 +373,7 @@ def calc_time_equivalence(
         fire_type = 0  # parametric fire
 
     else:  # Otherwise, it is a travelling fire
-        #   Get travelling fire curve
+        # Get travelling fire curve
         fire_time, fire_temp, heat_release, distance_to_element = _fire_travelling(
             fire_load_density,
             fire_hrr_density,
@@ -423,6 +424,10 @@ def calc_time_equivalence(
     sought_temperature_steel_ubound = -1
     sought_protection_thickness = -1
 
+    # import matplotlib.pyplot as plt
+    # fig, ax = plt.subplots()
+    # ax.plot(fire_time, fire_temp)
+
     if beam_temperature_goal > 0:  # check seeking temperature, opt out if less than 0
         # Seeking process
         while seek_count_iter < seek_ubound_iter and seek_status is False:
@@ -439,7 +444,11 @@ def calc_time_equivalence(
             else:  # steel is too cold, increase intrumescent paint thickness
                 seek_ubound = sought_protection_thickness
 
-        # BEAM FIRE RESISTANCE PERIOD IN ISO 834
+            # ax.plot(t_, T_)
+            # plt.draw()
+            # plt.show()
+
+        # CALCULATE BEAM FIRE RESISTANCE PERIOD IN ISO 834
         # ======================================
 
         # Make steel time-temperature curve when exposed to the given ambient temperature, i.e. ISO 834.
@@ -452,36 +461,229 @@ def calc_time_equivalence(
         time_ = np.concatenate((np.array([0]), time_, np.array([time_[-1]])))
         temperature_steel = np.concatenate((np.array([-1]), temperature_steel, np.array([1e12])))
 
+        # CALCULATE EQUIVALENCE EXPOSURE TIME IN ISO 834 TO 620 C
+
         # perform interpolation for teq based on acutal steel temperature and iso steel temperature
         interp_ = interp1d(temperature_steel, time_, kind="linear", bounds_error=False, fill_value=-1)
         time_fire_resistance = interp_(beam_temperature_goal)
 
-    if is_return_dict:
-        return {
-            "time_fire_resistance": time_fire_resistance,
-            "seek_status": seek_status,
-            "window_open_fraction": window_open_fraction,
-            "fire_load_density": fire_load_density,
-            "fire_spread_speed": fire_spread_speed,
-            "beam_position": beam_position,
-            "nft_ubound": nft_ubound,
-            "fire_type": fire_type,
-            "sought_temperature_steel_ubound": sought_temperature_steel_ubound,
-            "sought_protection_thickness": sought_protection_thickness,
-            "seek_count_iter": seek_count_iter,
-            "temperature_steel_ubound": temperature_steel_ubound,
-            "index": index
-        }
-    else:
-        return time_fire_resistance, seek_status, window_open_fraction, fire_load_density, fire_spread_speed, beam_position, nft_ubound, fire_type, sought_temperature_steel_ubound, sought_protection_thickness, seek_count_iter, temperature_steel_ubound, index
+    r_dict = {'room_wall_thermal_inertia': room_wall_thermal_inertia,
+              'fire_load_density': fire_load_density,
+              'fire_hrr_density': fire_hrr_density,
+              'fire_spread_speed': fire_spread_speed,
+              'fire_duration': fire_duration,
+              'beam_position': beam_position,
+              'beam_rho': beam_rho,
+              'beam_c': beam_c,
+              'beam_cross_section_area': beam_cross_section_area,
+              'beam_temperature_goal': beam_temperature_goal,
+              'protection_k': protection_k,
+              'protection_rho': protection_rho,
+              'protection_c': protection_c,
+              'protection_thickness': protection_thickness,
+              'protection_protected_perimeter': protection_protected_perimeter,
+              'iso834_time': iso834_time,
+              'iso834_temperature': iso834_temperature,
+              'nft_ubound': nft_ubound,
+              'seek_ubound_iter': seek_ubound_iter,
+              'seek_ubound': seek_ubound,
+              'seek_lbound': seek_lbound,
+              'seek_tol_y': seek_tol_y,
+              'index': index,
+              'time_fire_resistance': time_fire_resistance,
+              'seek_status': seek_status,
+              'fire_type': fire_type,
+              'sought_temperature_steel_ubound': sought_temperature_steel_ubound,
+              'sought_protection_thickness': sought_protection_thickness,
+              'seek_count_iter': seek_count_iter,
+              'temperature_steel_ubound': temperature_steel_ubound,
+              'fire_time': fire_time,
+              'fire_temp': fire_temp}
+
+    if return_mode == 0:
+        return time_step, time_start, time_limiting, window_height, window_width, window_open_fraction, room_breadth, room_depth, room_height, room_wall_thermal_inertia, fire_load_density, fire_hrr_density, fire_spread_speed, fire_duration, beam_position, beam_rho, 0, beam_cross_section_area, beam_temperature_goal, protection_k, protection_rho, protection_c, protection_thickness, protection_protected_perimeter, 0, 0, nft_ubound, seek_ubound_iter, seek_ubound, seek_lbound, seek_tol_y, index, time_fire_resistance, seek_status, fire_type, sought_temperature_steel_ubound, sought_protection_thickness, seek_count_iter, temperature_steel_ubound, 0, 0
+    elif return_mode == 1:
+        return time_step, time_start, time_limiting, window_height, window_width, window_open_fraction, room_breadth, room_depth, room_height, room_wall_thermal_inertia, fire_load_density, fire_hrr_density, fire_spread_speed, fire_duration, beam_position, beam_rho, beam_c, beam_cross_section_area, beam_temperature_goal, protection_k, protection_rho, protection_c, protection_thickness, protection_protected_perimeter, iso834_time, iso834_temperature, nft_ubound, seek_ubound_iter, seek_ubound, seek_lbound, seek_tol_y, index, time_fire_resistance, seek_status, fire_type, sought_temperature_steel_ubound, sought_protection_thickness, seek_count_iter, temperature_steel_ubound, fire_time, fire_temp
+    elif return_mode == 2:
+        return r_dict
+    # def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
 
 
-def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
+#     steel_prop = Thermal()
+#
+#     #   Handy interim functions
+#
+#     # linear_distribution = lambda min, max, prob: ((max - min) * prob) + min
+#     def linear_distribution(min, max, rv):
+#         return ((max - min) * rv) + min
+#
+#     # DEPRECIATED (4 Aug 2018)
+#     # def linear_distribution(min, max, prob):
+#     #     return ((max - min) * prob) + min
+#
+#     # ------------------------------------------------------------------------------------------------------------------
+#     #   Define the inputs from file
+#     # ------------------------------------------------------------------------------------------------------------------
+#
+#     # dict_setting_vars = dict()
+#
+#     # Read input variables from external text file
+#     with open(str(dir_file), "r") as file_inputs:
+#         string_inputs = file_inputs.read()
+#     dict_vars_0 = kwargs_from_text(string_inputs)
+#     if dict_extra_variables_to_add:
+#         dict_vars_0.update(dict_extra_variables_to_add)
+#     dict_vars_0["beam_c"] = steel_prop.c()
+#
+#     # dict_vars_0_ is used for making the returned DataFrame, hence it passes necessary variables only
+#     dict_vars_0_ = copy.copy(dict_vars_0)
+#     simulations = dict_vars_0["simulations"]
+#
+#     # Variable group definition
+#     list_setting_vars = ["simulations", "steel_temp_failure", "n_proc", "building_height", "select_fires_teq",
+#                          "select_fires_teq_tol"]
+#     list_interim_vars = ["qfd_std", "qfd_mean", "qfd_ubound", "qfd_lbound", "opening_fraction_lbound",
+#                          "opening_fraction_ubound", 'opening_fraction_std', 'opening_fraction_mean',
+#                          "beam_loc_ratio_lbound",
+#                          "beam_loc_ratio_ubound", "com_eff_lbound", "com_eff_ubound", "spread_lbound", "spread_ubound",
+#                          "nft_average"]
+#
+#     # Extract separated
+#     df_pref = {k: None for k in list_setting_vars}
+#     dict_dist_vars = {key: None for key in list_interim_vars}
+#     for key in df_pref:
+#         if key in dict_vars_0:
+#             df_pref[key] = dict_vars_0[key]
+#             del dict_vars_0[key]
+#     for key in dict_dist_vars:
+#         if key in dict_vars_0:
+#             dict_dist_vars[key] = dict_vars_0[key]
+#             del dict_vars_0[key]
+#
+#     for key in list(dict_vars_0_.keys()):
+#         if key in list_setting_vars:
+#             del dict_vars_0_[key]
+#         elif key in list_interim_vars:
+#             del dict_vars_0_[key]
+#
+#     for key in dict_vars_0_: dict_vars_0_[key] = [dict_vars_0_[key]] * simulations
+#
+#     # ------------------------------------------------------------------------------------------------------------------
+#     # Distribution variables
+#     # ------------------------------------------------------------------------------------------------------------------
+#
+#     # lhs_mat = lhs(n=6, samples=simulations, criterion=dict_setting_vars["lhs_criterion"])
+#     lhs_mat = latin_hypercube_sampling(num_samples=simulations, num_arguments=6)
+#
+#     # Near field standard deviation
+#     avg_nft = dict_dist_vars["nft_average"]  # TFM near field temperature - Norm distribution - mean [C]
+#     std_nft = (1.939 - (np.log(avg_nft) * 0.266)) * avg_nft
+#
+#     # Convert LHS probabilities to distribution invariants
+#     # todo: check why this is not used
+#     com_eff_lbound = dict_dist_vars["com_eff_lbound"]  # Min combustion efficiency [-]  - Linear dist
+#     com_eff_ubound = dict_dist_vars["com_eff_ubound"]  # Max combustion efficiency [-]  - Linear dist
+#     comb_lhs = linear_distribution(com_eff_lbound, com_eff_ubound, lhs_mat[:, 0])
+#     # comb_lhs = np.linspace(com_eff_lbound, com_eff_ubound, simulations+1)
+#     # comb_lhs += (comb_lhs[1] - comb_lhs[0])
+#     # comb_lhs = comb_lhs[0:-2]
+#     # np.random.shuffle(comb_lhs)
+#
+#     # Fuel load density
+#     # -----------------
+#     qfd_std = dict_dist_vars["qfd_std"]  # Fire load density - Gumbel distribution - standard dev [MJ/sq.m]
+#     qfd_mean = dict_dist_vars["qfd_mean"]  # Fire load density - Gumbel distribution - mean [MJ/sq.m]
+#     qfd_ubound = dict_dist_vars["qfd_ubound"]  # Fire load density - Gumbel distribution - upper limit [MJ/sq.m]
+#     qfd_lbound = dict_dist_vars["qfd_lbound"]  # Fire load density - Gumbel distribution - lower limit [MJ/sq.m]
+#     qfd_loc, qfd_scale = gumbel_parameter_converter(qfd_mean, qfd_std)
+#     qfd_lhs = gumbel_r_trunc_ppf(qfd_lbound, qfd_ubound, simulations, qfd_loc, qfd_scale) * comb_lhs
+#     np.random.shuffle(qfd_lhs)
+#     # DEPRECIATED 14 Aug 2018 - Following codes calculate gumbel parameters for qfd
+#     # qfd_scale = qfd_std * (6 ** 0.5) / np.pi
+#     # qfd_loc = qfd_mean - (0.57722 * qfd_scale)
+#     # qfd_dist = gumbel_r(loc=qfd_loc, scale=qfd_scale)
+#     # qfd_p_l, qfd_p_u = qfd_dist.cdf(qfd_lbound), qfd_dist.cdf(qfd_ubound)
+#     # qfd_lhs = gumbel_r(loc=qfd_loc, scale=qfd_scale).ppf(lhs_mat[:, 1]) * comb_lhs
+#
+#     # Opening fraction factor (glazing fall-out fraction)
+#     # ---------------------------------------------------
+#     opening_fraction_std = dict_dist_vars[
+#         'opening_fraction_std']  # Glazing fall-out fraction - log normal distribution - standard deviation
+#     opening_fraction_mean = dict_dist_vars[
+#         'opening_fraction_mean']  # Glazing fall-out fraction - log normal distribution - mean
+#     opening_fraction_lbound = dict_dist_vars['opening_fraction_lbound']  # Minimum glazing fall-out fraction
+#     opening_fraction_ubound = dict_dist_vars['opening_fraction_ubound']  # Maximum glazing fall-out fraction
+#     opening_fraction_mean, opening_fraction_std = lognorm_parameters_true_to_inv(opening_fraction_mean,
+#                                                                                  opening_fraction_std)
+#     glaz_lhs = 1 - lognorm_trunc_ppf(opening_fraction_lbound, opening_fraction_ubound, simulations,
+#                                      opening_fraction_std, 0, np.exp(opening_fraction_mean))
+#     np.random.shuffle(glaz_lhs)
+#     # DEPRECIATED 14 Aug 2018 - Following two lines calculates linear distributed opening fraction
+#     # glaz_lhs = linear_distribution(glaz_lbound, glaz_ubound, lhs_mat[:, 2])
+#     # glaz_lhs = 1-lognorm_trunc_ppf(0, 1, 100, 0.2, 0, np.exp(0.2), lhs_mat[:, 2])
+#
+#     # Beam location
+#     # -------------
+#     beam_lbound = dict_dist_vars[
+#         "beam_loc_ratio_lbound"]  # Min beam location relative to compartment length for TFM [-]  - Linear dist
+#     beam_ubound = dict_dist_vars[
+#         "beam_loc_ratio_ubound"]  # Max beam location relative to compartment length for TFM [-]  - Linear dist
+#     beam_lhs = linear_distribution(beam_lbound, beam_ubound, lhs_mat[:, 3]) * dict_vars_0["room_depth"]
+#     # beam_lhs = np.linspace(beam_lbound, beam_ubound, simulations+1)
+#     # beam_lhs += (beam_lhs[1] - beam_lhs[0])
+#     # beam_lhs = beam_lhs[0:-2] * dict_vars_0["room_depth"]
+#     # np.random.shuffle(beam_lhs)
+#
+#     # Fire spread speed (travelling fire)
+#     # -----------------------------------
+#     spread_lbound = dict_dist_vars["spread_lbound"]  # Min spread rate for TFM [m/s]  - Linear dist
+#     spread_ubound = dict_dist_vars["spread_ubound"]  # Max spread rate for TFM [m/s]  - Linear dist
+#     spread_lhs = linear_distribution(spread_lbound, spread_ubound, lhs_mat[:, 4])
+#     # spread_lhs = np.linspace(spread_lbound, spread_ubound, simulations+1)
+#     # spread_lhs += (spread_lhs[1] - spread_lhs[0])
+#     # spread_lhs = spread_lhs[0:-2]
+#     # np.random.shuffle(spread_lhs)
+#
+#     # Near field temperature (travelling fire)
+#     # ----------------------------------------
+#     nft_lhs = norm(loc=avg_nft, scale=std_nft).ppf(lhs_mat[:, 5])
+#     nft_lhs[nft_lhs > 1200] = 1200  # todo: reference?
+#
+#     # ------------------------------------------------------------------------------------------------------------------
+#     # Create input kwargs for mc calculation
+#     # ------------------------------------------------------------------------------------------------------------------
+#
+#     list_kwargs = []
+#     for i in range(0, simulations):
+#         x_ = dict_vars_0.copy()
+#         x_.update({"window_open_fraction": glaz_lhs[i],
+#                    "fire_load_density": qfd_lhs[i],
+#                    "fire_spread_speed": spread_lhs[i],
+#                    "beam_position": beam_lhs[i],
+#                    "nft_ubound": nft_lhs[i],
+#                    "index": i}, )
+#         list_kwargs.append(x_)
+#
+#     dict_vars_0_["window_open_fraction"] = glaz_lhs
+#     dict_vars_0_["fire_load_density"] = qfd_lhs
+#     dict_vars_0_["fire_spread_speed"] = spread_lhs
+#     dict_vars_0_["beam_position"] = beam_lhs
+#     dict_vars_0_["nft_ubound"] = nft_lhs
+#     dict_vars_0_["index"] = np.arange(0, simulations, 1, int)
+#
+#     df_input = df(dict_vars_0_)
+#     df_input.set_index("index", inplace=True)
+#
+#     return df_input, df_pref
+
+
+def mc_inputs_generator2(dict_extra_variables_to_add=None, dir_file=str):
     steel_prop = Thermal()
 
     #   Handy interim functions
 
-    linear_distribution = lambda min, max, prob: ((max - min) * prob) + min
+    # linear_distribution = lambda min, max, prob: ((max - min) * prob) + min
+    def linear_distribution(min, max, rv): return ((max - min) * rv) + min
 
     # DEPRECIATED (4 Aug 2018)
     # def linear_distribution(min, max, prob):
@@ -499,38 +701,78 @@ def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
     dict_vars_0 = kwargs_from_text(string_inputs)
     if dict_extra_variables_to_add:
         dict_vars_0.update(dict_extra_variables_to_add)
+
     dict_vars_0["beam_c"] = steel_prop.c()
 
     # dict_vars_0_ is used for making the returned DataFrame, hence it passes necessary variables only
     dict_vars_0_ = copy.copy(dict_vars_0)
-    simulations = dict_vars_0["simulations"]
 
-    # Variable group definition
-    list_setting_vars = ["simulations", "steel_temp_failure", "n_proc", "building_height", "select_fires_teq",
-                         "select_fires_teq_tol"]
-    list_interim_vars = ["qfd_std", "qfd_mean", "qfd_ubound", "qfd_lbound", "opening_fraction_lbound", "opening_fraction_ubound", 'opening_fraction_std', 'opening_fraction_mean',
-                         "beam_loc_ratio_lbound",
-                         "beam_loc_ratio_ubound", "com_eff_lbound", "com_eff_ubound", "spread_lbound", "spread_ubound", "nft_average"]
+    return mc_inputs_generator2_core(**dict_vars_0)
 
-    # Extract separated
-    df_pref = {k: None for k in list_setting_vars}
-    dict_dist_vars = {key: None for key in list_interim_vars}
-    for key in df_pref:
-        if key in dict_vars_0:
-            df_pref[key] = dict_vars_0[key]
-            del dict_vars_0[key]
-    for key in dict_dist_vars:
-        if key in dict_vars_0:
-            dict_dist_vars[key] = dict_vars_0[key]
-            del dict_vars_0[key]
 
-    for key in list(dict_vars_0_.keys()):
-        if key in list_setting_vars:
-            del dict_vars_0_[key]
-        elif key in list_interim_vars:
-            del dict_vars_0_[key]
+def mc_inputs_generator2_core(
+        # Setting parameters
+        simulations,
+        n_proc,
+        reliability_target,
+        # select_fires_teq,
+        # select_fires_teq_tol,
 
-    for key in dict_vars_0_: dict_vars_0_[key] = [dict_vars_0_[key]] * simulations
+        # Simulation parameters
+        room_breadth,
+        room_depth,
+        room_height,
+        window_width,
+        window_height,
+
+        time_start,
+        time_limiting,
+        time_step,
+        fire_duration,
+        fire_hrr_density,
+        room_wall_thermal_inertia,
+
+        beam_cross_section_area,
+        beam_rho,
+        beam_c,
+        beam_temperature_goal,
+        protection_protected_perimeter,
+        protection_thickness,
+        protection_k,
+        protection_rho,
+        protection_c,
+
+        qfd_std,
+        qfd_mean,
+        qfd_ubound,
+        qfd_lbound,
+        opening_fraction_lbound,
+        opening_fraction_ubound,
+        opening_fraction_std,
+        opening_fraction_mean,
+        beam_loc_ratio_lbound,
+        beam_loc_ratio_ubound,
+        com_eff_lbound,
+        com_eff_ubound,
+        spread_lbound,
+        spread_ubound,
+        nft_mean,
+
+        # Derived
+        iso834_time,
+        iso834_temperature,
+):
+    #   Handy interim functions
+
+    # linear_distribution = lambda min, max, prob: ((max - min) * prob) + min
+    def linear_distribution(min, max, rv):
+        return ((max - min) * rv) + min
+
+    # CHECKS
+    # ======
+
+    # Fire duration has to be as long as travelling fire to travel through the entire floor
+    fire_duration = np.max([fire_duration, room_depth / spread_lbound])
 
     # ------------------------------------------------------------------------------------------------------------------
     # Distribution variables
@@ -540,25 +782,14 @@ def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
     lhs_mat = latin_hypercube_sampling(num_samples=simulations, num_arguments=6)
 
     # Near field standard deviation
-    avg_nft = dict_dist_vars["nft_average"]  # TFM near field temperature - Norm distribution - mean [C]
-    std_nft = (1.939 - (np.log(avg_nft) * 0.266)) * avg_nft
+    # nft_mean = nft_mean  # TFM near field temperature - Norm distribution - mean [C]
+    std_nft = (1.939 - (np.log(nft_mean) * 0.266)) * nft_mean
 
     # Convert LHS probabilities to distribution invariants
-    # todo: check why this is not used
-    com_eff_lbound = dict_dist_vars["com_eff_lbound"]  # Min combustion efficiency [-]  - Linear dist
-    com_eff_ubound = dict_dist_vars["com_eff_ubound"]  # Max combustion efficiency [-]  - Linear dist
     comb_lhs = linear_distribution(com_eff_lbound, com_eff_ubound, lhs_mat[:, 0])
-    # comb_lhs = np.linspace(com_eff_lbound, com_eff_ubound, simulations+1)
-    # comb_lhs += (comb_lhs[1] - comb_lhs[0])
-    # comb_lhs = comb_lhs[0:-2]
-    # np.random.shuffle(comb_lhs)
 
     # Fuel load density
     # -----------------
-    qfd_std = dict_dist_vars["qfd_std"]  # Fire load density - Gumbel distribution - standard dev [MJ/sq.m]
-    qfd_mean = dict_dist_vars["qfd_mean"]  # Fire load density - Gumbel distribution - mean [MJ/sq.m]
-    qfd_ubound = dict_dist_vars["qfd_ubound"]  # Fire load density - Gumbel distribution - upper limit [MJ/sq.m]
-    qfd_lbound = dict_dist_vars["qfd_lbound"]  # Fire load density - Gumbel distribution - lower limit [MJ/sq.m]
     qfd_loc, qfd_scale = gumbel_parameter_converter(qfd_mean, qfd_std)
     qfd_lhs = gumbel_r_trunc_ppf(qfd_lbound, qfd_ubound, simulations, qfd_loc, qfd_scale) * comb_lhs
     np.random.shuffle(qfd_lhs)
@@ -571,67 +802,85 @@ def mc_inputs_generator(dict_extra_variables_to_add=None, dir_file=str):
 
     # Opening fraction factor (glazing fall-out fraction)
     # ---------------------------------------------------
-    opening_fraction_std = dict_dist_vars['opening_fraction_std']  # Glazing fall-out fraction - log normal distribution - standard deviation
-    opening_fraction_mean = dict_dist_vars['opening_fraction_mean']  # Glazing fall-out fraction - log normal distribution - mean
-    opening_fraction_lbound = dict_dist_vars['opening_fraction_lbound']  # Minimum glazing fall-out fraction
-    opening_fraction_ubound = dict_dist_vars['opening_fraction_ubound']  # Maximum glazing fall-out fraction
-    opening_fraction_mean, opening_fraction_std = lognorm_parameters_true_to_inv(opening_fraction_mean, opening_fraction_std)
-    glaz_lhs = 1 - lognorm_trunc_ppf(opening_fraction_lbound, opening_fraction_ubound, simulations, opening_fraction_std, 0, np.exp(opening_fraction_mean))
+    opening_fraction_mean, opening_fraction_std = lognorm_parameters_true_to_inv(opening_fraction_mean,
+                                                                                 opening_fraction_std)
+    glaz_lhs = 1 - lognorm_trunc_ppf(opening_fraction_lbound, opening_fraction_ubound, simulations,
+                                     opening_fraction_std, 0, np.exp(opening_fraction_mean))
     np.random.shuffle(glaz_lhs)
-    # DEPRECIATED 14 Aug 2018 - Following two lines calculates linear distributed opening fraction
-    # glaz_lhs = linear_distribution(glaz_lbound, glaz_ubound, lhs_mat[:, 2])
-    # glaz_lhs = 1-lognorm_trunc_ppf(0, 1, 100, 0.2, 0, np.exp(0.2), lhs_mat[:, 2])
 
     # Beam location
     # -------------
-    beam_lbound = dict_dist_vars["beam_loc_ratio_lbound"]  # Min beam location relative to compartment length for TFM [-]  - Linear dist
-    beam_ubound = dict_dist_vars["beam_loc_ratio_ubound"]  # Max beam location relative to compartment length for TFM [-]  - Linear dist
-    beam_lhs = linear_distribution(beam_lbound, beam_ubound, lhs_mat[:, 3]) * dict_vars_0["room_depth"]
-    # beam_lhs = np.linspace(beam_lbound, beam_ubound, simulations+1)
-    # beam_lhs += (beam_lhs[1] - beam_lhs[0])
-    # beam_lhs = beam_lhs[0:-2] * dict_vars_0["room_depth"]
-    # np.random.shuffle(beam_lhs)
+    beam_lhs = linear_distribution(beam_loc_ratio_lbound, beam_loc_ratio_ubound, lhs_mat[:, 3]) * room_depth
 
     # Fire spread speed (travelling fire)
     # -----------------------------------
-    spread_lbound = dict_dist_vars["spread_lbound"]  # Min spread rate for TFM [m/s]  - Linear dist
-    spread_ubound = dict_dist_vars["spread_ubound"]  # Max spread rate for TFM [m/s]  - Linear dist
     spread_lhs = linear_distribution(spread_lbound, spread_ubound, lhs_mat[:, 4])
-    # spread_lhs = np.linspace(spread_lbound, spread_ubound, simulations+1)
-    # spread_lhs += (spread_lhs[1] - spread_lhs[0])
-    # spread_lhs = spread_lhs[0:-2]
-    # np.random.shuffle(spread_lhs)
 
     # Near field temperature (travelling fire)
     # ----------------------------------------
-    nft_lhs = norm(loc=avg_nft, scale=std_nft).ppf(lhs_mat[:, 5])
+    nft_lhs = norm(loc=nft_mean, scale=std_nft).ppf(lhs_mat[:, 5])
     nft_lhs[nft_lhs > 1200] = 1200  # todo: reference?
 
     # ------------------------------------------------------------------------------------------------------------------
     # Create input kwargs for mc calculation
     # ------------------------------------------------------------------------------------------------------------------
 
-    list_kwargs = []
+    dict_input_kwargs_static = dict(
+        room_breadth=room_breadth,
+        room_depth=room_depth,
+        room_height=room_height,
+        window_width=window_width,
+        window_height=window_height,
+
+        time_start=time_start,
+        time_limiting=time_limiting,
+        time_step=time_step,
+        fire_duration=fire_duration,
+        fire_hrr_density=fire_hrr_density,
+        room_wall_thermal_inertia=room_wall_thermal_inertia,
+
+        beam_cross_section_area=beam_cross_section_area,
+        beam_rho=beam_rho,
+        beam_c=beam_c,
+        beam_temperature_goal=beam_temperature_goal,
+        protection_protected_perimeter=protection_protected_perimeter,
+        protection_thickness=protection_thickness,
+        protection_k=protection_k,
+        protection_rho=protection_rho,
+        protection_c=protection_c,
+
+        iso834_time=iso834_time,
+        iso834_temperature=iso834_temperature,
+    )
+
+    dict_pref_kwargs = dict(
+        simulations=simulations,
+        # steel_temp_failure=beam_temperature_goal,
+        n_proc=n_proc,
+        reliability_target=reliability_target,
+        # select_fires_teq=select_fires_teq,
+        # select_fires_teq_tol=select_fires_teq_tol,
+    )
+
+    list_mc_input_kwargs = []
     for i in range(0, simulations):
-        if qfd_lbound > qfd_lhs[i] > qfd_ubound:  # Fire load density is outside limits
-            continue
-        x_ = dict_vars_0.copy()
+        x_ = dict_input_kwargs_static.copy()
         x_.update({"window_open_fraction": glaz_lhs[i],
                    "fire_load_density": qfd_lhs[i],
                    "fire_spread_speed": spread_lhs[i],
                    "beam_position": beam_lhs[i],
                    "nft_ubound": nft_lhs[i],
                    "index": i}, )
-        list_kwargs.append(x_)
+        list_mc_input_kwargs.append(x_)
 
-    dict_vars_0_["window_open_fraction"] = glaz_lhs
-    dict_vars_0_["fire_load_density"] = qfd_lhs
-    dict_vars_0_["fire_spread_speed"] = spread_lhs
-    dict_vars_0_["beam_position"] = beam_lhs
-    dict_vars_0_["nft_ubound"] = nft_lhs
-    dict_vars_0_["index"] = np.arange(0, simulations, 1, int)
+    # list_mc_input_kwargs["window_open_fraction"] = glaz_lhs
+    # dict_vars_0_["fire_load_density"] = qfd_lhs
+    # dict_vars_0_["fire_spread_speed"] = spread_lhs
+    # dict_vars_0_["beam_position"] = beam_lhs
+    # dict_vars_0_["nft_ubound"] = nft_lhs
+    # dict_vars_0_["index"] = np.arange(0, simulations, 1, int)
 
-    df_input = df(dict_vars_0_)
+    df_input = df(list_mc_input_kwargs)
     df_input.set_index("index", inplace=True)
 
-    return df_input, df_pref
+    return df_input, dict_pref_kwargs

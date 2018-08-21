@@ -21,13 +21,13 @@ seaborn==0.9.0
 
 #### Installation using `pip install`
 
-`sfeprapy` is published on PyPI and therefore can be installed by using `pip install`. Please ensure you have `pip` packaged available. It is recommended to install Anaconda Python distribution as it packs few very useful libraries, including `pip`. Type the following command in a command-line terminal will install let you `sfeprapy`.
+`sfeprapy` is available on PyPI and therefore can be installed by using `pip install`. Please ensure you have `pip` packaged available. It is recommended to install Anaconda Python distribution as it packs few very useful libraries, including `pip`. Type the following command in a command-line terminal will install let you `sfeprapy`.
 ```python
 pip install sfeprapy
 ```
 
 #### Local installation
-For any reasons that you do not want to install `sfeprapy` as a Python library, download the entire project folder to your computer, change current working directory to the project folder then install `sfeprapy` by using pip:
+For any reasons you do not want to install `sfeprapy` as a Python library, download the entire project folder to your computer, change current working directory to the project folder then install `sfeprapy` by using pip:
 
 ```
 pip install .
@@ -45,7 +45,7 @@ app.run()
 
 A dialog box will pop out for you to select folders containing problem definition files. The dialog box will only let you select one folder at a time, but you can select more folders after you click **Select Folder** button. Click **Cancel** to finish selecting folders and the time equivalence analysis will proceed. The program will be paused when all problem definition files are complete. Example console output is shown below.
 
-```shell
+```
 Input file:              test1
 Total simulations:       500
 Number of threads:       4
