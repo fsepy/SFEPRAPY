@@ -6,7 +6,7 @@ PART 1-2. More detailed instruction can be found in F. Jean-Marc & R.P. Vila (20
 the code in this module compliant with. Section 5.4 is particularly followed.
 """
 import numpy as np
-from project.dat.steel_carbon import thermal
+from sfeprapy.dat.steel_carbon import thermal
 
 
 def _M_cr(C_1, C_2, I_z, k_z, k_w, I_w, I_t, L, E, G, z_g):

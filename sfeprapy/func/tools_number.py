@@ -17,5 +17,27 @@ def distribute_numbers_cartesian_product(n):
     return c
 
 
+def permuatation_list(a, b):
+
+    if isinstance(a[0], list):
+        a = [[i] for i in a]
+
+    if isinstance(b[0], list):
+        b = [[i] for i in b]
+
+    r = []
+    for i in a:
+        for j in b:
+            r.append(i+j)
+
+
 if __name__ == "__main__":
-    print(distribute_numbers_cartesian_product([9]*3))
+    # print(distribute_numbers_cartesian_product([9]*3))
+
+    a = [[1],[2],[3]]
+
+    b = [[11],[22],[33]]
+
+    r = permuatation_list(a, b)
+
+    print(r)

@@ -35,7 +35,7 @@ def protected_steel():
 
 def protected_steel2():
     """
-    This test is for protected steel in eurocode under parametric fire curve.
+    This run3 is for protected steel in eurocode under parametric fire curve.
     """
     import copy
     import matplotlib.pyplot as plt

@@ -107,7 +107,7 @@ def parametric_eurocode1(A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, time
         fire_type = "fuel controlled"
 
     T_g = np.minimum(T_heating_g, T_cooling_g)
-    T_g[T_g < 0] = 0
+    T_g[T_g < temperature_initial] = temperature_initial
 
     data_all = {"fire_type": fire_type}
 
@@ -125,6 +125,7 @@ def standard_fire_iso834(
         time,
         temperature_initial
 ):
+
     # INPUTS CHECK
     time = np.array(time, dtype=float)
     time[time < 0] = np.nan
@@ -302,6 +303,26 @@ def t_square(time, growth_factor, cap_hrr=0, cap_hrr_to_time=0, terminate_at_pea
 
 
 if __name__ == "__main__":
-    time = np.arange(0, )
+    time = np.arange(0, 2*60*60, 30)
+    temperature_cap = 450
 
-    t_square()
+    time, temperature = standard_fire_iso834(time=np.arange(0, 2*60*60+1), temperature_initial=20+273.15)
+
+    temperature -= 273.15
+    temperature[temperature > temperature_cap] = temperature_cap
+
+    import seaborn as sb
+    import matplotlib.pyplot as plt
+
+    sb.scatterplot(time, temperature)
+    plt.show()
+
+    time_temperature = list(zip(time, temperature))
+
+    print(time_temperature)
+
+    time_temperature = ['{:.0f},{:.1f}'.format(*i) for i in time_temperature]
+
+    with open('o.txt', 'w+') as f:
+        f.write('\n'.join(time_temperature))
+    # t_square()

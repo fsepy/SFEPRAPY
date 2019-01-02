@@ -12,7 +12,7 @@ import copy
 import os
 import json
 import numpy as np
-from sfeprapy import time_equivalence_core as func_core
+from sfeprapy import time_equivalence_mc as func_core
 from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
 from sfeprapy.dat.steel_carbon import Thermal
 
@@ -100,7 +100,9 @@ def main(dir_wd_list=list()):
     # WRITE RESULTS
     # =============
 
+    return 0
+
 
 if __name__ == '__main__':
-    # main([r"D:\~python_project\SfePra\project\test_input\misc_deterministric"])
-    main()
+    main([r"C:\Users\IanFu\Desktop\aaaaa"])
+    # main()
