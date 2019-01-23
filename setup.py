@@ -15,7 +15,7 @@ with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
 setuptools.setup(
     name='sfeprapy',
 
-    version='0.0.5',
+    version='0.0.6',
 
     description='Structural fire safety engineering - probabilistic reliability assessment',
 

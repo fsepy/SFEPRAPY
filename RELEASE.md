@@ -34,6 +34,10 @@
 
 ### VERSIONS
 
+**22/01/2018 VERSION: 0.0.6**
+- Fixed: Final time equivalence plot legend text is set to case name. Previously '_out' was included.
+- Improved: Final time equivalence plot will be produced without running any simulation, e.g. all `is_live` is set to 0.
+
 **01/01/2019 VERSION: 0.0.5**
 
 - New: More configuration parameters can be defined in 'config.json' file located in the same folder as the selected input file;

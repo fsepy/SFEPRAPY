@@ -157,7 +157,8 @@ def plot_figures(list_path_out_csv, plot_teq_xlim, reliability_target, path_work
         # Obtain some useful strings / directories / variables
         # ----------------------------------------------------
 
-        id_ = os.path.basename(path_out_csv).split('.')[0]
+        id_ = os.path.basename(path_out_csv).replace('_out.csv', '')
+        id_.replace('_out.csv', '')
 
         # Check 'deterministic'
         # ----------------------
@@ -276,12 +277,37 @@ def run():
     #
     # list_path_input_json = [os.path.realpath(i.name) for i in list_path_input_json]
 
+
+
+    # load csv input file
     path_work, list_path_input_json = csv_to_jsons()
+
+    # load configuration parameters
+    try:
+        with open(os.path.join(path_work, 'config.json'), 'r') as f:
+            dict_config_params = json.load(f)
+    except FileExistsError:
+        dict_config_params_defualt = {
+            'n_proc': 3,
+            'plot_teq_xlim': 120,
+            'reliability_target': 0.8,
+        }
+        dict_config_params = dict_config_params_defualt
 
     list_input_file_names = [os.path.basename(i).split('.')[0] for i in list_path_input_json]
 
+    # plot all figures if no simulations to run
     if len(list_path_input_json) == 0:
-        print("terminated because no files are selected.")
+        list_path_out_csv_all = []
+        for f in os.listdir(os.path.join(path_work, 'temp')):
+            if f.endswith("out.csv"):
+                list_path_out_csv_all.append(os.path.join(path_work, 'temp', f))
+        plot_figures(
+            list_path_out_csv=list_path_out_csv_all,
+            plot_teq_xlim=dict_config_params['plot_teq_xlim'],
+            reliability_target=dict_config_params['reliability_target'],
+            path_work=path_work
+        )
         return 0
 
     # path_work = os.path.dirname(list_path_input_json[0])
@@ -291,18 +317,7 @@ def run():
         with open(i, 'r') as f:
             list_dict_input_files.append(json.load(f))
 
-    # load configuration parameters
-    dict_config_params_defualt = {
-        'n_proc': 3,
-        'plot_teq_xlim': 120,
-        'reliability_target': 0.8,
-    }
 
-    try:
-        with open(os.path.join(path_work, 'config.json'), 'r') as f:
-            dict_config_params = json.load(f)
-    except FileExistsError:
-        dict_config_params = dict_config_params_defualt
 
     # ==================================================================================================================
     # Spawn Monte Carlo parameters from dict() to DataFrame()s
@@ -432,6 +447,10 @@ def run():
     list_path_out_csv = []
 
     for i, list_dict_mc_params in enumerate(list_list_dict_mc_params):
+
+        print("CASE:", list_input_file_names[i])
+        print("NO. OF THREADS:", dict_config_params['n_proc'])
+        print("NO. OF SIMULATION:", len(list_dict_mc_params))
 
         if dict_config_params['n_proc'] == 1:
             results = []
