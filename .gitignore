@@ -26,3 +26,6 @@
 
 # Python unittest files
 /.pytest_cache
+
+# Jupyter notebook temp files
+/.ipynb_checkpoints

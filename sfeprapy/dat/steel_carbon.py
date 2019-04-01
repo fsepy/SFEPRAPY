@@ -1822,7 +1822,7 @@ c_1_T_steelc_ec = """Temperature [K],Specific Heat Capacity [J/kg/K]
 1172.65,650.7566765578634
 1173.15,650.0
 1473.15,650.0
-2000,650.0"""
+2500,650.0"""
 
 
 class Thermal(object):

@@ -32,6 +32,7 @@ class Dialog(QtWidgets.QDialog):
 
         self.setWindowTitle("Basic Layouts")
 
+
     def createMenu(self):
         self.menuBar = QtWidgets.QMenuBar()
 

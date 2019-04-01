@@ -14,27 +14,43 @@
 
 - [ ] Build-in Eurocode time equivalence hand calculation.
 
-- [ ] Graphical user interface for pre-processing input parameters.
-
-- [ ] Upgrade `sfeprapy.time_equivalence_core.mc_inputs_generator_core` with `scipy.stats.norm.ppf` and `scipy.stats.gumbel_r.ppf` to generate Monte Carlo input samples.
-
-- [ ] Add array input variable feature which input files will be automatically populated based on variables arrays.
-
-- [ ] Generate report about generated random variables, namely, to calculate miu and sigma and compare with input values.
-
 - [ ] Work out the most onerous beam location, which would give the worst time equivalence result.
 
 - [ ] Add PD 6688 time equivalence calculation.
 
-- [ ] Optimise the flow: .csv file > .json file > .p files > dist.png files + teq.png file
-
-- [ ] input as .json file
-
-- [ ] enable control of plot limits
 
 ### VERSIONS
 
-**22/01/2018 VERSION: 0.0.6**
+
+**31/03/2019 VERSION: 0.4**
+
+- New: `sfeprapy.mc` figure size is customisable in config.json file.
+- New: `sfeprapy.mc` figure x-axis limits (i.e. t_eq) is customisable in config.json file.
+- Fixed: `sfeprapy.mc` result $t_{eq}$ 'stepping' issue due to tolerance of the solver is now fixed by replacing the bisection solver with secant solver.
+- Improved: `sfeprapy.mc` input parameter (in master .csv file) `fire_mode` is added, replacing `fire_type_enforced`.
+- Improved: `sfeprapy.mc` simulation time improved. Tested case shows 256 seconds reduced to 26 seconds for 1000 simulations on i7-3770k with 6 threads.
+- Improved: `sfeprapy.mc` refreshed data flow - master .csv input file -> individual case *.json file -> individual case MC *_in.csv file -> individual case result *_out.csv file -> *.png files.
+
+**11/03/2019 VERSION: 0.3**
+
+- Improved: Updated the decision making for choosing between travelling fire and parametric fire, introduced q_td limit criteria, i.e. 50 <= q_td <= 1000.
+
+**11/03/2019 VERSION: 0.2**
+
+- SfePrapy is now in beta testing phase;
+- New: Eurocode DIN Annex parametric fire curve is now available, force simulations to use only this fire curve by set `fire_type_enforced` to 2 (see new input file template); and
+- New: Feature to find best fit distribution function - fire this tool by `python -m sfeprapy.dist_fit`.
+
+**07/03/2019 VERSION: 0.0.8**
+
+- Improved: Capable of combine individual time equivalence curves into one with corresponding `probability_weight` (see new input file template).
+
+**17/02/2019 VERSION: 0.0.7**
+
+- New: Additional figure named `t_eq_merged.png` is produced to show merged time equivalency of all cases.
+
+**22/01/2019 VERSION: 0.0.6**
+
 - Fixed: Final time equivalence plot legend text is set to case name. Previously '_out' was included.
 - Improved: Final time equivalence plot will be produced without running any simulation, e.g. all `is_live` is set to 0.
 
@@ -58,11 +74,13 @@
 - Verification procedures are added for part of the project, including parametric fire testing, travelling fire testing and Eurocode protected steel heat transfer.
 
 **15/08/2018 VERSION: 0.0.2**
+
 - Graphical folder select dialog is available;
 - Fixed an issue associated with `sfeprapy.time_equivalence.run()` where would not ask for new input folder directory when run more than once without re-import the module;
 - Fixed window opening fraction factor distribution. Previously the mean $\mu$ and standard deviation $\sigma$ are adopted based on $x$, however, the `scipy.stats.lognorm` module takes $\mu$ and $\sigma$ based on $ln(x)$. This has been corrected;
 
 **04/08/2018 VERSION: 0.0.1**
+
 - Renamed the packaged from `sfepy` to `sfeprapy` (Structural Fire Engineering Probabilistic Risk Assessment Python);
 - Github repository created;
 - Updated progress bar appearance in `sfeprapy.time_equivalence.run()`;

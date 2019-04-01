@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 
+
 # [Eq. 11.1 & 11.2]
 def _theta_c(Q, r, h):
     """
@@ -68,12 +69,12 @@ if __name__ == "__main__":
     # INPUTS
     time_start = 0
     time_step = 0.5
-    time_end = 30 * 60
+    time_end = 5 * 60
 
     alpha = 0.0117e3  # [W/s2]
-    r = 2.82  # Estimation
-    h = 6
-    RTI = np.average([80, 200])
+    r = 2.75  # Estimation
+    h = 2.6
+    RTI = 115
     T_d_activation = 273.15 + 68  # [K]
 
     # CONTAINERS

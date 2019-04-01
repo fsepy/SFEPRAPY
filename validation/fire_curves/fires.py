@@ -4,7 +4,7 @@ matplotlib.use('TkAgg')
 
 
 def travelling_fire():
-    from sfeprapy.func.temperature_fires import travelling_fire as fire
+    from sfeprapy.func.__temperature_fires import travelling_fire as fire
     import matplotlib.pyplot as plt
     import numpy as np
     time, temperature, data = fire(
@@ -32,7 +32,7 @@ def parametric_fire():
     import copy
     import numpy as np
     import matplotlib.pyplot as plt
-    from sfeprapy.func.temperature_fires import parametric_eurocode1 as fire
+    from sfeprapy.func.fire_parametric_ec import fire
 
     kwargs = {"A_t": 360,
               "A_f": 100,
@@ -69,7 +69,7 @@ def parametric_fire():
 
 def iso834():
     import pandas as pd
-    from sfeprapy.func.temperature_fires import standard_fire_iso834 as fire
+    from sfeprapy.func.__temperature_fires import standard_fire_iso834 as fire
     import numpy as np
     t = np.arange(0, 30*60, 5)
     res = {}
@@ -82,7 +82,7 @@ def iso834():
 def t_square():
     import pandas as pd
     import numpy as np
-    from sfeprapy.func.temperature_fires import t_square as fire
+    from sfeprapy.func.__temperature_fires import t_square as fire
 
     growth = "fast"
     cap_time = 300

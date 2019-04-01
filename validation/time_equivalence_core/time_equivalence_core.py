@@ -3,13 +3,14 @@
 def time_equivalence_core():
 
     import numpy as np
-    from sfeprapy.time_equivalence_mc import calc_time_equivalence
-    from sfeprapy.func.temperature_fires import standard_fire_iso834 as _fire_standard
+    from sfeprapy.mc.time_equivalence_mc import calc_time_equivalence
+    from sfeprapy.func.fire_iso834 import fire as _fire_standard
     from sfeprapy.dat.steel_carbon import Thermal
 
     steel_prop = Thermal()
     beam_c = steel_prop.c()
-    fire = _fire_standard(np.arange(0, 3*60*60, 1), 273.15+20)
+    time = np.arange(0, 3*60*60, 1)
+    fire = _fire_standard(time, 273.15+20)
 
     input_parameters = {
         "time_step": 1,
@@ -25,22 +26,26 @@ def time_equivalence_core():
         "fire_hrr_density": 0.25,
         "fire_spread_speed": 0.0114,
         "fire_duration": 18000,
+        "fire_t_alpha": 300,
+        "fire_gamma_fi_q": 1200,
         "beam_position": 0.75,
         "beam_rho": 7850,
         "beam_c": beam_c,
         "beam_cross_section_area": 0.017,
         "beam_temperature_goal": 620+273.15,
+        "beam_loc_z": 2.8,
         "protection_k": 0.2,
         "protection_rho": 800,
         "protection_c": 1700,
         "protection_thickness": 0.0125,
         "protection_protected_perimeter": 2.14,
-        "iso834_time": fire[0],
-        "iso834_temperature": fire[1],
+        "iso834_time": time,
+        "iso834_temperature": fire,
         "seek_ubound_iter": 20,
         "seek_tol_y": 1.,
         "nft_ubound": 1200,
-        "return_mode": 2
+        "return_mode": 2,
+        "index": 0
     }
 
     results = calc_time_equivalence(**input_parameters)
@@ -75,7 +80,7 @@ def time_equivalence_core():
     benchmark_set2 = {
         'index': -1,
         'fire_resistance_equivalence': 2413.08066401,
-        'seek_status': True,
+        'flag_solver_status': True,
         'fire_type': 1,
         'sought_temperature_steel_ubound': 893.2451301167116,
         'sought_protection_thickness': 0.007368115234375001,
@@ -86,8 +91,8 @@ def time_equivalence_core():
     str_fmt = 'Check {:44}: {}'
 
     print(str_fmt.format('fire_type', benchmark_set2['fire_type'] == results['fire_type']))
-    print(str_fmt.format('seek_status', benchmark_set2['seek_status'] == results['seek_status']))
-    print(str_fmt.format('sought_temperature_steel_ubound', abs(input_parameters['beam_temperature_goal'] - results['sought_temperature_steel_ubound']) <= input_parameters['seek_tol_y']))
+    print(str_fmt.format('flag_solver_status', benchmark_set2['flag_solver_status'] == results['flag_solver_status']))
+    print(str_fmt.format('solver_steel_temperature_solved', abs(input_parameters['beam_temperature_goal'] - results['solver_steel_temperature_solved']) <= input_parameters['seek_tol_y']))
 
     return results
 

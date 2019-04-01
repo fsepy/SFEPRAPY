@@ -13,11 +13,12 @@ with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
     long_description = file.read()
 
 setuptools.setup(
+
     name='sfeprapy',
 
-    version='0.0.6',
+    version='0.4',
 
-    description='Structural fire safety engineering - probabilistic reliability assessment',
+    description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
     author='Yan Fu',
 
@@ -31,7 +32,7 @@ setuptools.setup(
 
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
@@ -39,9 +40,9 @@ setuptools.setup(
         "Topic :: Scientific/Engineering",
     ],
 
-    long_description='Structural fire safety engineering - probabilistic reliability assessment',
+    long_description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
-    packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls', 'sfeprapy.mc'],
+    packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls', 'sfeprapy.mc', 'sfeprapy.dist_fit'],
 
     # entry_points={'console_scripts': ['sfeprapymc = sfeprapy.mc.__main__:run']},
 

@@ -12,7 +12,7 @@ def least_square(x1, y1, x2, y2):
 
 
 def travelling_fire():
-    from sfeprapy.func.temperature_fires import travelling_fire as fire
+    from sfeprapy.func.__temperature_fires import travelling_fire as fire
 
     time, temperature, data = fire(
         T_0=293.15,

@@ -26,8 +26,7 @@ def test_eurocode_parametric_fire():
     """
 
     import copy, pandas, os
-    import numpy as np
-    from sfeprapy.func.temperature_fires import parametric_eurocode1 as fire
+    from sfeprapy.func.fire_parametric_ec import fire
 
     kwargs = {"A_t": 360,
               "A_f": 100,

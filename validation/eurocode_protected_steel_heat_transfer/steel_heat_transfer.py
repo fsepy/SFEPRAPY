@@ -2,9 +2,10 @@
 import matplotlib
 matplotlib.use('TkAgg')
 
+
 def protected_steel():
     from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as steel
-    from sfeprapy.func.temperature_fires import standard_fire_iso834 as fire
+    from sfeprapy.func.fire_iso834 import fire
     from sfeprapy.dat.steel_carbon import Thermal
     import matplotlib.pyplot as plt
     import numpy as np
@@ -12,10 +13,13 @@ def protected_steel():
     steel_prop = Thermal()
     c = steel_prop.c()
     rho = 7850
-    t, T = fire(np.arange(0,10080,60), 20+273.15)
+    t = np.arange(0,10080,1)
+    T = fire(t, 20+273.15)
 
-    for d_p in np.arange(0.001, 0.2+0.02, 0.02):
-        t_s, T_s, d = steel(
+    list_dp = np.arange(0.001, 0.2+0.02, 0.02)
+
+    for d_p in [0.035]:
+        T_s = steel(
             time=t,
             temperature_ambient=T,
             rho_steel=rho,
@@ -27,7 +31,7 @@ def protected_steel():
             thickness_protection=d_p,
             perimeter_protected=2.14
         )
-        plt.plot(t_s, T_s, label="d_p={:5.3f}".format(d_p))
+        plt.plot(t, T_s, label="d_p={:5.3f}".format(d_p))
 
     plt.legend(loc=1)
     plt.show()
@@ -37,9 +41,8 @@ def protected_steel2():
     """
     This run3 is for protected steel in eurocode under parametric fire curve.
     """
-    import copy
     import matplotlib.pyplot as plt
-    from sfeprapy.func.temperature_fires import parametric_eurocode1 as fire
+    from sfeprapy.func.fire_parametric_ec import fire
     from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as steel
     from sfeprapy.dat.steel_carbon import Thermal
 
@@ -94,4 +97,3 @@ if __name__ == "__main__":
     protected_steel()
     # protected_steel2()
 
-    pass
