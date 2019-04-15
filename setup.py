@@ -16,7 +16,7 @@ setuptools.setup(
 
     name='sfeprapy',
 
-    version='0.4',
+    version='0.5',
 
     description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
@@ -42,7 +42,7 @@ setuptools.setup(
 
     long_description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
-    packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls', 'sfeprapy.mc', 'sfeprapy.dist_fit'],
+    packages=['sfeprapy', 'sfeprapy.func', 'sfeprapy.dat', 'sfeprapy.cls', 'sfeprapy.mc', 'sfeprapy.mc1', 'sfeprapy.dist_fit'],
 
     # entry_points={'console_scripts': ['sfeprapymc = sfeprapy.mc.__main__:run']},
 

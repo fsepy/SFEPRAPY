@@ -220,7 +220,7 @@ def T_t(t, t_1, t_2, t_2_x, t_3_x, T_1, T_2_x, T_3_x, A_t, A_w, h_w, t_alpha, T_
         T[t_1_fo_] = T[t_1_][-1]
 
     # No temperate below T_initial
-    T[T<T_initial] = T_initial
+    T[T < T_initial] = T_initial
 
     return T
 

@@ -1,0 +1,38 @@
+﻿INDEX,CATEGORY,PARAM NAME,DISPLAY NAME,VALUE,TYPE
+0,0,simulations,Number of simulations,50,int
+1,0,reliability_target,Height of building [m] or reliability target 0 to 1,0.8,float
+2,0,n_proc,"Number of threads, 0 to use all processors",0,int
+3,1,room_breadth,Room breadth [m],15.8,float
+4,1,room_depth,Room depth [m],31.6,float
+5,1,room_height,Room height [m],3,float
+6,1,window_width,Window width [m],72,float
+7,1,window_height,Window height [m],2.8,float
+8,0,time_start,Start time of simulation [s],0,int
+9,1,time_limiting,Limiting time for fuel controlled case in EN 1991-1-2 parametric fire [hr],0.333,float
+10,0,time_step,Time step used for fire and heat transfer [s],30,int
+11,1,fire_duration,Maximum time in time array [s],18000,int
+12,1,fire_hrr_density,HRR density [MW/sq.m],0.25,float
+13,1,room_wall_thermal_inertia,Compartment thermal inertia [J/m2/sq.s/K],720,float
+14,1,beam_cross_section_area,Cross section area [sq.m],0.017,float
+15,1,beam_rho,Density [kg/m3],7850,float
+16,0,beam_temperature_goal,Beam (steel) failure temperature for goal seek [K]. -1 to opt-out seeking.,893,float
+17,1,protection_protected_perimeter,Heated perimeter [m],2.14,float
+18,1,protection_thickness,Thickness of protection [m]. -1 to opt-out maximum steel temperature calc.,0.0125,float
+19,1,protection_k,Protection conductivity [W/m.K],0.25,float
+20,1,protection_rho,Density of protection [kg/cb.m],800,float
+21,1,protection_c,Specific heat of protection [J/kg.K],1700,float
+22,2,qfd_std,Fire load density - Gumbel distribution - standard dev [MJ/sq.m],126,float
+23,2,qfd_mean,Fire load density - Gumbel distribution - mean [MJ/sq.m],420,float
+24,2,qfd_ubound,Fire load density - Gumbel distribution - upper limit [MJ/sq.m],0.001,float
+25,2,qfd_lbound,Fire load density - Gumbel distribution - lower limit [MJ/sq.m],1500,float
+26,2,opening_fraction_std,Glazing fall-out fraction - 1-lognorm - standard dev.,0.2,float
+27,2,opening_fraction_mean,Glazing fall-out fraction - 1-lognorm - mean,0.2,float
+28,2,opening_fraction_ubound,Glazing fall-out fraction - 1-lognorm - upper limit,1,float
+29,2,opening_fraction_lbound,Glazing fall-out fraction - 1-lognorm - lower limit,0,float
+30,2,beam_loc_ratio_lbound,Min beam location relative to compartment length for TFM [-] - Linear dist,0.6,float
+31,2,beam_loc_ratio_ubound,Max beam location relative to compartment length for TFM [-] - Linear dist,0.999,float
+32,2,com_eff_lbound,Min combustion efficiency - Linear dist,0.75,float
+33,2,com_eff_ubound,Max combustion efficiency - Linear dist,0.999,float
+34,2,spread_lbound,Min spread rate for TFM [m/s] - Linear dist,0.0035,float
+35,2,spread_ubound,Max spread rate for TFM [m/s] - Linear dist,0.0193,float
+36,2,nft_mean,TFM near field temperature - Norm distribution - mean [C],1050,float

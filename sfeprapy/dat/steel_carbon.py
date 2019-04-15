@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 from io import StringIO
+import warnings
 
 k_1_T_steelc_ec = """Temperature [K],Thermal Conductivity [W/m/K]
 293.15, 53.334
@@ -1889,13 +1890,17 @@ def steel_specific_heat_carbon_steel(temperature):
 
 if __name__ == "__main__":
 
-    temperature = np.arange(20.,1200.+0.5,0.5) + 273.15
-    prop = temperature * 0
-    for i,v in enumerate(temperature):
-        prop[i] = steel_specific_heat_carbon_steel(v)
-    df = pd.DataFrame(
-        {
-            "Temperature [K]": temperature,
-            "Specific Heat Capacity [J/kg/K]": prop
-        }
-    )
+    import timeit
+
+    test_number = 100000
+
+    c = Thermal().c()
+
+    def aa():
+        steel_specific_heat_carbon_steel(np.random.rand() * 1180 + 20 + 273.15)
+
+    def bb():
+        c(np.random.rand() * 1180 + 20 + 273.15)
+
+    print(timeit.timeit(aa, number=test_number))
+    print(timeit.timeit(bb, number=test_number))

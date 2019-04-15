@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from scipy.interpolate import interp1d
+import warnings
+
+warnings.filterwarnings('ignore')
 
 
 def unprotected_steel_eurocode(
@@ -67,7 +70,6 @@ def protected_steel_eurocode(
         time,
         temperature_ambient,
         rho_steel,
-        c_steel_T,
         area_steel_section,
         k_protection,
         rho_protection,
@@ -99,6 +101,30 @@ def protected_steel_eurocode(
     """
     # todo: 4.2.5.2 (2) - thermal properties for the insulation material
     # todo: revise BS EN 1993-1-2:2005, Clauses 4.2.5.2
+
+    # BS EN 1993-1-2:2005, 3.4.1.2
+    # return self.__make_property("c")
+
+    def c_steel_T(temperature):
+
+        temperature -= 273.15
+        if temperature < 20:
+            warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+            return 425 + 0.773 * 20 - 1.69e-3 * np.power(20, 2) + 2.22e-6 * np.power(20, 3)
+        if 20 <= temperature < 600:
+            return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
+        elif 600 <= temperature < 735:
+            return 666 + 13002 / (738 - temperature)
+        elif 735 <= temperature < 900:
+            return 545 + 17820 / (temperature - 731)
+        elif 900 <= temperature <= 1200:
+            return 650
+        elif temperature > 1200:
+            warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+            return 650
+        else:
+            warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+            return 0
 
     V = area_steel_section
     rho_a = rho_steel
@@ -151,7 +177,7 @@ def protected_steel_eurocode(
         elif flag_heating_started and terminate_max_temperature < temperature_steel[i]:
             break
 
-        # NOTE: Steel temperature can be in cooling phase at the begining of calculation, even the ambient temperature
+        # NOTE: Steel temperature can be in cooling phase at the beginning of calculation, even the ambient temperature
         #       (fire) is hot. This is
         #       due to the factor 'phi' which intends to address the energy locked within the protection layer.
         #       The steel temperature is forced to be increased or remain as previous when ambient temperature and
@@ -163,12 +189,6 @@ def protected_steel_eurocode(
         #     temperature_rate_steel[i] = 0
         #     temperature_steel[i] = temperature_steel[i-1]
 
-    data_all = {
-        "temperature steel [K]": temperature_steel,
-        "temperature rate steel [K/s]": temperature_rate_steel,
-        "specific heat steel [J/kg/K]": specific_heat_steel
-    }
-
     return temperature_steel
 
 
@@ -176,7 +196,6 @@ def protected_steel_eurocode_max_temperature(
         time,
         temperature_ambient,
         rho_steel,
-        c_steel_T,
         area_steel_section,
         k_protection,
         rho_protection,
@@ -212,6 +231,27 @@ def protected_steel_eurocode_max_temperature(
     # todo: 4.2.5.2 (2) - thermal properties for the insulation material
     # todo: revise BS EN 1993-1-2:2005, Clauses 4.2.5.2
 
+    def c_steel_T(temperature):
+
+        temperature -= 273.15
+        if temperature < 20:
+            warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+            return 425 + 0.773 * 20 - 1.69e-3 * np.power(20, 2) + 2.22e-6 * np.power(20, 3)
+        if 20 <= temperature < 600:
+            return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
+        elif 600 <= temperature < 735:
+            return 666 + 13002 / (738 - temperature)
+        elif 735 <= temperature < 900:
+            return 545 + 17820 / (temperature - 731)
+        elif 900 <= temperature <= 1200:
+            return 650
+        elif temperature > 1200:
+            warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+            return 650
+        else:
+            warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+            return 0
+
     V = area_steel_section
     rho_a = rho_steel
     lambda_p = k_protection
@@ -234,7 +274,7 @@ def protected_steel_eurocode_max_temperature(
     # T_ini = temperature_ambient[0]  # temperature at beginning
     T = temperature_ambient[0]  # current steel temperature
     # T_max = -1  # maximum steel temperature
-    c = c_steel_T(293.15)
+    # c = c_steel_T(293.15)
     d = time[1] - time[0]
 
     # temperature_ambient_ = iter(temperature_ambient)  # skip the first item
@@ -243,10 +283,7 @@ def protected_steel_eurocode_max_temperature(
 
         T_g = temperature_ambient[i]
 
-        try:
-            c_s = c_steel_T(T)
-        except ValueError:
-            pass
+        c_s = c_steel_T(T)
 
         # Steel temperature equations are from [BS EN 1993-1-2:2005, Clauses 4.2.5.2, Eq. 4.27]
         phi = (c_p * rho_p / c_s / rho_a) * d_p * A_p / V

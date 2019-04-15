@@ -2,31 +2,28 @@
 
 ### KNOWN ISSUES AND TASKS LIST
 
-- [ ] Verification to travelling fire.
-
-- [ ] Verification to Eurocode protected steel heat transfer.
-
-- [ ] Verification to time_equivalence calculated intermediate variables. i.e. opening_factor.
-
-- [ ] Verification to distribution functions.
-
-- [ ] Make verification procedures.
-
-- [ ] Build-in Eurocode time equivalence hand calculation.
-
 - [ ] Work out the most onerous beam location, which would give the worst time equivalence result.
-
-- [ ] Add PD 6688 time equivalence calculation.
 
 
 ### VERSIONS
 
+**XX/XX/2019 VERSION: 0.6**
+
+- New: `sfeprapy.func.fire_travelling:fire_v` vectorised travelling fire module.
+- Improved: `sfeprapy.mc` removed stochastic parameter beam_loc from input file, beam location for travelling fire is solved (i.e. to give the worst steel temperature).
+
+**15/04/2019 VERSION: 0.5**
+
+- New: `sfeprapy.pd6688.annex_b_equivalent_time_of_fire_exposure` Time equivalence calculation as per PD 6688. Usage can be found in its docstring `annex_b_equivalent_time_of_fire_exposure.__doc__`.
+- New: (WIP) `sfeprapy.mc1` new equivalent time exposure procedure.
+- Improved: `sfeprapy.mc` optimised temperature dependent steel heat capacity routine, resulted in 65% less simulation time. Tested case shows 32.8 seconds reduced to 16.7 seconds for 1000 simulations on i7-7660U with 2 threads.
+- Fixed: `sfeprapy.mc.mc_inputs_generator.py:mc_inputs_generator` Positive and negative inf in sampled stochastic parameters. Extreme values are replaced by upper and lower limits.
 
 **31/03/2019 VERSION: 0.4**
 
 - New: `sfeprapy.mc` figure size is customisable in config.json file.
 - New: `sfeprapy.mc` figure x-axis limits (i.e. t_eq) is customisable in config.json file.
-- Fixed: `sfeprapy.mc` result $t_{eq}$ 'stepping' issue due to tolerance of the solver is now fixed by replacing the bisection solver with secant solver.
+- Fixed: `sfeprapy.mc` final time equivalence 'stepping' issue due to tolerance of the solver is now fixed by replacing existing bisection by a secant.
 - Improved: `sfeprapy.mc` input parameter (in master .csv file) `fire_mode` is added, replacing `fire_type_enforced`.
 - Improved: `sfeprapy.mc` simulation time improved. Tested case shows 256 seconds reduced to 26 seconds for 1000 simulations on i7-3770k with 6 threads.
 - Improved: `sfeprapy.mc` refreshed data flow - master .csv input file -> individual case *.json file -> individual case MC *_in.csv file -> individual case result *_out.csv file -> *.png files.

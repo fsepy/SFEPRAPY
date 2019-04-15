@@ -1,0 +1,1 @@
+This input produces roughly 50% parametric fire and 50% travelling fire when fire_mode=3.

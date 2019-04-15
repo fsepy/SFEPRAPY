@@ -12,7 +12,7 @@ import copy
 import os
 import json
 import numpy as np
-from sfeprapy.mc import time_equivalence_mc as func_core
+from sfeprapy.mc import mc_inputs_generator as func_core
 from sfeprapy.func.__temperature_fires import standard_fire_iso834 as _fire_standard
 from sfeprapy.dat.steel_carbon import Thermal
 

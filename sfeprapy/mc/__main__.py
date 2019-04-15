@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import json
-import copy
 import warnings
 from tkinter import filedialog, Tk, StringVar
 from scipy.interpolate import interp1d
@@ -22,7 +21,8 @@ from sfeprapy.dat.steel_carbon import Thermal
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_iso834 import fire as _fire_standard
 from sfeprapy.func.fire_travelling import fire as _fire_travelling
-from sfeprapy.mc.time_equivalence_mc import calc_time_equivalence_worker, mc_inputs_generator, calc_time_equivalence
+from sfeprapy.mc.mc_simulation_func import calc_time_equivalence_worker, calc_time_equivalence
+from sfeprapy.mc.mc_inputs_generator import mc_inputs_generator
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
 
 
@@ -190,11 +190,11 @@ def plot_figures(list_path_out_csv, plot_teq_xlim, reliability_target, path_work
 
         # obtain x and y values for plot
 
-        mask_teq_sort = np.asarray(df_result["TIME EQUIVALENCE [s]"].values).argsort()
-        x = df_result["TIME EQUIVALENCE [s]"].values[mask_teq_sort] / 60.  # to minutes
+        mask_teq_sort = np.asarray(df_result["fire_resistance_equivalence"].values).argsort()
+        x = df_result["fire_resistance_equivalence"].values[mask_teq_sort] / 60.  # to minutes
 
-        if 'PROBABILITY' in df_result and apply_probability:
-            y = np.cumsum(df_result["PROBABILITY"].values[mask_teq_sort])
+        if 'probability_weight' in df_result and apply_probability:
+            y = np.cumsum(df_result["probability_weight"].values[mask_teq_sort])
         else:
             y = np.arange(1, len(x) + 1) / len(x)
 
@@ -297,7 +297,8 @@ def jsons_to_mc_input_df(list_path_json, save_csv=False):
     list_df_mc_params = []
 
     # finalise and save to *_in.csv
-    beam_c = Thermal().c()
+    # beam_c = Thermal().c()
+    beam_c = 0
     iso834_time = np.arange(0, 6 * 60 * 60, 30)
     iso834_temperature = _fire_standard(iso834_time, 273.15 + 20)
 
@@ -307,18 +308,6 @@ def jsons_to_mc_input_df(list_path_json, save_csv=False):
             list_dict_params_from_json.append(json.load(f))
 
     for i, dict_params_from_json in enumerate(list_dict_params_from_json):
-
-        # DEPRECIATED 30/03/2019: THIS FEATURE IS NOT BEING USED
-        # obtain user defined MC parameters if provided
-        # if 'path_mc_params_csv' in dict_params_from_json:  # Read MC parameters. If USER provided MC parameters in a *.csv file
-        #     # load MC parameters
-        #     try:
-        #         df_mc_params = pd.read_csv(dict_params_from_json['path_mc_params_csv'])
-        #     except FileNotFoundError:
-        #         print('ERROR! *.csv file not found: {}'.format(dict_params_from_json['path_mc_params_csv']))
-        #         return -1
-
-        # else:  # Make MC parameters. If USER did not provide MC parameters in a *.csv file
 
         try:
             if dict_params_from_json['is_live'] == 0:
@@ -343,7 +332,6 @@ def jsons_to_mc_input_df(list_path_json, save_csv=False):
         df_mc_params['fire_mode'] = [dict_params_from_json['fire_mode']] * len(df_mc_params.index)
         df_mc_params['fire_t_alpha'] = [dict_params_from_json['fire_t_alpha']] * len(df_mc_params.index)
         df_mc_params['fire_gamma_fi_q'] = [dict_params_from_json['fire_gamma_fi_q']] * len(df_mc_params.index)
-        df_mc_params['beam_rho'] = [dict_params_from_json['beam_rho']] * len(df_mc_params.index)
         df_mc_params['beam_c'] = [beam_c] * len(df_mc_params.index)
         df_mc_params['beam_cross_section_area'] = [dict_params_from_json['beam_cross_section_area']] * len(df_mc_params.index)
         df_mc_params['beam_temperature_goal'] = [dict_params_from_json['beam_temperature_goal']] * len(df_mc_params.index)
@@ -371,6 +359,112 @@ def jsons_to_mc_input_df(list_path_json, save_csv=False):
                 warnings.warn('WARNING! File save failed: {}'.format(pf_))
 
     return list_df_mc_params
+
+
+def post_processing_plot_figures(path_work, dict_config_params):
+    # Requirements
+    # list_path_out_csv: a list of numeral output file path in *.csv format
+
+    # FIGURE FORMAT
+    line_styles = OrderedDict(
+        [
+            ('solid', (0, ())),
+            # ('loosely dotted', (0, (1, 10))),
+            # ('dotted', (0, (1, 5))),
+            # ('densely dotted', (0, (1, 1))),
+
+            # ('loosely dashed', (0, (5, 10))),
+            # ('dashed', (0, (5, 5))),
+            # ('densely dashed', (0, (5, 1))),
+
+            # ('loosely dashdotted', (0, (3, 10, 1, 10))),
+            # ('dashdotted', (0, (3, 5, 1, 5))),
+            # ('densely dashdotted', (0, (3, 1, 1, 1))),
+
+            # ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+            # ('dashdotdotted', (0, (3, 5, 1, 5, 1, 5))),
+            # ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))
+        ]
+    )
+
+    cycle_line_styles = cycle([v for v in line_styles.values()])
+
+    list_path_out_csv_all = []
+    for f in os.listdir(os.path.join(path_work, 'temp')):
+        if f.endswith("_out.csv"):
+            list_path_out_csv_all.append(os.path.join(path_work, 'temp', f))
+
+    # Plot individual t_eq
+    for path_out_csv in list_path_out_csv_all:
+        plot_figures(
+            list_path_out_csv=[path_out_csv],
+            plot_teq_xlim=dict_config_params['plot_teq_xlim'],
+            reliability_target=dict_config_params['reliability_target'],
+            path_work=os.path.join(path_work, 'temp'),
+            figure_name=os.path.basename(path_out_csv).replace('_out.csv', '.png'),
+            cycle_linestyles=cycle_line_styles
+        )
+
+    # Plot individual t_eq into one figure
+    plot_figures(
+        list_path_out_csv=list_path_out_csv_all,
+        plot_teq_xlim=dict_config_params['plot_teq_xlim'],
+        reliability_target=dict_config_params['reliability_target'],
+        path_work=path_work,
+        figure_name='t_eq.png',
+        plot_figuresize=dict_config_params['plot_figuresize'],
+        cycle_linestyles=cycle_line_styles
+    )
+
+    # Plot combined t_eq with all results merged into one curve
+    if len(list_path_out_csv_all) >= 0:
+        list_pd_out_csv = []
+
+        for path_out_csv in list_path_out_csv_all:
+            df_ = pd.read_csv(path_out_csv, index_col='index', dtype=np.float64)
+
+            path_temp = os.path.dirname(path_out_csv)
+            job_id = os.path.basename(path_out_csv).replace("_out.csv", "")
+
+            with open(os.path.join(path_temp, "{}.json".format(job_id))) as f:
+                dict_input = json.load(f)
+
+            print(os.path.join(path_temp, "{}.json".format(job_id)), " - ", "probability_weight" in dict_input)
+
+            if "probability_weight" in dict_input:  # apply probability weight if available
+
+                df_["probability_weight"] = dict_input['probability_weight'] * (1 / len(df_.index))
+                list_pd_out_csv.append(df_)
+
+            # list_pd_out_csv.append(df_)
+
+        pd_out_all = pd.concat(list_pd_out_csv, axis=0, ignore_index=True, sort=False)
+        pd_out_all.sort_values("fire_resistance_equivalence", inplace=True)
+        path_out_csv_merged = os.path.join(path_work, 'temp', '{}_mergedout.csv'.format(os.path.basename(path_work)))
+        pd_out_all.to_csv(path_out_csv_merged)
+
+        plot_figures(
+            list_path_out_csv=[path_out_csv_merged],
+            plot_teq_xlim=dict_config_params['plot_teq_xlim'],
+            reliability_target=dict_config_params['reliability_target'],
+            path_work=path_work,
+            figure_name='t_eq_merged.png',
+            apply_probability=True,
+            figure_show_legend=False,
+            plot_figuresize=dict_config_params['plot_figuresize'],
+            cycle_linestyles=cycle_line_styles
+        )
+
+
+def individual_teq_to_csv(path_work):
+    list_path_out_csv = []
+    for f in os.listdir(os.path.join(path_work, 'temp')):
+        if f.endswith("_out.csv"):
+            list_path_out_csv.append(os.path.join(path_work, 'temp', f))
+
+    for path_out_csv in list_path_out_csv:
+        df_ = pd.read_csv(path_out_csv, index_col='index', dtype=np.float16)
+        name_ = os.path.basename(path_out_csv).replace("_out.csv", "")
 
 
 def run():
@@ -433,7 +527,7 @@ def run():
     # Spawn Monte Carlo parameters from dict() to DataFrame()s
     # ==================================================================================================================
 
-    print('warning up stoves and oven...')
+    print('warming up stoves and oven...')
 
     list_df_mc_params = jsons_to_mc_input_df(list_path_json=list_path_input_json, save_csv=False)
 
@@ -497,54 +591,11 @@ def run():
             results = jobs.get()
 
         # save to *.csv
-        results = np.array(results)
+        # results = np.array(results)
         list_path_out_csv.append(os.path.join(path_work, 'temp', '{}_out.csv'.format(list_input_file_names[i])))
-        df_output = pd.DataFrame({
-            # 'TIME STEP [s]': results[:, 0],
-            # 'TIME START [s]': results[:, 1],
-            # 'TIME LIMITING []': results[:, 2],
-            # 'WINDOW HEIGHT [m]': results[:, 3],
-            # 'WINDOW WIDTH [m]': results[:, 4],
-            'WINDOW OPEN FRACTION []': results[:, 5],
-            # 'ROOM BREADTH [m]': results[:, 6],
-            # 'ROOM DEPTH [m]': results[:, 7],
-            # 'ROOM HEIGHT [m]': results[:, 8],
-            # 'ROOM WALL THERMAL INERTIA [J/m2s1/2K]': results[:, 9],
-            'FIRE LOAD DENSITY [MJ/m2]': results[:, 10],
-            # 'FIRE HRR DENSITY [MW/m2]': results[:, 11],
-            'FIRE SPREAD SPEED [m/s]': results[:, 12],
-            'FIRE DURATION [s]': results[:, 13],
-            'BEAM POSITION [m]': results[:, 14],
-            # 'BEAM RHO [kg/m3]': results[:, 15],
-            # 'BEAM C [-]': results[:, 16],
-            # 'BEAM CROSS-SECTION AREA [m2]': results[:, 17],
-            'BEAM FAILURE TEMPERATURE [K]': results[:, 18],
-            # 'PROTECTION K [W/m/K]': results[:, 19],
-            # 'PROTECTION RHO [kg/m3]': results[:, 20],
-            # 'PROTECTION C OBJECT []': results[:, 21],
-            'PROTECTION THICKNESS [m]': results[:, 22],
-            # 'PROTECTION PERIMETER [m]': results[:, 23],
-            # 'ISO834 TIME ARRAY [s]': results[:, 24],
-            # 'ISO834 TEMPERATURE ARRAY [K]': results[:, 25],
-            'MAX. NEAR FIELD TEMPERATURE [C]': results[:, 26],
-            'SOLVER ITERATION LIMIT []': results[:, 27],
-            'SEEK PROTECTION THICKNESS UPPER BOUND [m]': results[:, 28],
-            'SEEK PROTECTION THICKNESS LOWER BOUND [m]': results[:, 29],
-            'SOLVED BEAM FAILURE TEMPERATURE TOLERANCE [K]': results[:, 30],
-            'INDEX': results[:, 31],
-            'TIME EQUIVALENCE [s]': results[:, 32],
-            'SOLVER STATUS [0:Fail, 1:Success]': results[:, 33],
-            'FIRE TYPE [0:P, 1:T]': results[:, 34],
-            'SOLVED BEAM TEMPERATURE [K]': results[:, 35],
-            'SOLVED BEAM PROTECTION THICKNESS [m]': results[:, 36],
-            'SOLVER ITERATION COUNT []': results[:, 37],
-            'BEAM TEMPERATURE TO FIXED PROTECTION THICKNESS [K]': results[:, 38],
-            # 'FIRE TIME ARRAY [s]': results[:, 39],
-            # 'FIRE TEMPERATURE ARRAY [K]': results[:, 40],
-            'OPENING FACTOR [m0.5]': results[:, 41]
-        })
-        df_output.set_index("INDEX", inplace=True)  # assign 'INDEX' column as DataFrame index
-        df_output.sort_values('TIME EQUIVALENCE [s]', inplace=True)  # sort base on time equivalence
+        df_output = pd.DataFrame(results)
+        df_output.set_index("index", inplace=True)  # assign 'INDEX' column as DataFrame index
+        df_output.sort_values('fire_resistance_equivalence', inplace=True)  # sort base on time equivalence
         df_output.to_csv(list_path_out_csv[-1])
 
         # export fires
@@ -563,112 +614,6 @@ def run():
     input('dinner is ready (press any key to continue)...')
 
 
-def post_processing_plot_figures(path_work, dict_config_params):
-    # Requirements
-    # list_path_out_csv: a list of numeral output file path in *.csv format
-
-    # FIGURE FORMAT
-    line_styles = OrderedDict(
-        [
-            ('solid', (0, ())),
-            # ('loosely dotted', (0, (1, 10))),
-            # ('dotted', (0, (1, 5))),
-            # ('densely dotted', (0, (1, 1))),
-            
-            # ('loosely dashed', (0, (5, 10))),
-            # ('dashed', (0, (5, 5))),
-            # ('densely dashed', (0, (5, 1))),
-            
-            # ('loosely dashdotted', (0, (3, 10, 1, 10))),
-            # ('dashdotted', (0, (3, 5, 1, 5))),
-            # ('densely dashdotted', (0, (3, 1, 1, 1))),
-            
-            # ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
-            # ('dashdotdotted', (0, (3, 5, 1, 5, 1, 5))),
-            # ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))
-        ]
-    )
-
-    cycle_line_styles = cycle([v for v in line_styles.values()])
-
-    list_path_out_csv_all = []
-    for f in os.listdir(os.path.join(path_work, 'temp')):
-        if f.endswith("_out.csv"):
-            list_path_out_csv_all.append(os.path.join(path_work, 'temp', f))
-
-    # Plot individual t_eq
-    for path_out_csv in list_path_out_csv_all:
-        plot_figures(
-            list_path_out_csv=[path_out_csv],
-            plot_teq_xlim=dict_config_params['plot_teq_xlim'],
-            reliability_target=dict_config_params['reliability_target'],
-            path_work=os.path.join(path_work, 'temp'),
-            figure_name=os.path.basename(path_out_csv).replace('_out.csv', '.png'),
-            cycle_linestyles=cycle_line_styles
-        )
-
-    # Plot individual t_eq into one figure
-    plot_figures(
-        list_path_out_csv=list_path_out_csv_all,
-        plot_teq_xlim=dict_config_params['plot_teq_xlim'],
-        reliability_target=dict_config_params['reliability_target'],
-        path_work=path_work,
-        figure_name='t_eq.png',
-        plot_figuresize=dict_config_params['plot_figuresize'],
-        cycle_linestyles=cycle_line_styles
-    )
-
-    # Plot combined t_eq with all results merged into one curve
-    if len(list_path_out_csv_all) >= 0:
-        list_pd_out_csv = []
-
-        for path_out_csv in list_path_out_csv_all:
-            df_ = pd.read_csv(path_out_csv, index_col='INDEX', dtype=np.float64)
-
-            path_temp = os.path.dirname(path_out_csv)
-            job_id = os.path.basename(path_out_csv).replace("_out.csv", "")
-
-            with open(os.path.join(path_temp, "{}.json".format(job_id))) as f:
-                dict_input = json.load(f)
-
-            print(os.path.join(path_temp, "{}.json".format(job_id)), " - ", "probability_weight" in dict_input)
-
-            if "probability_weight" in dict_input:  # apply probability weight if available
-
-                df_["PROBABILITY"] = dict_input['probability_weight'] * (1 / len(df_.index))
-                list_pd_out_csv.append(df_)
-
-            # list_pd_out_csv.append(df_)
-
-        pd_out_all = pd.concat(list_pd_out_csv, axis=0, ignore_index=True, sort=False)
-        pd_out_all.sort_values("TIME EQUIVALENCE [s]", inplace=True)
-        path_out_csv_merged = os.path.join(path_work, 'temp', '{}_mergedout.csv'.format(os.path.basename(path_work)))
-        pd_out_all.to_csv(path_out_csv_merged)
-
-        plot_figures(
-            list_path_out_csv=[path_out_csv_merged],
-            plot_teq_xlim=dict_config_params['plot_teq_xlim'],
-            reliability_target=dict_config_params['reliability_target'],
-            path_work=path_work,
-            figure_name='t_eq_merged.png',
-            apply_probability=True,
-            figure_show_legend=False,
-            plot_figuresize=dict_config_params['plot_figuresize'],
-            cycle_linestyles = cycle_line_styles
-        )
-
-
-def individual_teq_to_csv(path_work):
-
-    list_path_out_csv = []
-    for f in os.listdir(os.path.join(path_work, 'temp')):
-        if f.endswith("_out.csv"):
-            list_path_out_csv.append(os.path.join(path_work, 'temp', f))
-
-    for path_out_csv in list_path_out_csv:
-        df_ = pd.read_csv(path_out_csv, index_col='INDEX', dtype=np.float16)
-        name_ = os.path.basename(path_out_csv).replace("_out.csv", "")
-
-
 if __name__ == '__main__':
+    # warnings.filterwarnings('ignore')
     run()
