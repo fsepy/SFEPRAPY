@@ -100,7 +100,6 @@ def input_df_to_jsons(df_input_params):
             json.dump(val, f)
 
 
-
 def jsons_to_mc_input_df(list_path_json, save_csv=False):
 
     list_df_mc_params = []
@@ -302,8 +301,6 @@ def main(path_master_input_csv: Union[str, pd.DataFrame] = None):
     dict_df_out = extract_results(*pp)
     for k, df in dict_df_out.items():
         df.to_csv(os.path.join(path_work, k+'.csv'), index=False)
-
-    input('Complete, press any key to continue...')
 
 
 if __name__ == '__main__':
