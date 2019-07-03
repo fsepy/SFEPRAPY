@@ -306,5 +306,4 @@ def main(path_master_input_csv: Union[str, pd.DataFrame] = None):
 if __name__ == '__main__':
 
     warnings.filterwarnings('ignore')
-
     main()

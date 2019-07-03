@@ -3,6 +3,7 @@ from typing import Union
 from scipy.interpolate import interp1d
 import numpy as np
 import pandas as pd
+import copy
 
 from sfeprapy.func.fire_travelling import fire as fire_travelling
 from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as _steel_temperature
@@ -471,7 +472,14 @@ def calc_time_equivalence(
 
 def y_results_summary(df_res: pd.DataFrame):
 
+    df_res = copy.copy(df_res)
+    df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
+    # df_res.replace(-np.inf, np.nan)
+    df_res = df_res.dropna(axis=0, how="any")
+    
     str_fmt = '{:<50.50}: {}\n'
+
+    str_fmt2 = '{:<50.50}: {:<.3f}\n'
 
     str_out = ''
 
@@ -482,15 +490,12 @@ def y_results_summary(df_res: pd.DataFrame):
 
     str_out += str_fmt.format('fire_type', fire_type_val)
     str_out += str_fmt.format('solver_convergence_status', np.sum(df_res['solver_convergence_status'].values))
-    str_out += str_fmt.format('beam_position', df_res['beam_position'].mean())
-    str_out += str_fmt.format('fire_combustion_effeciency', df_res['fire_combustion_effeciency'].mean())
-    str_out += str_fmt.format('fire_hrr_density', df_res['fire_hrr_density'].mean())
-    str_out += str_fmt.format('fire_load_density', df_res['fire_load_density'].mean())
-    str_out += str_fmt.format('fire_nft_ubound', df_res['fire_nft_ubound'].mean())
-    str_out += str_fmt.format('fire_spread_speed', df_res['fire_spread_speed'].mean())
-    str_out += str_fmt.format('window_open_fraction', df_res['window_open_fraction'].mean())
-    str_out += str_fmt.format('m solver_time_equivalence_solved', df_res['solver_time_equivalence_solved'].mean())
-    str_out += str_fmt.format('s solver_time_equivalence_solved', df_res['solver_time_equivalence_solved'].std())
+    str_out += str_fmt2.format('beam_position', df_res['beam_position'].mean())
+    str_out += str_fmt2.format('fire_combustion_effeciency', df_res['fire_combustion_effeciency'].mean())
+    str_out += str_fmt2.format('fire_hrr_density', df_res['fire_hrr_density'].mean())
+    str_out += str_fmt2.format('fire_load_density', df_res['fire_load_density'].mean())
+    str_out += str_fmt2.format('fire_nft_ubound', df_res['fire_nft_ubound'].mean())
+    str_out += str_fmt2.format('fire_spread_speed', df_res['fire_spread_speed'].mean())
+    str_out += str_fmt2.format('window_open_fraction', df_res['window_open_fraction'].mean())
 
     return str_out
-
