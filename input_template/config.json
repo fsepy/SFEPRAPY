@@ -1,5 +1,5 @@
 {
-  "n_threads": 5,
-  "output_fires": 0,
+  "n_threads": 2,
+  "output_fires": 1,
   "output_summary": 1
 }

@@ -1,12 +1,12 @@
 PARAMETERS,Example Case
 is_live,1
 fire_mode,3
-probability_weight,0.2
-n_simulations,10000
+probability_weight,1
+n_simulations,1000
 time_step,30
 time_duration,18000
-fire_hrr_density_lbound,0.249
-fire_hrr_density_ubound,0.251
+fire_hrr_density_lbound,0.25
+fire_hrr_density_ubound,0.25
 fire_hrr_density_mean,0.25
 fire_hrr_density_std,100
 fire_qfd_std,126
