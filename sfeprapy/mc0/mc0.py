@@ -287,7 +287,7 @@ def main(path_master_input_csv: Union[str, pd.DataFrame] = None):
                 df_fire_temperature.to_csv(os.path.join(path_work, 'temp', list_input_file_names[i]+'_fires.csv'), index=False)
 
         if 'output_summary' in dict_config_params:
-            if int(dict_config_params['output_print_summary']) > 0: 
+            if int(dict_config_params['output_summary']) > 0: 
                 print(y_results_summary(df_output))
 
         df_output.pop('fire_time')
