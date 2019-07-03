@@ -23,3 +23,12 @@ def fire(
     temperature += 273.15  # [C] -> [K]
 
     return temperature
+
+
+if __name__ == '__main__':
+    fire_time = np.arange(0, 2*60*60+1, 1)
+    fire_temperature = fire(fire_time, 273.15+20)
+
+    print(fire_temperature[fire_time==5*60], fire_temperature[fire_time==10*60], fire_temperature[fire_time==15*60],
+          fire_temperature[fire_time == 20 * 60], fire_temperature[fire_time==25*60])
+

@@ -1,8 +1,0 @@
-{
-  "n_proc": 3,
-  "plot_teq_xlim": 180,
-  "reliability_target": 0.8,
-  "output_fires": 0,
-  "plot_style": "seaborn-paper",
-  "plot_figuresize": [3.94, 2.76]
-}

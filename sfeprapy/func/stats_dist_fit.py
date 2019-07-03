@@ -1,6 +1,6 @@
 # distribution_auto_fitting
 # Author: Yan Fu
-# Date 07/03/2019
+# Date: 07/03/2019
 
 import os
 import warnings
@@ -10,21 +10,40 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as st
+from typing import Union
 from scipy import interpolate
 
 
 # Create models from data
-def fit(data, bins=200, ax=None, distribution_list=None):
-    """Model data by finding best fit distribution to data"""
+def fit(data, bins:int=200, ax=None, distribution_list:Union[list, int]=None, suppress_print:bool=False):
+    """
+    Model data by finding best fit distribution to data
+    :param data:
+    :param bins:
+    :param ax:
+    :param distribution_list:
+    :param suppress_print:
+    :return list_fitted_distribution:
+    :return list_fitted_distribution_params:
+    :return list_fitted_distribution_sse:
+    """
 
     # Get histogram of original data
     y, x = np.histogram(data, bins=bins, density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     # ax.plot(x, y)
     # ax.fill_between(x, y, color="black")
-    ax.hist(data, bins='auto', density=True, color='black')
-    ax.set_xlim(min(*x) - (max(*x) - min(*x)) * 0.01, max(*x) + (max(*x) - min(*x)) * 0.01, auto=False)
-    ax.set_ylim(min(*y) - (max(*y) - min(*y)) * 0.01, max(*y) + (max(*y) - min(*y)) * 0.01, auto=False)
+
+    def cprint(*args):
+        if suppress_print:
+            return 0
+        else:
+            print(*args)
+
+    if ax:
+        ax.hist(data, bins='auto', density=True, color='black')
+        ax.set_xlim(min(*x) - (max(*x) - min(*x)) * 0.01, max(*x) + (max(*x) - min(*x)) * 0.01, auto=False)
+        ax.set_ylim(min(*y) - (max(*y) - min(*y)) * 0.01, max(*y) + (max(*y) - min(*y)) * 0.01, auto=False)
 
     if distribution_list == 0 or distribution_list == None:
         # full list of available distribution functions
@@ -149,7 +168,7 @@ def fit(data, bins=200, ax=None, distribution_list=None):
 
     # Estimate distribution parameters from data
 
-    print('{:20.20}{:60.60}'.format('Distribution', 'Loss (Residual sum of squares) and distribution parameters'))
+    cprint('{:20.20}{:60.60}'.format('Distribution', 'Loss (Residual sum of squares) and distribution parameters'))
     list_fitted_distribution = []
     list_fitted_distribution_sse = []
     list_fitted_distribution_params = []
@@ -188,7 +207,7 @@ def fit(data, bins=200, ax=None, distribution_list=None):
                     best_sse = sse
 
                 params_ = ["{:10.2f}".format(i) for i in params]
-                print('{:20.20}{:10.5E} - [{}]'.format(distribution.name, sse, ", ".join(params_)))
+                cprint('{:20.20}{:10.5E} - [{}]'.format(distribution.name, sse, ", ".join(params_)))
 
                 list_fitted_distribution.append(distribution)
                 list_fitted_distribution_sse.append(sse)
@@ -322,13 +341,13 @@ if __name__ == '__main__':
         [239.8509764,0.044029866],
         [240.8273381,0.057339559],
         [241.5981501,0.073946897],
-        [242.5745118,0.08725659],
-        [243.036999,0.10384351],
+        [242.5745118,0.087256590],
+        [243.036999,0.1038435100],
         [243.8591984,0.125421139],
         [244.4758479,0.143673897],
-        [245.04111,0.163578881],
-        [245.709147,0.183490672],
-        [246.3257965,0.20174343],
+        [245.04111,0.16357888100],
+        [245.709147,0.1834906720],
+        [246.3257965,0.201743430],
         [246.7368962,0.226605092],
         [247.3021583,0.251476964],
         [247.7646454,0.276342029],
@@ -348,7 +367,7 @@ if __name__ == '__main__':
         [254.5991778,0.627788025],
         [255.2158273,0.659285816],
         [255.3186023,0.677504543],
-        [255.626927,0.689114366],
+        [255.626927,0.6891143660],
         [256.1921891,0.718953125],
         [256.5519013,0.735533238],
         [257.3741007,0.768700272],
@@ -356,10 +375,10 @@ if __name__ == '__main__':
         [258.3504625,0.813466918],
         [258.6587873,0.833354887],
         [259.4809866,0.858243774],
-        [260.2004111,0.87319208],
+        [260.2004111,0.873192080],
         [260.8684481,0.899726387],
         [261.2795478,0.909687387],
-        [262.3586845,0.93459329],
+        [262.3586845,0.934593290],
         [262.8725591,0.944561097],
         [263.7461459,0.956208354],
         [264.5169579,0.967848805],
@@ -368,7 +387,8 @@ if __name__ == '__main__':
         [267.3946557,0.991218189],
         [268.5251799,0.994604317],
         [270.1181912,0.999676701],
-        [275.2569373,1]]
+        [275.2569373,1.000000000]]
 
-    
-    auto_fit()
+    fit(cdf_to_samples(np.array(data_cdf_example)[:,0], np.array(data_cdf_example)[:,1]), distribution_list=1, suppress_print=False)
+
+    # auto_fit()

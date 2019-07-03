@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 def least_square(x1, y1, x2, y2):
     import numpy as np
     from scipy.interpolate import interp1d
@@ -17,7 +18,7 @@ def test_eurocode_parametric_fire():
     VERSION: 0.0.1
     DATE: 1 Oct 2018
     DESCRIPTION:
-    This function verifies sfeprapy.func.temperature_fires.parametric_eurocode1 based on figure 7 in the referenced
+    This function verifies sfeprapy.ky2T.temperature_fires.parametric_eurocode1 based on figure 7 in the referenced
     document below.
     Holicky, M., Meterna, A., Sedlacek, G. and Schleich, J.B., 2005. Implementation of eurocodes, handbook 5, design of
     buildings for the fire situation. Leonardo da Vinci Pilot Project: Luxemboug.

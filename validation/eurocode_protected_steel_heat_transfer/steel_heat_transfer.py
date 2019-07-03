@@ -4,7 +4,7 @@ matplotlib.use('TkAgg')
 
 
 def protected_steel():
-    from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as steel
+    from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as steel
     from sfeprapy.func.fire_iso834 import fire
     from sfeprapy.dat.steel_carbon import Thermal
     import matplotlib.pyplot as plt
@@ -23,7 +23,6 @@ def protected_steel():
             time=t,
             temperature_ambient=T,
             rho_steel=rho,
-            c_steel_T=c,
             area_steel_section=0.017,
             k_protection=0.2,
             rho_protection=800,
@@ -39,18 +38,19 @@ def protected_steel():
 
 def protected_steel2():
     """
-    This run3 is for protected steel in eurocode under parametric fire curve.
+    This main is for protected steel in eurocode under parametric fire curve.
     """
     import matplotlib.pyplot as plt
     from sfeprapy.func.fire_parametric_ec import fire
-    from sfeprapy.func.temperature_steel_section import protected_steel_eurocode as steel
+    from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as steel
     from sfeprapy.dat.steel_carbon import Thermal
 
     steel_prop = Thermal()
     c = steel_prop.c()
     rho = steel_prop.rho()
 
-    kwargs_fire = {"A_t": 360,
+    kwargs_fire = {"t":0,
+                   "A_t": 360,
                    "A_f": 100,
                    "A_v": 72,
                    "h_eq": 1,
@@ -59,8 +59,6 @@ def protected_steel2():
                    "rho": 1,
                    "c": 2250000,
                    "t_lim": 20*60,
-                   "time_end": 2*60*60,
-                   "time_step": 1,
                    "time_start": 0,
                    "temperature_initial": 293.15}
     time_fire, temp_fire = fire(**kwargs_fire)

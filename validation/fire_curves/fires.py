@@ -69,7 +69,7 @@ def parametric_fire():
 
 def iso834():
     import pandas as pd
-    from sfeprapy.func.__temperature_fires import standard_fire_iso834 as fire
+    from sfeprapy.func.fire_iso834 import fire
     import numpy as np
     t = np.arange(0, 30*60, 5)
     res = {}

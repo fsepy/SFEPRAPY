@@ -14,6 +14,7 @@
 
 # Pycharm development files
 *.idea
+.idea*
 
 # Visual Studio Code development files
 /.vscode
@@ -29,3 +30,7 @@
 
 # Jupyter notebook temp files
 /.ipynb_checkpoints
+
+# Test files
+/input_template/
+!/input_template/solver_time_equivalence_solved.csv
