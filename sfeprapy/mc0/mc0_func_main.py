@@ -477,9 +477,8 @@ def y_results_summary(df_res: pd.DataFrame):
     # df_res.replace(-np.inf, np.nan)
     df_res = df_res.dropna(axis=0, how="any")
     
-    str_fmt = '{:<50.50}: {}\n'
-
-    str_fmt2 = '{:<50.50}: {:<.3f}\n'
+    str_fmt = '{:<24.24}: {}\n'
+    str_fmt2 = '{:<24.24}: {:<.3f}\n'
 
     str_out = ''
 
