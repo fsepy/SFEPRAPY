@@ -2,18 +2,19 @@
 
 ### KNOWN ISSUES AND TASKS LIST
 
-- [ ] Work out the most onerous beam location, which would give the worst time equivalence result.
-
+- [ ] sfeprapy.mc0 to remove intermediate json files, to run MCS for all cases in one go.
+- [ ] sfeprapy.mc0.mc0_func_gen, combine all MCS input DataFrames for individual cases into one DataFrame. One more column is needed to record case names.
+- [ ] sfeprapy.mc0.mc0 to refactor `path_work`, `input_master` and `config_master`, so the function handles inputs from Python rather than GUI file picker.
+- [ ] sfeprapy.mc0.mc0 to implement MCS for multiple cases in one DataFrame, to run MCS on case to case basis in alphabetical order, to to_csv after individual cases are run, to able to set `is_live` for individual cases.
 
 ### VERSIONS
 
 **XX/XX/2019 VERSION: 0.6**
 
-- [ ] New: `sfeprapy.mc_obj.py:MonteCarloSimulation` new generalised Monte Carlo Simulation framework
-- [ ] Improved: `sfeprapy.mc` removed stochastic parameter beam_loc from input file, beam location for travelling fire is solved (i.e. to give the worst steel temperature).
-- [ ] Improved: `sfeprapy.mc1` converted to OOP, MonteCarloCase and MonteCarlo classes are provided to substitute existing factions.
-- [ ] Fixed: `sfeprapy.mc` convergence of protection thickness maybe failed to derive.
-- [ ] Fixed: `sfeprapy.dat.ec_3_1_2kyT` units fixed, used degree K but should be degree C.
+- New: `sfeprapy.mc0` when `beam_loc` is removed, the most onerous location will be calculated and used based on specific fire curve.
+- Improved: `sfeprapy.mc1` MCS routine is converted to an object, MonteCarloCase and MonteCarlo classes are provided to substitute existing factions.
+- Fixed: `sfeprapy.mc1` convergence of protection thickness maybe failed to find.
+- Fixed: `sfeprapy.dat.ec_3_1_2kyT` units fixed, used degree K but should be degree C.
 
 **15/04/2019 VERSION: 0.5**
 

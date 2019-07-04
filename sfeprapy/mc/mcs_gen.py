@@ -79,6 +79,9 @@ def random_variable_generator(dict_in: dict, num_samples: int):
 
     # sample CDF points (y-axis value)
     if dist is 'lognorm_mod':
+        cfd_q = np.linspace(
+            getattr(stats)
+        )
         samples = 0
     else:
         cfd_q = np.linspace(
@@ -109,57 +112,31 @@ def dict_unflatten(dict_in: dict):
                 dict_out[k1] = dict(k2 = dict_in[k])
 
 
+def main(x: dict, num_samples: int):
 
+    dict_out = dict()
 
+    for k, v in x.items():
 
-# def main(x: Union[dict, str, pd.DataFrame], num_samples: int):
-#
-#     if isinstance(x, str):
-#         # csv to dict
-#         df_in = None
-#         if x.endswith('.csv'):
-#             df_in = pd.read_csv(x).set_index('PARAMETERS')
-#         elif x.endswith('.xlsx'):
-#             df_in = pd.read_excel(x).set_index('PARAMETERS')
-#         dict_in = df_in.to_dict()
-#         for i in list(dict_in.keys()):
-#             ii = dict_in[i]
-#             for j in
-#
-#     elif isinstance(x, pd.DataFrame):
-#         x.set_index(keys='PARAMETERS', inplace=True)
-#         dict_in = x.to_dict()
-#
-#
-#     if isinstance(x, pd.DataFrame):
-#         pass
-#     elif isinstance(x, str):
-#
-#     elif isinstance(x, dict):
-#
-#         dict_out = dict()
-#
-#         for k, v in x.items():
-#
-#             if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.float):
-#                 dict_out[k] = np.full((num_samples,), v, dtype=float)
-#
-#             elif isinstance(v, str):
-#                 dict_out[k] = np.full((num_samples,), v, dtype=np.dtype('U{:d}'.format(len(v))))
-#
-#             elif isinstance(v, dict):
-#                 if 'dist' in v:
-#                     dict_out[k] = random_variable_generator(v, num_samples)
-#                 else:
-#                     raise ValueError('Unknown input data type for {}.'.format(k))
-#             else:
-#                 raise TypeError('Unknown input data type for {}.'.format(k))
-#
-#         dict_out['index'] = np.arange(0, num_samples, 1)
-#
-#         df_out = pd.DataFrame.from_dict(dict_out, orient='columns')
-#
-#     return df_out
+        if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.float):
+            dict_out[k] = np.full((num_samples,), v, dtype=float)
+
+        elif isinstance(v, str):
+            dict_out[k] = np.full((num_samples,), v, dtype=np.dtype('U{:d}'.format(len(v))))
+
+        elif isinstance(v, dict):
+            if 'dist' in v:
+                dict_out[k] = random_variable_generator(v, num_samples)
+            else:
+                raise ValueError('Unknown input data type for {}.'.format(k))
+        else:
+            raise TypeError('Unknown input data type for {}.'.format(k))
+
+    dict_out['index'] = np.arange(0, num_samples, 1)
+
+    df_out = pd.DataFrame.from_dict(dict_out, orient='columns')
+
+    return df_out
 
 
 def _test_random_variable_generator():
@@ -185,15 +162,17 @@ def _test_random_variable_generator():
             lbound=50,
             mean=420,
             sd=126
+        ),
+        v6=dict(
+            dist='lognorm_mod',
+            ubound=1,
+            lbound=0,
+            mean=0.5,
+            sd=1,
         )
     )
 
     df_out = main(dict_in, 10000)
-
-    # import seaborn as sns
-    # import matplotlib.pyplot as plt
-    # sns.distplot(df_out, bins=100)
-    # plt.show()
 
     print(df_out)
 
