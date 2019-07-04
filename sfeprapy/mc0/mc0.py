@@ -79,27 +79,6 @@ def input_csv_to_jsons(path_input_file_csv):
     return path_work, list_path_input_jsons
 
 
-def input_df_to_jsons(df_input_params):
-
-    dict_dict_input_params = df_input_params.to_dict()
-
-    # dict to json (list)
-    dict_jsons = dict()
-    list_path_input_jsons = []
-    for key, val in dict_dict_input_params.items():
-        path_input_file_json = os.path.join(path_work, 'temp', key + '.json')
-
-        list_path_input_jsons.append(path_input_file_json)
-
-        try:
-            os.mkdir(os.path.dirname(path_input_file_json))
-        except FileExistsError:
-            pass
-
-        with open(path_input_file_json, 'w') as f:
-            json.dump(val, f)
-
-
 def jsons_to_mc_input_df(list_path_json, save_csv=False):
 
     list_df_mc_params = []
