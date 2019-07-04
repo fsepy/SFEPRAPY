@@ -287,7 +287,7 @@ def mc_inputs_generator(
                 beam_position=[(beam_loc_ratio_ubound + beam_loc_ratio_lbound) / 2 * room_depth],
                 fire_nft_ubound=[fire_nft_mean],
                 fire_hrr_density=[fire_hrr_density_mean],
-                fire_load_density_effeciency=[(fire_com_eff_ubound + fire_com_eff_lbound) / 2],
+                fire_load_density_efficiency=[(fire_com_eff_ubound + fire_com_eff_lbound) / 2],
                 index=[0]
             )
         )
@@ -377,7 +377,7 @@ def mc_inputs_generator(
                 beam_position=beam_lhs,
                 fire_nft_ubound=nft_lhs,
                 fire_hrr_density=fire_hrr_density,
-                fire_combustion_effeciency=comb_lhs,
+                fire_combustion_efficiency=comb_lhs,
                 index=np.arange(0, n_simulations, 1)
             )
         )

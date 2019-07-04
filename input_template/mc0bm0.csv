@@ -2,7 +2,7 @@ PARAMETERS,Example Case 1,Example Case 2
 is_live,1,1
 fire_mode,3,3
 probability_weight,1,1
-n_simulations,1000,1000
+n_simulations,500,500
 time_step,30,30
 time_duration,18000,18000
 fire_hrr_density_lbound,0.25,0.75

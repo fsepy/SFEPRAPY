@@ -53,6 +53,7 @@ def calc_time_equivalence_worker(arg):
 
 
 def calc_time_equivalence(
+        case_name,
         time_step,
         time_limiting,
         window_height,
@@ -65,7 +66,7 @@ def calc_time_equivalence(
         fire_mode,
         fire_nft_ubound,
         fire_load_density,
-        fire_combustion_effeciency,
+        fire_combustion_efficiency,
         fire_hrr_density,
         fire_spread_speed,
         fire_duration,
@@ -144,7 +145,7 @@ def calc_time_equivalence(
 
     # PERMEABLE AND INPUT CHECKS
 
-    fire_load_density_deducted = fire_load_density * fire_combustion_effeciency
+    fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
 
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
     room_depth, room_breadth = max(room_depth, room_breadth), min(room_depth, room_breadth)
@@ -448,9 +449,10 @@ def calc_time_equivalence(
 
     results = dict(
         index=index,
+        case_name=case_name,
         fire_type=fire_type,
         fire_load_density=fire_load_density,
-        fire_combustion_effeciency=fire_combustion_effeciency,
+        fire_combustion_efficiency=fire_combustion_efficiency,
         fire_hrr_density=fire_hrr_density,
         fire_spread_speed=fire_spread_speed,
         fire_nft_ubound=fire_nft_ubound,
@@ -490,7 +492,7 @@ def y_results_summary(df_res: pd.DataFrame):
     str_out += str_fmt.format('fire_type', fire_type_val)
     str_out += str_fmt.format('solver_convergence_status', np.sum(df_res['solver_convergence_status'].values))
     str_out += str_fmt2.format('beam_position', df_res['beam_position'].mean())
-    str_out += str_fmt2.format('fire_combustion_effeciency', df_res['fire_combustion_effeciency'].mean())
+    str_out += str_fmt2.format('fire_combustion_efficiency', df_res['fire_combustion_efficiency'].mean())
     str_out += str_fmt2.format('fire_hrr_density', df_res['fire_hrr_density'].mean())
     str_out += str_fmt2.format('fire_load_density', df_res['fire_load_density'].mean())
     str_out += str_fmt2.format('fire_nft_ubound', df_res['fire_nft_ubound'].mean())
