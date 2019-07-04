@@ -27,10 +27,12 @@ def select_path_input_csv():
     root.withdraw()
     folder_path = StringVar()
 
-    path_input_file_csv = filedialog.askopenfile(title='Select Input File',
-                                                 parent=root,
-                                                 filetypes=[('SPREADSHEET', ['.csv', '.xlsx'])],
-                                                 mode='r')
+    path_input_file_csv = filedialog.askopenfile(
+        title='Select Input File',
+        parent=root,
+        filetypes=[('SPREADSHEET', ['.csv', '.xlsx'])],
+        mode='r'
+    )
 
     folder_path.set(path_input_file_csv)
 
@@ -160,6 +162,7 @@ def mc_inputs_dict_to_df(dict_in: dict):
     iso834_time = np.arange(0, 6 * 60 * 60, 30)
     iso834_temperature = _fire_standard(iso834_time, 273.15 + 20)
 
+    df_mc['case_name'] = [dict_in['case_name']] * n_simulations
     df_mc['time_step'] = [dict_in['time_step']] * n_simulations
     df_mc['time_limiting'] = [dict_in['fire_tlim']] * n_simulations
     df_mc['window_height'] = [dict_in['room_window_height']] * n_simulations
@@ -329,16 +332,16 @@ def main(input_master: Union[str, pd.DataFrame] = None, config_master: dict = No
         df.to_csv(os.path.join(path_work, k + '.csv'), index=False)
 
 
-def main_param(input_master: dict = None, config_master: dict = None):
+def main_params(input_master: dict = None, config_master: dict = None):
 
     # ==================================================================================================================
     # Parse configurations
     # ==================================================================================================================
 
     if config_master:
-        n_threads = 1 if 'n_threads' in config_master else config_master['n_threads']
-        output_fires = 1 if 'output_fires' in config_master else config_master['output_fires']
-        output_summary = 1 if 'output_summary' in config_master else config_master['output_summary']
+        n_threads = 1 if 'n_threads' not in config_master else config_master['n_threads']
+        output_fires = 1 if 'output_fires' not in config_master else config_master['output_fires']
+        output_summary = 1 if 'output_summary' not in config_master else config_master['output_summary']
     else:
         n_threads = 1
         output_fires = 0
@@ -348,7 +351,7 @@ def main_param(input_master: dict = None, config_master: dict = None):
     # Spawn Monte Carlo parameters from dict() to DataFrame()s
     # ==================================================================================================================
     
-    list_df_mc = list
+    list_df_mc = []
     for case_name, params in input_master.items():
         params['case_name'] = case_name
         list_df_mc.append(mc_inputs_dict_to_df(params))
@@ -359,11 +362,13 @@ def main_param(input_master: dict = None, config_master: dict = None):
     # ==================================================================================================================
 
     list_out = list()
+    dict_fires = dict()
 
     for case_name in input_master.keys():
+
         df_mc_params_i = df_mc_params[df_mc_params['case_name']==case_name]
 
-        dict_mc_params_i = df_mc_params_i.to_dict('records')
+        list_dict_mc_params_i = df_mc_params_i.to_dict('records')
 
         print('{:<24.24}: {}'.format("CASE", case_name))
         print('{:<24.24}: {}'.format("NO. OF THREADS", n_threads))
@@ -372,16 +377,16 @@ def main_param(input_master: dict = None, config_master: dict = None):
         if n_threads == 1:
             results = []
 
-            for dict_mc_params in tqdm(list_dict_mc_params):
+            for dict_mc_params in tqdm(list_dict_mc_params_i, ncols=60):
                 results.append(calc_time_equivalence(**dict_mc_params))
                 time.sleep(0.001)
 
         else:
             m = mp.Manager()
             q = m.Queue()
-            p = mp.Pool(int(dict_config_params['n_threads']), maxtasksperchild=1000)
-            jobs = p.map_async(calc_time_equivalence_worker, [(dict_, q) for dict_ in list_dict_mc_params])
-            count_total_simulations = len(list_dict_mc_params)
+            p = mp.Pool(n_threads, maxtasksperchild=1000)
+            jobs = p.map_async(calc_time_equivalence_worker, [(dict_, q) for dict_ in list_dict_mc_params_i])
+            count_total_simulations = len(list_dict_mc_params_i)
 
             with tqdm(total=count_total_simulations, ncols=60) as pbar:
 
@@ -401,7 +406,7 @@ def main_param(input_master: dict = None, config_master: dict = None):
 
         # save to *.csv
         # results = np.array(results)
-        list_path_out_csv.append(os.path.join(path_work, 'temp', '{}_out.csv'.format(list_input_file_names[i])))
+        # list_path_out_csv.append(os.path.join(path_work, 'temp', '{}_out.csv'.format(list_input_file_names[i])))
         df_output = pd.DataFrame(results)
         # df_output.set_index("index", inplace=True)  # assign 'INDEX' column as DataFrame index
         df_output.sort_values('solver_time_equivalence_solved', inplace=True)  # sort base on time equivalence
@@ -413,28 +418,35 @@ def main_param(input_master: dict = None, config_master: dict = None):
 
         if output_fires:
             list_fire_temperature = fire_temperature.values
-            dict_fire_temperature = {'temperature_{}'.format(v): list_fire_temperature[i] for i, v in
-                                        enumerate(df_output['index'].values)}
+            dict_fire_temperature = {
+                'temperature_{}'.format(v): list_fire_temperature[i] for i, v in enumerate(df_output['index'].values)
+            }
             dict_fire_temperature['time'] = fire_time.iloc[0]
             df_fire_temperature = pd.DataFrame.from_dict(dict_fire_temperature)
-            df_fire_temperature.to_csv(os.path.join(path_work, 'temp', list_input_file_names[i] + '_fires.csv'),
-                                        index=False)
+            dict_fires[case_name] = df_fire_temperature
+            # df_fire_temperature.to_csv(os.path.join(path_work, 'temp', list_input_file_names[i] + '_fires.csv'),
+            #                             index=False)
 
         if output_summary:
             print(y_results_summary(df_output))
 
         df_output.pop('fire_time')
         df_output.pop('fire_temperature')
-        df_output.to_csv(list_path_out_csv[-1], index=False)
 
-    pp = list()
-    for fn in os.listdir(os.path.join(path_work, 'temp')):
-        if fn.endswith('_out.csv'):
-            pp.append(os.path.join(path_work, 'temp', fn))
+        list_out.append(df_output)
 
-    dict_df_out = extract_results(*pp)
-    for k, df in dict_df_out.items():
-        df.to_csv(os.path.join(path_work, k + '.csv'), index=False)
+        # df_output.to_csv(list_path_out_csv[-1], index=False)
+
+    # pp = list()
+    # for fn in os.listdir(os.path.join(path_work, 'temp')):
+    #     if fn.endswith('_out.csv'):
+    #         pp.append(os.path.join(path_work, 'temp', fn))
+
+    # dict_df_out = extract_results(*pp)
+    # for k, df in dict_df_out.items():
+    #     df.to_csv(os.path.join(path_work, k + '.csv'), index=False)
+
+    return list_out, dict_fires
 
 
 if __name__ == '__main__':
@@ -533,14 +545,12 @@ if __name__ == '__main__':
         )
     )
 
-    _input_master_ = pd.DataFrame.from_dict({'Example Case': _input_master_})
-
     _config_master_ = dict(
-        n_threads=1,
+        n_threads=6,
         output_fires=0,
-        output_summary=0,
+        output_summary=1,
     )
 
-    warnings.filterwarnings('ignore')
+    # warnings.filterwarnings('ignore')
 
-    main_param(input_master=_input_master_, config_master=_config_master_)
+    main_params(input_master=_input_master_, config_master=_config_master_)
