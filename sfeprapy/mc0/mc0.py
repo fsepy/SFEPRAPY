@@ -247,9 +247,7 @@ def main(path_master_input_csv: Union[str, pd.DataFrame] = None):
             jobs = p.map_async(calc_time_equivalence_worker, [(dict_, q) for dict_ in list_dict_mc_params])
             count_total_simulations = len(list_dict_mc_params)
 
-            # pbar = tqdm(total=count_total_simulations, ncols=80)
-
-            with tqdm(total=count_total_simulations, ncols=80) as pbar:
+            with tqdm(total=count_total_simulations, ncols=60) as pbar:
 
                 while True:
                     if jobs.ready():
