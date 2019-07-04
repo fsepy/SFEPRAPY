@@ -180,6 +180,7 @@ def main_params(input_master: dict = None, config_master: dict = None):
         print('{:<24.24}: {}'.format("CASE", case_name))
         print('{:<24.24}: {}'.format("NO. OF THREADS", n_threads))
         print('{:<24.24}: {}'.format("NO. OF SIMULATIONS", len(df_mc_params_i.index)))
+        time.sleep(0.1)
 
         if n_threads == 1:
             results = []
