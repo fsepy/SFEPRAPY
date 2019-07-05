@@ -223,6 +223,7 @@ def main_params(input_master: dict = None, config_master: dict = None):
             dict_out['.'.join([case_name, 'fires'])] = df_fire_temperature
 
         if output_summary:
+            time.sleep(0.5)
             print(y_results_summary(df_output))
 
         df_output.pop('fire_time')
