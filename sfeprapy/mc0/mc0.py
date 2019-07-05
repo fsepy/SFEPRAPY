@@ -124,7 +124,7 @@ def main(path_input_master: str = None):
 
     for file_name, df_ in dict_out.items():
         if isinstance(df_, pd.DataFrame):
-            df_.to_csv(os.path.join(path_work, file_name))
+            df_.to_csv(os.path.join(path_work, file_name), index=False)
         else:
             warnings.warn('DataFrame object is expected, got {}.'.format(type(df_)))
 
