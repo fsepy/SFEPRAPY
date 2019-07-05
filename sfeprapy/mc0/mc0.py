@@ -180,14 +180,9 @@ def main_params(input_master: dict = None, config_master: dict = None):
         print('{:<24.24}: {}'.format("CASE", case_name))
         print('{:<24.24}: {}'.format("NO. OF THREADS", n_threads))
         print('{:<24.24}: {}'.format("NO. OF SIMULATIONS", len(df_mc_params_i.index)))
-        time.sleep(0.1)
 
         if n_threads == 1:
-            results = []
-
-            for dict_mc_params in tqdm(list_dict_mc_params_i, ncols=60):
-                results.append(calc_time_equivalence(**dict_mc_params))
-                time.sleep(0.001)
+            results = [calc_time_equivalence(**dict_mc_params) for dict_mc_params in tqdm(list_dict_mc_params_i, ncols=60)]
 
         else:
             m = mp.Manager()
@@ -196,19 +191,19 @@ def main_params(input_master: dict = None, config_master: dict = None):
             jobs = p.map_async(calc_time_equivalence_worker, [(dict_, q) for dict_ in list_dict_mc_params_i])
             count_total_simulations = len(list_dict_mc_params_i)
 
-            with tqdm(total=count_total_simulations, ncols=60) as pbar:
-
-                while True:
-                    if jobs.ready():
-                        if count_total_simulations > pbar.n:
-                            pbar.update(count_total_simulations - pbar.n)
-                        break
-                    else:
-                        if q.qsize() - pbar.n > 0:
-                            pbar.update(q.qsize() - pbar.n)
-                        time.sleep(1)
-                p.close()
-                p.join()
+            pbar = tqdm(total=count_total_simulations, ncols=60)
+            while True:
+                if jobs.ready():
+                    if count_total_simulations > pbar.n:
+                        pbar.update(count_total_simulations - pbar.n)
+                    break
+                else:
+                    if q.qsize() - pbar.n > 0:
+                        pbar.update(q.qsize() - pbar.n)
+                    time.sleep(1)
+            p.close()
+            p.join()
+            pbar.close()
 
             results = jobs.get()
 

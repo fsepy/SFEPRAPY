@@ -18,6 +18,7 @@
 
 # Visual Studio Code development files
 /.vscode
+.DS_Store
 
 # Environment files
 *.env
