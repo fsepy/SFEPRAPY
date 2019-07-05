@@ -191,19 +191,18 @@ def main_params(input_master: dict = None, config_master: dict = None):
             jobs = p.map_async(calc_time_equivalence_worker, [(dict_, q) for dict_ in list_dict_mc_params_i])
             count_total_simulations = len(list_dict_mc_params_i)
 
-            pbar = tqdm(total=count_total_simulations, ncols=60)
-            while True:
-                if jobs.ready():
-                    if count_total_simulations > pbar.n:
-                        pbar.update(count_total_simulations - pbar.n)
-                    break
-                else:
-                    if q.qsize() - pbar.n > 0:
-                        pbar.update(q.qsize() - pbar.n)
-                    time.sleep(1)
-            p.close()
-            p.join()
-            pbar.close()
+            with tqdm(total=count_total_simulations, ncols=60) as pbar:
+                while True:
+                    if jobs.ready():
+                        if count_total_simulations > pbar.n:
+                            pbar.update(count_total_simulations - pbar.n)
+                        break
+                    else:
+                        if q.qsize() - pbar.n > 0:
+                            pbar.update(q.qsize() - pbar.n)
+                        time.sleep(1)
+                p.close()
+                p.join()
 
             results = jobs.get()
 
