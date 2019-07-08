@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import copy
+from typing import Union
+
 import numpy as np
-from typing import Union, Optional
 
 
 def fire(
@@ -13,7 +14,7 @@ def fire(
         fire_spread_rate_ms: float,
         beam_location_height_m: float,
         beam_location_length_m: Union[float, list, np.ndarray],
-        fire_nft_c: float,
+        fire_nft_limit_c: float,
         opening_fraction: float = 0,
         opening_width_m: float = 0,
         opening_height_m: float = 0,
@@ -28,7 +29,7 @@ def fire(
     :param fire_spread_rate_ms: in m/s, is fire spread speed
     :param beam_location_height_m: in m, is the beam lateral distance to fire origin
     :param beam_location_length_m: in m, is the beam height above the floor
-    :param fire_nft_c: in deg.C, is the maximum near field temperature
+    :param fire_nft_limit_c: in deg.C, is the maximum near field temperature
     :param opening_fraction: in -, is the ventilation opening proportion between 0 to 1
     :param opening_width_m: in m, is ventilation opening width
     :param opening_height_m: in m, is ventilation opening height
@@ -77,11 +78,11 @@ def fire(
     l_fire_median = (l_fire_front + l_fire_end) / 2.
 
     # workout the far field temperature of gas T_g
-    if isinstance(l_s, float):
+    if isinstance(l_s, float) or isinstance(l_s, int):
         r = np.absolute(l_s - l_fire_median)
         T_g = np.where((r / h_s) > 0.8, (5.38 * np.power(Q / r, 2 / 3) / h_s) + 20., 0)
         T_g = np.where((r / h_s) <= 0.8, (16.9 * np.power(Q, 2 / 3) / np.power(h_s, 5/3)) + 20., T_g)
-        T_g[T_g >= fire_nft_c] = fire_nft_c
+        T_g[T_g >= fire_nft_limit_c] = fire_nft_limit_c
         return T_g
     elif isinstance(l_s, np.ndarray) or isinstance(l_s, list):
         l_s_list = copy.copy(l_s)
@@ -90,7 +91,7 @@ def fire(
             r = np.absolute(l_s - l_fire_median)
             T_g = np.where((r / h_s) > 0.8, (5.38 * np.power(Q / r, 2 / 3) / h_s) + 20., 0)
             T_g = np.where((r / h_s) <= 0.8, (16.9 * np.power(Q, 2 / 3) / np.power(h_s, 5/3)) + 20., T_g)
-            T_g[T_g >= fire_nft_c] = fire_nft_c
+            T_g[T_g >= fire_nft_limit_c] = fire_nft_limit_c
             T_g_list.append(T_g)
         return T_g_list
     else:
@@ -118,7 +119,7 @@ def check_fire():
             fire_spread_rate_ms=0.012,
             beam_location_height_m=3,
             beam_location_length_m=length / 2,
-            fire_nft_c=1050,
+            fire_nft_limit_c=1050,
         )
 
         ax.plot(time / 60, temperature, label="Room length {:4.0f} m".format(length))
@@ -150,7 +151,7 @@ def check_fire_multiple_beam_location():
         fire_spread_rate_ms=0.012,
         beam_location_height_m=3,
         beam_location_length_m=np.linspace(0, length, 12)[1:-1],
-        fire_nft_c=1050,
+        fire_nft_limit_c=1050,
     )
 
     for temperature in temperature_list:
@@ -165,3 +166,4 @@ def check_fire_multiple_beam_location():
 
 if __name__ == '__main__':
     check_fire_multiple_beam_location()
+    check_fire()
