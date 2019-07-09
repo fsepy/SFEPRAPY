@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from scipy.interpolate import interp1d
 import numpy as np
 import pandas as pd
 
-from sfeprapy.func.fire_travelling import fire as _fire_travelling
-from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode_max_temperature as _steel_temperature_max
+from sfeprapy.dat.ec_3_1_2_kyT import ky2T_probabilistic_vectorised
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
-from sfeprapy.dat.ec_3_1_2_kyT import ky2T, ky2T_vectorised, ky2T_probabilistic_vectorised
+from sfeprapy.func.fire_travelling_depreciated import fire as _fire_travelling
+from sfeprapy.func.heat_transfer_protected_steel_ec import \
+    protected_steel_eurocode_max_temperature as _steel_temperature_max
 
 
 def a_solve_steel_protection_thickness_in_iso_fire(
