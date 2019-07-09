@@ -4,13 +4,13 @@ import numpy as np
 def fire(
         t: np.ndarray,
         T_0: float,
-        q_fd:float,
+        q_fd: float,
         hrrpua: float,
         l: float,
         w: float,
-        s:float,
-        h: float,
-        l_s:float,
+        s: float,
+        e_h: float,
+        e_l: float,
         T_max: float = 1323.15,
 ):
     """
@@ -21,8 +21,8 @@ def fire(
     :param l: float, [m], Compartment length.
     :param w: float, [m], Compartment width.
     :param s: float, [m/s], Fire spread speed.
-    :param h: float, [m], Vertical distance between element to fuel bed.
-    :param l_s: float, [m], Horizontal distance between element to fire front.
+    :param e_h: float, [m], Vertical distance between element to fuel bed.
+    :param e_l: float, [m], Horizontal distance between element to fire front.
     :return temperature: [K] An array representing temperature incorporating 'time'.
     """
 
@@ -66,21 +66,21 @@ def fire(
     l_fire_end[l_fire_end < 0] = 0.
     l_fire_end[l_fire_end > l] = l
     l_fire_median = (l_fire_front + l_fire_end) / 2.
-    r = np.absolute(l_s - l_fire_median)
+    r = np.absolute(e_l - l_fire_median)
     r[r == 0] = 0.001  # will cause crash if r = 0
 
     # workout the far field temperature of gas T_g
-    T_g1 = (5.38 * np.power(Q / r, 2 / 3) / h) * ((r / h) > 0.18)
-    T_g2 = (16.9 * np.power(Q, 2 / 3) / np.power(h, 5 / 3)) * ((r / h) <= 0.18)
+    T_g1 = (5.38 * np.power(Q / r, 2 / 3) / e_h) * ((r / e_h) > 0.18)
+    T_g2 = (16.9 * np.power(Q, 2 / 3) / np.power(e_h, 5 / 3)) * ((r / e_h) <= 0.18)
     T_g = T_g1 + T_g2 + T_0
 
     T_g[T_g >= T_max] = T_max
 
     # UNIT CONVERSION TO FIT OUTPUT (SI)
-    T_g_K = T_g + 273.15  # C -> K
+    T_g = T_g + 273.15  # C -> K
     Q *= 10e6  # MJ -> J
 
-    return T_g_K
+    return T_g
 
 
 if __name__ == '__main__':
@@ -105,8 +105,8 @@ if __name__ == '__main__':
             l=l,
             w=17.4,
             s=0.012,
-            h=3.5,
-            l_s=l/2,
+            e_h=3.5,
+            e_l=l / 2,
         )
         ax.plot(time / 60, temperature - 273.15)
 
