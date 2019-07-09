@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from typing import Union
 
 
-def gumbel_r(mean: float, sd: float, **_):
+def gumbel_r_(mean: float, sd: float, **_):
 
     # parameters Gumbel W&S
     alpha = 1.282 / sd
@@ -20,7 +18,7 @@ def gumbel_r(mean: float, sd: float, **_):
     return dict(loc=loc, scale=scale)
 
 
-def lognorm(mean: float, sd: float, **_):
+def lognorm_(mean: float, sd: float, **_):
 
     cov = sd / mean
 
@@ -34,7 +32,7 @@ def lognorm(mean: float, sd: float, **_):
     return dict(s=s, loc=loc, scale=scale)
 
 
-def norm(mean: float, sd: float, **_):
+def norm_(mean: float, sd: float, **_):
 
     loc = mean
     scale = sd
@@ -42,7 +40,7 @@ def norm(mean: float, sd: float, **_):
     return dict(loc=loc, scale=scale)
 
 
-def uniform(ubound: float, lbound: float, **_):
+def uniform_(ubound: float, lbound: float, **_):
 
     if lbound > ubound:
         lbound += ubound
@@ -58,37 +56,51 @@ def uniform(ubound: float, lbound: float, **_):
 def random_variable_generator(dict_in: dict, num_samples: int):
 
     # assign distribution type
+    dist_0 = dict_in['dist']
     dist = dict_in['dist']
 
     # assign distribution boundary (for samples)
     ubound = dict_in['ubound']
     lbound = dict_in['lbound']
 
+    # sample CDF points (y-axis value)
+    def generate_cfd_q(dist_, dist_kw_, lbound_, ubound_):
+        cfd_q_ = np.linspace(
+            getattr(stats, dist_).cdf(x=lbound_, **dist_kw_),
+            getattr(stats, dist_).cdf(x=ubound_, **dist_kw_),
+            num_samples)
+        samples_ = getattr(stats, dist_).ppf(q=cfd_q_, **dist_kw_)
+        return samples_
+
     # convert human distribution parameters to scipy distribution parameters
     dist_kw = dict()
-    if dist is 'gumbel_r':
-        dist_kw = gumbel_r(**dict_in)
-    elif dist is 'uniform':
-        dist_kw = uniform(**dict_in)
-    elif dist is 'norm':
-        dist_kw = norm(**dict_in)
-    elif dist is 'lognorm_mod':
-        dist_kw = lognorm(**dict_in)
+    if dist_0 is 'gumbel_r_':
+        dist_kw = gumbel_r_(**dict_in)
+        dist = 'gumbel_r'
+        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+    elif dist_0 is 'uniform_':
+        dist_kw = uniform_(**dict_in)
+        dist = 'uniform'
+        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+
+    elif dist_0 is 'norm_':
+        dist_kw = norm_(**dict_in)
+        dist = 'norm'
+        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+
+    elif dist_0 is 'lognorm_':
+        dist_kw = lognorm_(**dict_in)
+        dist = 'lognorm'
+        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+
+    elif dist_0 is 'lognorm_mod_':
+        dist_kw = lognorm_(**dict_in)
+        dist = 'lognorm'
+        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+        samples = 1 - samples
+
     else:
         raise ValueError('Unknown distribution type {}.'.format(dist))
-
-    # sample CDF points (y-axis value)
-    if dist is 'lognorm_mod':
-        cfd_q = np.linspace(
-            getattr(stats)
-        )
-        samples = 0
-    else:
-        cfd_q = np.linspace(
-            getattr(stats, dist).cdf(x=lbound, **dist_kw),
-            getattr(stats, dist).cdf(x=ubound, **dist_kw),
-            num_samples)
-        samples = getattr(stats, dist).ppf(q=cfd_q, **dist_kw)
 
     samples[samples == np.inf] = ubound
     samples[samples == -np.inf] = lbound
@@ -145,26 +157,33 @@ def _test_random_variable_generator():
         v1=np.pi,
         v2='hello world.',
         v3=dict(
-            dist='uniform',
+            dist='uniform_',
             ubound=10,
             lbound=-1
         ),
         v4=dict(
-            dist='norm',
+            dist='norm_',
             ubound=5+1,
             lbound=5-1,
             mean=5,
             sd=1
         ),
         v5=dict(
-            dist='gumbel_r',
+            dist='gumbel_r_',
             ubound=2500,
             lbound=50,
             mean=420,
             sd=126
         ),
         v6=dict(
-            dist='lognorm_mod',
+            dist='lognorm_',
+            ubound=1,
+            lbound=0,
+            mean=0.5,
+            sd=1,
+        ),
+        v7=dict(
+            dist='lognorm_mod_',
             ubound=1,
             lbound=0,
             mean=0.5,

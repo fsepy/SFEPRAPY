@@ -21,9 +21,6 @@ def fire(t, A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, temperature_initi
     # UNITS: SI -> Equations
     q_fd /= 1e6  # [J/m2] -> [MJ/m2]
     t_lim /= 3600  # [s] -> [hr]
-    # time_end /= 3600  # [s] -> [hr]
-    # time_step /= 3600  # [s] -> [hr]
-    # time_start /= 3600  # [s] -> [hr]
     t = t / 3600  # [s] -> [hr]
     temperature_initial -= 273.15  # [K] -> [C]
 
