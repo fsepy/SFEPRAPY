@@ -198,7 +198,7 @@ def calc_time_equivalence(
         fire_spread_rate_ms=fire_spread_speed,
         beam_location_height_m=beam_loc_z,
         beam_location_length_m=beam_position,
-        fire_nft_c=fire_nft_ubound,
+        fire_nft_limit_c=fire_nft_ubound,
         opening_width_m=window_width,
         opening_height_m=window_height,
         opening_fraction=window_open_fraction,

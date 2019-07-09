@@ -582,6 +582,8 @@ def main(
 
 
 if __name__ == '__main__':
+    warnings.filterwarnings('ignore')
+
     from sfeprapy.func.fire_iso834 import fire as fire_iso834
 
     fire_time = np.arange(0, 2 * 60 * 60, 1)
@@ -620,11 +622,11 @@ if __name__ == '__main__':
         window_height=2,
         window_open_fraction=0.8,
         window_width=72)
-    print(_res_)
+    
+    for _k_, _v_ in _res_.items():
+        print('{:<30}: {}'.format(_k_, _v_))
 
     import matplotlib.pyplot as plt
-
-    fig, ax = plt.subplots()
-    ax.plot(fire_time, _res_['fire_temperature'])
-
+    fig, ax1 = plt.subplots()
+    ax1.plot(fire_time, _res_['fire_temperature'])
     plt.show()

@@ -109,7 +109,7 @@ def main(path_input_master: str = None):
     try:
         with open(os.path.join(path_work, 'config.json'), 'r') as f:
             dict_config_params = json.load(f)
-    except (FileExistsError, FileNotFoundError) as e:
+    except (FileExistsError, FileNotFoundError) as _:
         dict_config_params_default = {
             'n_threads': 1,
             'output_fires': 0,
