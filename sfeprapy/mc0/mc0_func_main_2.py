@@ -523,7 +523,8 @@ def main(
         solver_tol,
         window_height,
         window_open_fraction,
-        window_width
+        window_width,
+        **_
 ):
     res = dict()
 

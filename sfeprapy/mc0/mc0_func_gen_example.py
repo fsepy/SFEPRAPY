@@ -86,7 +86,7 @@ def mcs_gen_test_muted():
             ubound=1673.15,
             mean=1323.15,
             sd=0),
-        fire_combustion_efficient(
+        fire_combustion_efficiency=dict(
             dist='uniform_',
         ),
         fire_tlim=0.333,
