@@ -25,13 +25,7 @@ def fire(
     :param e_l: float, [m], Horizontal distance between element to fire front.
     :return temperature: [K] An array representing temperature incorporating 'time'.
     """
-
-    # DEPRECIATED 02/05/2019
-    # :param A_v: [float][m2] Ventilation area
-    # :param h_eq: [float][m] Weighted ventilation height
-
-    # SETTINGS
-
+    
     # UNIT CONVERSION TO FIT EQUATIONS
     T_0 -= 273.15
     q_fd /= 1e6
