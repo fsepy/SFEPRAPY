@@ -162,33 +162,34 @@ def _test_random_variable_generator():
     dict_in = dict(
         v1=np.pi,
         v2='hello world.',
-        v3=dict(
+        v3=np.array([0, 1, 2]),
+        v4=dict(
             dist='uniform_',
             ubound=10,
             lbound=-1
         ),
-        v4=dict(
+        v5=dict(
             dist='norm_',
             ubound=5+1,
             lbound=5-1,
             mean=5,
             sd=1
         ),
-        v5=dict(
+        v6=dict(
             dist='gumbel_r_',
             ubound=2500,
             lbound=50,
             mean=420,
             sd=126
         ),
-        v6=dict(
+        v7=dict(
             dist='lognorm_',
             ubound=1,
             lbound=0,
             mean=0.5,
             sd=1,
         ),
-        v7=dict(
+        v8=dict(
             dist='lognorm_mod_',
             ubound=1,
             lbound=0,
