@@ -138,7 +138,10 @@ def main(x: dict, num_samples: int):
 
         elif isinstance(v, dict):
             if 'dist' in v:
-                dict_out[k] = random_variable_generator(v, num_samples)
+                try:
+                    dict_out[k] = random_variable_generator(v, num_samples)
+                except KeyError:
+                    raise('Missing parameters in input variable {}.'.format(k))
             else:
                 raise ValueError('Unknown input data type for {}.'.format(k))
         else:
