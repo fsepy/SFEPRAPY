@@ -135,6 +135,9 @@ def main(x: dict, num_samples: int):
 
         elif isinstance(v, str):
             dict_out[k] = np.full((num_samples,), v, dtype=np.dtype('U{:d}'.format(len(v))))
+        
+        elif isinstance(v, np.ndarray) or isinstance(v, list):
+            dict_out[k] = list(np.full((num_samples, len(v)), v, dtype=np.ndarray))
 
         elif isinstance(v, dict):
             if 'dist' in v:
