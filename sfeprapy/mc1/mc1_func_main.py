@@ -337,9 +337,9 @@ def main(
     df_out.pop('fire_iso834_temperature')
     df_out.pop("window_height")
     df_out.pop("window_width")
-    # df_out.pop("room_breadth")
-    # df_out.pop("room_depth")
-    # df_out.pop("room_height")
+    # df_mcs_in.pop("room_breadth")
+    # df_mcs_in.pop("room_depth")
+    # df_mcs_in.pop("room_height")
     df_out.pop("room_wall_thermal_inertia")
     df_out.pop("fire_mode")
     df_out.pop("fire_time_step")
@@ -361,10 +361,10 @@ def main(
     df_out.pop("solver_thickness_ubound")
     df_out.pop("solver_tolerance")
     df_out.pop("solver_iteration_limit")
-    # df_out.pop("solver_thickness_solved")
-    # df_out.pop("flag_solver_status")
-    # df_out.pop("solver_iteration_count")
-    # df_out.pop("fire_type")
+    # df_mcs_in.pop("solver_thickness_solved")
+    # df_mcs_in.pop("flag_solver_status")
+    # df_mcs_in.pop("solver_iteration_count")
+    # df_mcs_in.pop("fire_type")
 
     return df_out
 

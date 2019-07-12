@@ -1,23 +1,61 @@
 # -*- coding: utf-8 -*-
+import time
+import warnings
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
+from sfeprapy.func.mcs_gen import main as mcs_gen
+from sfeprapy.mc0.mc0_func_main_2 import main as mcs_calc
+from sfeprapy.mc0.mc0_func_main_2 import main_mp_wrapper
+
+warnings.filterwarnings('ignore')
+
+def main(dict_mc0_in):
+    n_threads = 1
+
+    df_mcs_in = mcs_gen(dict_mc0_in, dict_mc0_in['n_simulations'])
+    list_mcs_in = df_mcs_in.to_dict(orient='records')
+    list_df_mcs_out = list()
+
+    if n_threads == 1:
+        for i in tqdm(list_mcs_in):
+            mcs_calc(**i)
+    else:
+        import multiprocessing as mp
+        m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
+        q = m.Queue()
+        jobs = p.map_async(main_mp_wrapper, [(dict_, q) for dict_ in list_mcs_in])
+        n_simulations = len(list_mcs_in)
+        with tqdm(total=n_simulations, ncols=60) as pbar:
+            while True:
+                if jobs.ready():
+                    if n_simulations > pbar.n:
+                        pbar.update(n_simulations - pbar.n)
+                    break
+                else:
+                    if q.qsize() - pbar.n > 0:
+                        pbar.update(q.qsize() - pbar.n)
+                    time.sleep(1)
+            p.close()
+            p.join()
+            mcs_out = jobs.get()
+    df_mcs_out = pd.DataFrame(mcs_out)
+    df_mcs_out.drop('fire_temperature')
+    df_mcs_out.sort_values('solver_time_equivalence_solved', inplace=True)  # sort base on time equivalence
+
+    return df_mcs_out
 
 
-if __name__ == '__main__':
-    import time
-    import warnings
-    import numpy as np
-    from tqdm import tqdm
-    from sfeprapy.func.mcs_gen import main as mcs_gen
-    from sfeprapy.mc0.mc0_func_main_2 import main as mcs_calc
+def main_test():
     from sfeprapy.func.fire_iso834 import fire as isofire
-    
-    warnings.filterwarnings('ignore')
 
-    fire_time = np.arange(0, 3*60*60+30, 30, dtype=float)
+    fire_time = np.arange(0, 3 * 60 * 60 + 30, 30, dtype=float)
     fire_temperature_iso834 = isofire(fire_time, 293.15)
 
-    dict_in = dict(
+    dict_mc0_in = dict(
+        n_simulations=1000,
         probability_weight=0.2,
-        n_simulations=10000,
         time_step=30,
         time_duration=18000,
 
@@ -79,12 +117,37 @@ if __name__ == '__main__':
         window_height=2.5,
         window_open_fraction=0.8,
         window_width=72
-
     )
 
-    df_out = mcs_gen(dict_in, 1000)
+    n_threads = 1
 
-    list_out = df_out.to_dict(orient='records')
+    df_mcs_in = mcs_gen(dict_mc0_in, dict_mc0_in['n_simulations'])
+    list_mcs_in = df_mcs_in.to_dict(orient='records')
+    list_df_mcs_out = list()
 
-    for i in tqdm(list_out):
+    if n_threads == 1:
+        for i in tqdm(list_mcs_in):
             mcs_calc(**i)
+    else:
+        import multiprocessing as mp
+        m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
+        q = m.Queue()
+        jobs = p.map_async(main_mp_wrapper, [(dict_, q) for dict_ in list_mcs_in])
+        n_simulations = len(list_mcs_in)
+        with tqdm(total=n_simulations, ncols=60) as pbar:
+            while True:
+                if jobs.ready():
+                    if n_simulations > pbar.n:
+                        pbar.update(n_simulations - pbar.n)
+                    break
+                else:
+                    if q.qsize() - pbar.n > 0:
+                        pbar.update(q.qsize() - pbar.n)
+                    time.sleep(1)
+            p.close()
+            p.join()
+        mcs_out = jobs.get()
+        df_mcs_out = pd.DataFrame(mcs_out)
+        df_mcs_out.drop('fire_temperature')
+        df_mcs_out.sort_values('solver_time_equivalence_solved', inplace=True)  # sort base on time equivalence
+        list_df_mcs_out.append(df_mcs_out)

@@ -112,8 +112,8 @@ def ky_req_calc(n_samples):
     # plt.hist(Tpscale, bins=200, weights=weights)
     # plt.show()
 
-    # res = np.array(Tpscale)
-    # np.savetxt('test.csv', res)
+    # mcs_out = np.array(Tpscale)
+    # np.savetxt('test.csv', mcs_out)
 
 
 if __name__ == '__main__':

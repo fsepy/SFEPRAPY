@@ -490,8 +490,14 @@ def summerise_mcs_results(df_res: pd.DataFrame):
 
     return str_out
 
+def main_mp_wrapper(arg):
+    kwargs, q = arg
+    q.put("index: {}".format(kwargs["index"]))
+    return main(**kwargs)
+
 
 def main(
+        index,
         beam_cross_section_area,
         beam_position_vertical,
         beam_position_horizontal,
@@ -526,7 +532,7 @@ def main(
         window_width,
         **_
 ):
-    res = dict()
+    res = dict(index=index)
 
     res.update(decide_fire(
         window_height,
@@ -587,15 +593,15 @@ if __name__ == '__main__':
 
     from sfeprapy.func.fire_iso834 import fire as fire_iso834
 
-    fire_time = np.arange(0, 2 * 60 * 60, 1)
-    fire_temperature_iso834 = fire_iso834(fire_time, 293.15)
+    fire_time_ = np.arange(0, 2 * 60 * 60, 1)
+    fire_temperature_iso834 = fire_iso834(fire_time_, 293.15)
 
     _res_ = main(
         beam_cross_section_area=0.017,
         beam_position_vertical=2.5,
         beam_position_horizontal=18,
         beam_rho=7850,
-        fire_time=fire_time,
+        fire_time=fire_time_,
         fire_combustion_efficiency=0.8,
         fire_gamma_fi_q=1,
         fire_hrr_density=0.25,
@@ -606,7 +612,7 @@ if __name__ == '__main__':
         fire_t_alpha=300,
         fire_tlim=0.333,
         fire_temperature_iso834=fire_temperature_iso834,
-        fire_time_iso834=fire_time,
+        fire_time_iso834=fire_time_,
         protection_c=1700,
         protection_k=0.2,
         protection_protected_perimeter=2.14,
@@ -629,5 +635,5 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
     fig, ax1 = plt.subplots()
-    ax1.plot(fire_time, _res_['fire_temperature'])
+    ax1.plot(fire_time_, _res_['fire_temperature'])
     plt.show()
