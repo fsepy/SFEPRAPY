@@ -1,19 +1,13 @@
-import multiprocessing as mp
 import os
-import matplotlib.pyplot as plt
+import types
+import warnings
+
 import numpy as np
 import pandas as pd
-import json
-import warnings
-import types
-from tkinter import filedialog, Tk, StringVar
-from scipy.interpolate import interp1d
 import stats
+from scipy.interpolate import interp1d
 
-from sfeprapy.func.fire_iso834 import fire as _fire_standard
-from sfeprapy.mc1.mc1_func_main import main as func_main
 from sfeprapy.mc1.mc1_func_gen import mc_inputs_generator
-from sfeprapy.mc1.mc1_func_ky_req import ky_req_calc
 
 
 class MonteCarloSimulation:
@@ -44,7 +38,7 @@ class MonteCarloSimulation:
         self._flag_output_plot_teq = False
         self._flag_output_plot_dist = False
         self._func_gen = func_gen  # random inputs processing function
-        self._func_mcs = func_mcs  # monte carlo simulation (main) procedure
+        self._func_mcs = func_mcs  # monte carlo simulation (main_args) procedure
 
         # ==============================================================================================================
         # PLACEHOLDERS

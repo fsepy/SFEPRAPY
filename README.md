@@ -39,11 +39,11 @@ There are a number of components packed within SfePrapy and the most important t
 python -m SfePrapy.mc
 ```
 
-Alternatively, the following code will To main SfePrapy Monte Carlo simulation routine in Python:
+Alternatively, the following code will To main_args SfePrapy Monte Carlo simulation routine in Python:
 
 ```python
->> from sfeprapy.mc.__main__ import main
->> main()
+>> from sfeprapy.mc.__main__ import main_args
+>> main_args()
 ```
 
 Then the tool will ask to select an input file (in *.csv format, definition see following sections) and simulation starts after selecting an input file. Simulation progress will be displayed as below.
@@ -55,20 +55,20 @@ NO. OF SIMULATION: 1000
 ████████████████████████ 151.3s 
 ```
 
-The app will identify all input files contained in the folder directory and main them one by one until all input files are complete. Simulation output files will be saved under the input file directory.
+The app will identify all input files contained in the folder directory and main_args them one by one until all input files are complete. Simulation output files will be saved under the input file directory.
 
 ##### Input Parameters
 
 Example input files can be found in example_input.
 
-The input parameters have been organised on this sheet and the units provided. The key parameters to adjust for each modelling case have been highlighted red. Other parameters will need to be adjusted for specific cases. Completing this table produces the output in the layout required for the csv input file on the sheet "Input for SfePrapy". This can then be copied into the csv file used as the input for SfePrapy - see misc folder for template. The third sheet of this document provides an example input file which if saved as a csv holds the data for three cases but would only main the first two (see "is_live" variable).
+The input parameters have been organised on this sheet and the units provided. The key parameters to adjust for each modelling case have been highlighted red. Other parameters will need to be adjusted for specific cases. Completing this table produces the output in the layout required for the csv input file on the sheet "Input for SfePrapy". This can then be copied into the csv file used as the input for SfePrapy - see misc folder for template. The third sheet of this document provides an example input file which if saved as a csv holds the data for three cases but would only main_args the first two (see "is_live" variable).
 
 | PARAMETER                           | DESCRIPTION                                                  |
 | ----------------------------------- | ------------------------------------------------------------ |
 | **Model Settings**                  |                                                              |
-| is_live                             | This is the trigger to tell SfePrapy to main the model for this set of input values. In the input CSV there can be multiple cases |
+| is_live                             | This is the trigger to tell SfePrapy to main_args the model for this set of input values. In the input CSV there can be multiple cases |
 | fire_type_enforced                  | Integer.<br />0 - EC parametric fire only;<br />1 - Travelling fire only;<br />2 - EC parametric fire, German Annex;<br />3 - Option 0 and 1 as above; and<br />4 - Option 2 and 2 as above. |
-| simulations                         | Integer. The number of simulations that will   be main. A sensitivity analysis should be carried out to determine the   appropriate number of simulations |
+| simulations                         | Integer. The number of simulations that will   be main_args. A sensitivity analysis should be carried out to determine the   appropriate number of simulations |
 |                                     |                                                              |
 | **Compartment Geometry**            |                                                              |
 | room_breadth                        | Float, in [m]. Breadth of room                             |
@@ -88,7 +88,7 @@ The input parameters have been organised on this sheet and the units provided. T
 | **Fire inputs**                     |                                                              |
 | fire_tlim                           | Float, in [hour]<br/>Time for maximum gas temperature in case of fuel controlled fire. <br />Slow: 25/60 <br />Medium: 20/60 <br />Fast: 15/60<br />(Annex A EN 1991-1-2) |
 | time_step                           | Float, in [s]. Time step used for the model.   Suggested time step 30 s to balance results accuracy and computation time. |
-| time_duration                       | Float, in [s]. End of simulation. This should be set so that output data is produced allowing the target reliability to be determined. Not always necessary to main for extended periods. Normally set it to 4 hours and longer period of time for greater room length in order for travelling fire to propagate the entire room |
+| time_duration                       | Float, in [s]. End of simulation. This should be set so that output data is produced allowing the target reliability to be determined. Not always necessary to main_args for extended periods. Normally set it to 4 hours and longer period of time for greater room length in order for travelling fire to propagate the entire room |
 | room_wall_thermal_inertia           | Float, in [J/m²/K/√s]. Compartment thermal inertia |
 | fire_qfd_mean                       | Float, in [MJ/m²]. Fire load density - Gumbel distribution - mean |
 | fire_qfd_std                        | Float, in [MJ/m²]. Fire load density - Gumbel distribution - standard dev |
@@ -110,7 +110,7 @@ The input parameters have been organised on this sheet and the units provided. T
 | beam_protection_rho                 | Float, in [kg/m³]. Density of protection to beam |
 | beam_protection_c                   | Float, in [J/kg/K]. Specific heat of protection |
 
-A configuration file (.json) is also required to main the simulation
+A configuration file (.json) is also required to main_args the simulation
 
 `config.json` contains configurations for `SfePrapy.mc`.
 
@@ -120,7 +120,7 @@ A configuration file (.json) is also required to main the simulation
 }
 ```
 
-Activate Python virtual environment and main SfePrapy.
+Activate Python virtual environment and main_args SfePrapy.
 
 ```bash
 python -m SfePrapy.mc

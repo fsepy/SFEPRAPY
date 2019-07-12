@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+import numpy as np
+from pandas import DataFrame as df
 from scipy import stats
 from scipy.interpolate import interp1d
-from scipy.stats.distributions import norm
-from pandas import DataFrame as df
-import numpy as np
 
 
 def lognorm_parameters_true_to_inv(miu, sigma):

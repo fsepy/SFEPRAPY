@@ -1,5 +1,5 @@
 # Sub-functions for 1D heat transfer code
-# __main__ will main a non-linear 1D heat transfer analysis
+# __main__ will main_args a non-linear 1D heat transfer analysis
 # Danny Hopkin
 # OFR Consultants
 # 15/05/2019

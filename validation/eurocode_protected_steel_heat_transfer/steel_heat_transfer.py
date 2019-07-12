@@ -38,7 +38,7 @@ def protected_steel():
 
 def protected_steel2():
     """
-    This main is for protected steel in eurocode under parametric fire curve.
+    This main_args is for protected steel in eurocode under parametric fire curve.
     """
     import matplotlib.pyplot as plt
     from sfeprapy.func.fire_parametric_ec import fire
