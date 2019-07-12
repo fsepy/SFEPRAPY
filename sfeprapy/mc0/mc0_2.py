@@ -12,8 +12,8 @@ if __name__ == '__main__':
     
     warnings.filterwarnings('ignore')
 
-    fire_time_iso834 = np.arange(0, 3*60*60, 30)
-    fire_temperature_iso834 = isofire(fire_time_iso834, 293.15)
+    fire_time = np.arange(0, 3*60*60+30, 30, dtype=float)
+    fire_temperature_iso834 = isofire(fire_time, 293.15)
 
     dict_in = dict(
         probability_weight=0.2,
@@ -56,13 +56,13 @@ if __name__ == '__main__':
         beam_position_vertical=2.5,
         beam_position_horizontal=18,
         beam_rho=7850,
-        fire_time=fire_time_iso834,
+        fire_time=fire_time,
         fire_mode=3,
         fire_gamma_fi_q=1,
         fire_t_alpha=300,
         fire_tlim=0.333,
         fire_temperature_iso834=fire_temperature_iso834,
-        fire_time_iso834=fire_time_iso834,
+        fire_time_iso834=fire_time,
         protection_c=1700,
         protection_k=0.2,
         protection_protected_perimeter=2.14,
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     )
 
-    df_out = mcs_gen(dict_in, 100)
+    df_out = mcs_gen(dict_in, 1000)
 
     list_out = df_out.to_dict(orient='records')
 
