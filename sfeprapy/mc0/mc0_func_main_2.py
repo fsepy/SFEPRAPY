@@ -1,4 +1,4 @@
-# -*- coidng: utf-8 -*-
+# -*- coding: utf-8 -*-
 import copy
 import warnings
 from typing import Union
@@ -226,7 +226,7 @@ def evaluate_fire_temperature(
             fire_spread_rate_ms=fire_spread_speed,
             beam_location_height_m=beam_position_vertical,
             beam_location_length_m=beam_position_horizontal,
-            fire_nft_limit_c=fire_nft_limit,
+            fire_nft_limit_c=fire_nft_limit - 273.15,
             opening_width_m=window_width,
             opening_height_m=window_height,
             opening_fraction=window_open_fraction,
@@ -490,13 +490,14 @@ def summerise_mcs_results(df_res: pd.DataFrame):
 
     return str_out
 
-def main_mp_wrapper(arg):
+
+def teq_main_wrapper(arg):
     kwargs, q = arg
     q.put("index: {}".format(kwargs["index"]))
-    return main(**kwargs)
+    return teq_main(**kwargs)
 
 
-def main(
+def teq_main(
         index,
         beam_cross_section_area,
         beam_position_vertical,
@@ -532,7 +533,41 @@ def main(
         window_width,
         **_
 ):
-    res = dict(index=index)
+    res = dict(
+        index=index,
+        # beam_cross_section_area=beam_cross_section_area,
+        # beam_position_vertical=beam_position_vertical,
+        beam_position_horizontal=beam_position_horizontal,
+        # beam_rho=beam_rho,
+        # fire_time=fire_time,
+        fire_combustion_efficiency=fire_combustion_efficiency,
+        # fire_gamma_fi_q=fire_gamma_fi_q,
+        fire_hrr_density=fire_hrr_density,
+        fire_load_density=fire_load_density,
+        # fire_mode=fire_mode,
+        fire_nft_limit=fire_nft_limit,
+        fire_spread_speed=fire_spread_speed,
+        # fire_t_alpha=fire_t_alpha,
+        # fire_tlim=fire_tlim,
+        # fire_temperature_iso834=fire_temperature_iso834,
+        # fire_time_iso834=fire_time_iso834,
+        # protection_c=protection_c,
+        # protection_k=protection_k,
+        # protection_protected_perimeter=protection_protected_perimeter,
+        # protection_rho=protection_rho,
+        # room_breadth=room_breadth,
+        # room_depth=room_depth,
+        # room_height=room_height,
+        # room_wall_thermal_inertia=room_wall_thermal_inertia,
+        # solver_temperature_goal=solver_temperature_goal,
+        # solver_max_iter=solver_max_iter,
+        # solver_thickness_lbound=solver_thickness_lbound,
+        # solver_thickness_ubound=solver_thickness_ubound,
+        # solver_tol=solver_tol,
+        # window_height=window_height,
+        window_open_fraction=window_open_fraction,
+        # window_width=window_width,
+    )
 
     res.update(decide_fire(
         window_height,
@@ -594,9 +629,10 @@ if __name__ == '__main__':
     from sfeprapy.func.fire_iso834 import fire as fire_iso834
 
     fire_time_ = np.arange(0, 2 * 60 * 60, 1)
-    fire_temperature_iso834 = fire_iso834(fire_time_, 293.15)
+    fire_temperature_iso834_ = fire_iso834(fire_time_, 293.15)
 
-    _res_ = main(
+    _res_ = teq_main(
+        index=0,
         beam_cross_section_area=0.017,
         beam_position_vertical=2.5,
         beam_position_horizontal=18,
@@ -611,7 +647,7 @@ if __name__ == '__main__':
         fire_spread_speed=0.01,
         fire_t_alpha=300,
         fire_tlim=0.333,
-        fire_temperature_iso834=fire_temperature_iso834,
+        fire_temperature_iso834=fire_temperature_iso834_,
         fire_time_iso834=fire_time_,
         protection_c=1700,
         protection_k=0.2,

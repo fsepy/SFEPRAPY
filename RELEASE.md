@@ -65,7 +65,7 @@
 **31/10/2018 VERSION: 0.0.4**
 
 - Additional returned results from the Monte Carlo simulation tool `sfeprapy.time_equivalence_core.grouped_a_b`. Window opening factor `opening_factor` is added to be returned from the function.
-- `sfeprapy.time_equivalence.app` is now able to main a single simulation. When 'simulations=1' is defined, all distributed variables are disabled and mean or mean(upper, lower) is used for stochastic parameters.
+- `sfeprapy.time_equivalence.app` is now able to main_args a single simulation. When 'simulations=1' is defined, all distributed variables are disabled and mean or mean(upper, lower) is used for stochastic parameters.
 - New testing input file 'benchmark_file_1' is added for single simulation testing, all other parameters are identical to 'benchmark_file_0'. Benchmark files are moved to validation folder, contained in root directory.
 
 **21/08/2018 VERSION: 0.0.3**
@@ -77,14 +77,14 @@
 **15/08/2018 VERSION: 0.0.2**
 
 - Graphical folder select dialog is available;
-- Fixed an issue associated with `sfeprapy.time_equivalence.main()` where would not ask for new input folder directory when main more than once without re-import the module;
+- Fixed an issue associated with `sfeprapy.time_equivalence.main_args()` where would not ask for new input folder directory when main_args more than once without re-import the module;
 - Fixed window opening fraction factor distribution. Previously the mean $\mu$ and standard deviation $\sigma$ are adopted based on $x$, however, the `scipy.stats.lognorm` module takes $\mu$ and $\sigma$ based on $ln(x)$. This has been corrected;
 
 **04/08/2018 VERSION: 0.0.1**
 
 - Renamed the packaged from `sfepy` to `sfeprapy` (Structural Fire Engineering Probabilistic Risk Assessment Python);
 - Github repository created;
-- Updated progress bar appearance in `sfeprapy.time_equivalence.main()`;
+- Updated progress bar appearance in `sfeprapy.time_equivalence.main_args()`;
 - Implemented new window opening fraction distribution `window_open_fraction`, linear distribution is now replaced by inverse truncated log normal distribution;
 - Updated plot appearance; and
 - Project now can be installed through `pip install sfeprapy`.

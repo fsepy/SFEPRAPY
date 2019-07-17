@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
+import json
 import multiprocessing as mp
 import os
 import time
-import numpy as np
-import pandas as pd
-import json
 import warnings
 from tkinter import filedialog, Tk, StringVar
 
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
+
 from sfeprapy.func.fire_iso834 import fire as _fire_standard
-from sfeprapy.mc0.mc0_func_main import calc_time_equivalence_worker, calc_time_equivalence, y_results_summary
 from sfeprapy.mc0.mc0_func_gen import mc_inputs_generator
+from sfeprapy.mc0.mc0_func_main import calc_time_equivalence_worker, calc_time_equivalence, y_results_summary
 
 
 def select_path_input_csv():
@@ -238,7 +239,7 @@ def main_params(input_master: dict = None, config_master: dict = None):
 
 def _test_mc_params_1():
     _input_master_ = dict(
-        example_case_1 = dict(
+        example_case_1=dict(
             is_live=1,
             fire_mode=3,
             probability_weight=1,
