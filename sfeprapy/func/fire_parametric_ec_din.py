@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 import warnings
+
+import numpy as np
 
 
 def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_MJm2, gamma_fi_Q=1.0, q_ref=1300, alpha=0.0117, hrrpua_MWm2=0.25):
-    """This piece of code calculates a time dependent temeprature array in accordance of Eurocode 1991-1-2 German Annex
-    parametric fire.
-    Ian Fu (fuyans@gmail.com), 11 March 2019
+    """This piece of code calculates a time dependent temeprature array in accordance of Appendix AA in German Annex "
+    Simplified natural fire model for fully developed room fires" to Eurocode 1991-1-2 (DIN EN 1991-1-2/NA:2010-12).
+    Limitations are detailed in the Section AA.2 and they are:
+      - minimum fuel load 100 MJ/sq.m
+      - maximum fuel load 1,300 MJ/sq.m
+      - maximum floor area 400 sq.m
+      - maximum ceiling height 5 m
+      - minimum vertical vent opening to floor area 12.5 %
+      - maximum vertical vent opening to floor area 50 %
 
     PARAMETERS:
     :param t_array_s: numpy.array, in [s], time
