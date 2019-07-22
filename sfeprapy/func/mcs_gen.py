@@ -73,27 +73,26 @@ def random_variable_generator(dict_in: dict, num_samples: int):
         return samples_
 
     # convert human distribution parameters to scipy distribution parameters
-    dist_kw = dict()
-    if dist_0 is 'gumbel_r_':
+    if dist_0 == 'gumbel_r_':
         dist_kw = gumbel_r_(**dict_in)
         dist = 'gumbel_r'
         samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
-    elif dist_0 is 'uniform_':
+    elif dist_0 == 'uniform_':
         dist_kw = uniform_(**dict_in)
         dist = 'uniform'
         samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
 
-    elif dist_0 is 'norm_':
+    elif dist_0 == 'norm_':
         dist_kw = norm_(**dict_in)
         dist = 'norm'
         samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
 
-    elif dist_0 is 'lognorm_':
+    elif dist_0 == 'lognorm_':
         dist_kw = lognorm_(**dict_in)
         dist = 'lognorm'
         samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
 
-    elif dist_0 is 'lognorm_mod_':
+    elif dist_0 == 'lognorm_mod_':
         dist_kw = lognorm_(**dict_in)
         dist = 'lognorm'
         samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)

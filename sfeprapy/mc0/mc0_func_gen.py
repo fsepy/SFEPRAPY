@@ -165,9 +165,9 @@ def gumbel_r_trunc_ppf(a, b, n_rv, loc, scale, cdf_y=None):
     )
 
     # Following three lines are used to check the validity of the distribution
-    # print("511 (0.80): {:.4f}".format(stats.gumbel_r.cdf(x=510, loc=loc, scale=scale)))
-    # print("584 (0.90): {:.4f}".format(stats.gumbel_r.cdf(x=584, loc=loc, scale=scale)))
-    # print("655 (0.95): {:.4f}".format(stats.gumbel_r.cdf(x=655, loc=loc, scale=scale)))
+    # print("511 (0.80): {:.4f}".format(stats.gumbel_r._y_(x=510, loc=loc, scale=scale)))
+    # print("584 (0.90): {:.4f}".format(stats.gumbel_r._y_(x=584, loc=loc, scale=scale)))
+    # print("655 (0.95): {:.4f}".format(stats.gumbel_r._y_(x=655, loc=loc, scale=scale)))
 
     # Sample log normal distribution
     sampled = stats.gumbel_r.ppf(q=sampled_cfd, loc=loc, scale=scale)

@@ -1,14 +1,15 @@
 import multiprocessing as mp
 import os
 import time
+from typing import Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import json
 import warnings
 from tkinter import filedialog, Tk, StringVar
-from scipy.interpolate import interp1d
 import scipy.stats as stats
+from tqdm import tqdm
 
 from sfeprapy.func.fire_iso834 import fire as _fire_standard
 
@@ -334,186 +335,215 @@ class MonteCarloCase:
         return sampled
 
 
-class MonteCarlo:
-    DEFAULT_TEMP_NAME = 'temp'
+class MCS:
+    DEFAULT_TEMP_FOLDER_NAME = 'temp'
     DEFAULT_CONFIG_FILE_NAME = 'config.json'
-    DEFAULT_FIGURE_NAME_TEQ_COMBINED = 'teq_combined.png'
-    DEFAULT_CONFIG = dict(n_threads=1, reliability_target=0.8, output_fires=0, plot_teq_xlim=180,
-                          plot_style="seaborn-paper", plot_figuresize=[3.94, 2.76])
+    DEFAULT_CONFIG = dict(n_threads=1, output_fires=0)
 
     def __init__(self):
-        self._path_master_csv = None
+        self._path_wd = None
 
-        self._dict_input_param = dict
-        self._dict_input_wd = dict
-        self._dict_input_case_name = dict
+        self._df_master_input = None
+        self._dict_config = None
 
-        self._dict_config = dict
+        self._func_mcs_gen = None
+        self._func_mcs_calc = None
+        self._func_mcs_calc_mp = None
 
-        self._monte_carlo_cases = None
-
-    @property
-    def path_master_csv(self):
-        return self._path_master_csv
+        self._df_mcs_out = None
 
     @property
-    def dict_input_param(self):
-        return self._dict_input_param
+    def path_wd(self):
+        return self._path_wd
 
     @property
-    def dict_input_wd(self):
-        return self._dict_input_wd
+    def input(self) -> pd.DataFrame:
+        return self._df_master_input
 
     @property
-    def dict_input_case_name(self):
-        return self._dict_input_case_name
+    def config(self):
+        return self._dict_config
 
     @property
-    def config(self, key=None):
-        if key is None:
-            return self._dict_config
-        else:
-            try:
-                return self._dict_config[key]
-            except KeyError:
-                return None
+    def func_mcs_gen(self):
+        return self._func_mcs_gen
 
     @property
-    def monte_carlo_cases(self):
-        return self._monte_carlo_cases
+    def func_mcs_calc_mp(self):
+        return self._func_mcs_calc_mp
 
-    @path_master_csv.setter
-    def path_master_csv(self, val: str):
-        val = os.path.realpath(val)
-        if not os.path.isfile(val):
-            raise FileNotFoundError('file {path_master_csv} not found.'.format(path_master_csv=val))
-        self._path_master_csv = val
+    @property
+    def func_mcs_calc(self):
+        return self._func_mcs_calc
+
+    @property
+    def mcs_out(self) -> pd.DataFrame:
+        return self._df_mcs_out
+
+    @path_wd.setter
+    def path_wd(self, p_):
+        assert os.path.isdir(p_)
+        self._path_wd = p_
+
+    @input.setter
+    def input(self, df: pd.DataFrame):
+        df.set_index('PARAMETERS', inplace=True)
+        self._df_master_input = df
 
     @config.setter
-    def config(self, val: dict):
-        if not isinstance(val, dict):
-            raise TypeError('config should be a dict object.')
-        self._dict_config = val
+    def config(self, dict_config: dict):
+        self._dict_config = dict_config
 
-    @monte_carlo_cases.setter
-    def monte_carlo_cases(self, val: MonteCarloCase):
-        if not isinstance(self._monte_carlo_cases, list):
-            self._monte_carlo_cases = [val]
-        else:
-            flag_exist = False
-            for i, mc_case in enumerate(self._monte_carlo_cases):
-                if mc_case.name == val.name:
-                    self._monte_carlo_cases[i] = val
-                    flag_exist = True
+    @func_mcs_gen.setter
+    def func_mcs_gen(self, func_mcs_gen):
+        self._func_mcs_gen = func_mcs_gen
 
-            if not flag_exist:
-                self._monte_carlo_cases.append(val)
+    @func_mcs_calc.setter
+    def func_mcs_calc(self, func_mcs_calc):
+        self._func_mcs_calc = func_mcs_calc
 
-    def select_input_file(self):
-        self.path_master_csv = self._gui_file_path()
+    @func_mcs_calc_mp.setter
+    def func_mcs_calc_mp(self, func_mcs_calc_mp):
+        self._func_mcs_calc_mp = func_mcs_calc_mp
 
-        path_config = os.path.join(os.path.dirname(self.path_master_csv), self.DEFAULT_CONFIG_FILE_NAME)
+    @mcs_out.setter
+    def mcs_out(self, df_out: pd.DataFrame):
+        self._df_mcs_out = df_out
 
-        if os.path.isfile(path_config):
-            with open(path_config, 'r') as f:
+    def define_problem(self, data: Union[str, pd.DataFrame, dict] = None, config: dict = None, path_wd: str = None):
+
+        # to get problem definition: try to parse from csv/xls/xlsx
+
+        if data is None:
+            fp = os.path.realpath(self._get_file_path_gui())
+            self.path_wd = os.path.dirname(fp)
+            if fp.endswith('.xlsx') or fp.endswith('.xls'):
+                self.input = pd.read_excel(fp)
+            elif fp.endswith('.csv'):
+                self.input = pd.read_csv(fp)
+            else:
+                raise ValueError('Unknown input file format.')
+        elif isinstance(data, str):
+            fp = data
+            self.path_wd = os.path.dirname(fp)
+            if fp.endswith('.xlsx') or fp.endswith('.xls'):
+                self.input = pd.read_excel(fp)
+            elif fp.endswith('.csv'):
+                self.input = pd.read_csv(fp)
+            else:
+                raise ValueError('Unknown input file format.')
+        elif isinstance(data, pd.DataFrame):
+            self.input = data
+        elif isinstance(data, dict):
+            self.input = pd.DataFrame.from_dict(data)
+
+        # to get configuration: try to parse from cwd if there is any, otherwise chose default values
+
+        if self.path_wd is None:
+            self.config = self.DEFAULT_CONFIG
+        elif os.path.isfile(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME)):
+            with open(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), 'r') as f:
                 self.config = json.load(f)
         else:
-            warnings.warn('config.json not found, default config parameters are used.')
             self.config = self.DEFAULT_CONFIG
 
-    def make_input_param(self):
-        if self.path_master_csv is None:
-            raise ValueError('csv file path (path_master_csv) not defined.')
-        if self.config is None:
-            raise ValueError('config is not defined.')
+    def define_stochastic_parameter_generator(self, func):
+        self.func_mcs_gen = func
 
-        path_input_file_csv = self.path_master_csv
-        config = self.config
+    def define_calculation_routine(self, func, func_mp=None):
+        self.func_mcs_calc = func
+        self.func_mcs_calc_mp = func_mp
 
-        # csv to dict
-        df_input_params = pd.read_csv(path_input_file_csv).set_index('PARAMETERS')
-        df_input_params = df_input_params.append(
-            pd.Series({k: config['n_threads'] for k in df_input_params.columns.values}, name='n_threads'),
-            ignore_index=False)
+    def run_mcs(self):
+        # Check whether required parameters are defined
+        err_msg = list()
+        if self._df_master_input is None:
+            err_msg.append('Problem definition is not defined.')
+        if self._func_mcs_calc is None:
+            err_msg.append('Monte Carlo Simulation calculation routine is not defined.')
+        if self._func_mcs_gen is None:
+            err_msg.append('Monte Carlo Simulation stochastic parameter generator is not defined.')
+        if len(err_msg) > 0:
+            raise ValueError(r'\n'.join(err_msg))
 
-        dict_dict_input_params = df_input_params.to_dict()
+        # Prepare mcs parameter inputs
+        x1 = self.input.to_dict()
+        for case_name in list(x1.keys()):
+            for param_name in list(x1[case_name].keys()):
+                if ':' in param_name:
+                    param_name_parent, param_name_sibling = param_name.split(':')
+                    if param_name_parent not in x1[case_name]:
+                        x1[case_name][param_name_parent] = dict()
+                    x1[case_name][param_name_parent][param_name_sibling] = x1[case_name].pop(param_name)
+        # to convert all "string numbers" to float data type
+        for case_name in x1.keys():
+            for i, v in x1[case_name].items():
+                if isinstance(v, dict):
+                    for ii, vv in v.items():
+                        try:
+                            x1[case_name][i][ii] = float(vv)
+                        except:
+                            pass
+                else:
+                    try:
+                        x1[case_name][i] = float(v)
+                    except:
+                        pass
 
-        # dict to json (list)
-        for case_name, input_param in dict_dict_input_params.items():
-            MCC = MonteCarloCase(
-                path_wd=os.path.join(os.path.dirname(path_input_file_csv), self.DEFAULT_TEMP_NAME),
-                name=case_name
-            )
-            MCC.input_param = input_param
-            MCC.generate_mc_param()
+        # Generate mcs parameter samples
+        x2 = {k: self.func_mcs_gen(v, int(v['n_simulations'])) for k, v in x1.items()}
 
-            self.monte_carlo_cases = MCC
+        # Run mcs simulation
+        x3 = {k: self._mcs_mp(self.func_mcs_calc, self.func_mcs_calc_mp, x=v, n_threads=self.config['n_threads']) for k, v in x2.items()}
 
-    def make_mc_params(self):
-        if self.monte_carlo_cases is None:
-            raise ValueError('no monte carlo case has been set up.')
+        self.mcs_out = pd.concat(x3)
 
-        for case in self.monte_carlo_cases:
-            case.in2sc()
-
-    def run_mc(self):
-
-        for case in self.monte_carlo_cases:
-            case.mc_sim()
-            case.res2csv()
-
-    def plot_teq(self):
-        plot_data = {}
-        for case in self.monte_carlo_cases:
-            plot_data[case.name] = dict(
-                x=case.mc_results_get(''),
-                y=np.linspace(0, 1, case.n_simulations)
-            )
-
-        self._plot_figure(
-            path_save_figure=os.path.join(os.path.dirname(self.path_master_csv), self.DEFAULT_FIGURE_NAME_TEQ_COMBINED),
-            data=plot_data,
-            plot_xlim=(0, 1)
-        )
-
-
-    def _get_results_teq(self):
-
-        for case in self.monte_carlo_cases:
-            case.mc_results_get('solver_steel_temperature_solved')
+        if self.path_wd:
+            self.mcs_out.to_csv(os.path.join(self.path_wd, 'mcs_out.csv'), index=False)
 
     @staticmethod
-    def _plot_figure(
-            path_save_figure: str,
-            data: dict,
-            plot_xlim: tuple,
-            plot_figuresize=(3.94, 2.76),
-    ):
+    def _mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int):
+        list_mcs_in = x.to_dict(orient='records')
 
-        teq_fig, teq_ax = plt.subplots(figsize=plot_figuresize)
-        teq_ax.set_xlim([0, plot_xlim])
+        print('{:<24.24}: {}'.format("CASE", list_mcs_in[0]['case_name']))
+        print('{:<24.24}: {}'.format("NO. OF THREADS", n_threads))
+        print('{:<24.24}: {}'.format("NO. OF SIMULATIONS", len(x.index)))
 
-        for case_name, plot_data in data.items():
-            teq_ax.plot(plot_data['x'], plot_data['y'], label=case_name, linewidth=1)
-            teq_ax.set_ylabel('y-axis label')
-            teq_ax.set_xlabel('x-axis label')
-            teq_ax.set_xticks(ticks=np.arange(0, plot_xlim + 0.001, 30))
+        if n_threads == 1:
+            mcs_out = list()
+            for i in tqdm(list_mcs_in, ncols=60):
+                mcs_out.append(func(**i))
+        else:
+            import multiprocessing as mp
+            m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
+            q = m.Queue()
+            jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
+            n_simulations = len(list_mcs_in)
+            with tqdm(total=n_simulations, ncols=60) as pbar:
+                while True:
+                    if jobs.ready():
+                        if n_simulations > pbar.n:
+                            pbar.update(n_simulations - pbar.n)
+                        break
+                    else:
+                        if q.qsize() - pbar.n > 0:
+                            pbar.update(q.qsize() - pbar.n)
+                        time.sleep(1)
+                p.close()
+                p.join()
+                mcs_out = jobs.get()
 
-        teq_ax.legend().set_visible(True)
-        teq_ax.legend(prop={'size': 7})
-        plt.tight_layout()
-        plt.savefig(
-            path_save_figure,
-            transparent=True,
-            bbox_inches='tight',
-            dpi=300
-        )
+        df_mcs_out = pd.DataFrame(mcs_out)
+        try:
+            df_mcs_out.drop('fire_temperature', inplace=True, axis=1)
+        except KeyError:
+            pass
+        df_mcs_out.sort_values('solver_time_equivalence_solved', inplace=True)  # sort base on time equivalence
 
-        plt.clf()
-        plt.close()
+        return df_mcs_out
 
     @staticmethod
-    def _gui_file_path():
+    def _get_file_path_gui():
         # get a list of dict()s representing different scenarios
         root = Tk()
         root.withdraw()
@@ -530,9 +560,34 @@ class MonteCarlo:
             raise FileNotFoundError('file not found.')
 
 
+def test():
+
+    # test gui version
+    def test_gui():
+        from sfeprapy.mc0.mc0_func_main_2 import teq_main as calc
+        from sfeprapy.mc0.mc0_func_main_2 import teq_main_wrapper as calc_mp
+        from sfeprapy.func.mcs_gen import main as gen
+        mcs = MCS()
+        mcs.define_problem()
+        mcs.define_stochastic_parameter_generator(gen)
+        mcs.define_calculation_routine(calc, calc_mp)
+        mcs.run_mcs()
+
+    # test non-gui version
+    def test_arg_dict():
+        import sfeprapy.mc0 as mc0
+        from sfeprapy.mc0.mc0_func_main_2 import teq_main as calc
+        from sfeprapy.mc0.mc0_func_main_2 import teq_main_wrapper as calc_mp
+        from sfeprapy.func.mcs_gen import main as gen
+        mcs = MCS()
+        mcs.define_problem(data=mc0.EXAMPLE_INPUT_DICT, config=mc0.EXAMPLE_CONFIG_DICT)
+        mcs.define_stochastic_parameter_generator(gen)
+        mcs.define_calculation_routine(calc, calc_mp)
+        mcs.run_mcs()
+
+    # test_gui()
+    test_arg_dict()
+
 if __name__ == '__main__':
-    MC = MonteCarlo()
-    MC.select_input_file()
-    MC.make_input_param()
-    MC.make_mc_params()
-    MC.run_mc()
+    warnings.filterwarnings('ignore')
+    test()

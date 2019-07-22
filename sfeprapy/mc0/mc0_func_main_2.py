@@ -462,48 +462,47 @@ def solve_time_equivalence(
 
 
 def summerise_mcs_results(df_res: pd.DataFrame):
+
     df_res = copy.copy(df_res)
     df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
     df_res = df_res.dropna(axis=0, how="any")
 
-    def ostr(key_):
+    dict_ = dict()
+    dict_['fire_type'] = str({k: np.sum(df_res['fire_type'].values == k) for k in np.unique(df_res['fire_type'].values)})
+
+    for k in ['beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_load_density', 'fire_nft_limit', 'fire_spread_speed']:
         try:
             x = df_res[k].values
             x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
-            return '{:<30.30}: {:<9.3f} {:<9.3f} {:<9.3f}\n'.format(key_, x1, x2, x3)
+            dict_[k] = f'{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}'
         except KeyError:
-            warnings.warn('Unable to find key in MCS results DataFrame object.')
-            return ''
+            pass
 
-    str_fmt = '{:<24.24}: {}\n'
+    list_ = [f'{k:<24.24}: {v}' for k, v in dict_.items()]
 
-    fire_type = df_res['fire_type'].values
-    fire_type_val = dict()
-    for k in np.unique(fire_type):
-        fire_type_val[k] = np.sum(fire_type == k)
-
-    str_out = str_fmt.format('fire_type', fire_type_val)
-    str_out += str_fmt.format('solver_convergence_status', np.sum(df_res['solver_convergence_status'].values))
-    str_out += (ostr('beam_position') + ostr('fire_combustion_efficiency') + ostr('fire_hrr_density'))
-    str_out += (ostr('fire_load_density') + ostr('fire_nft_limit') + ostr('fire_spread_speed') + ostr(
-        'window_open_fraction'))
-
-    return str_out
+    return '\n'.join(list_)
 
 
-def teq_main_wrapper(arg):
-    kwargs, q = arg
-    q.put("index: {}".format(kwargs["index"]))
-    return teq_main(**kwargs)
+def teq_main_wrapper(args):
+    try:
+        kwargs, q = args
+        q.put("index: {}".format(kwargs["index"]))
+        return teq_main(**kwargs)
+    except (ValueError, AttributeError):
+        return teq_main(**args)
 
 
 def teq_main(
+        case_name,
+        n_simulations,
+        probability_weight,
         index,
         beam_cross_section_area,
         beam_position_vertical,
         beam_position_horizontal,
         beam_rho,
-        fire_time,
+        fire_time_duration,
+        fire_time_step,
         fire_combustion_efficiency,
         fire_gamma_fi_q,
         fire_hrr_density,
@@ -513,8 +512,6 @@ def teq_main(
         fire_spread_speed,
         fire_t_alpha,
         fire_tlim,
-        fire_temperature_iso834,
-        fire_time_iso834,
         protection_c,
         protection_k,
         protection_protected_perimeter,
@@ -533,7 +530,21 @@ def teq_main(
         window_width,
         **_
 ):
+
+    # Calculate fire time, this is used for all fire curves in the calculation
+
+    fire_time = np.arange(0, fire_time_duration + fire_time_step, fire_time_step)
+
+    # Calculate ISO 834 fire temperature
+
+    fire_time_iso834 = fire_time
+    fire_temperature_iso834 = (345. * np.log10((fire_time / 60.) * 8. + 1.) + 20.) + 273.15  # in [K]
+
+    # Inject results, i.e. these values will be in the output
     res = dict(
+        case_name=case_name,
+        n_simulations=n_simulations,
+        probability_weight=probability_weight,
         index=index,
         # beam_cross_section_area=beam_cross_section_area,
         # beam_position_vertical=beam_position_vertical,
@@ -569,6 +580,8 @@ def teq_main(
         # window_width=window_width,
     )
 
+    # To check what design fire to use
+
     res.update(decide_fire(
         window_height,
         window_width,
@@ -581,6 +594,8 @@ def teq_main(
         fire_combustion_efficiency,
         fire_hrr_density,
         fire_spread_speed))
+
+    # To calculate design fire temperature
 
     res.update(evaluate_fire_temperature(
         window_height,
@@ -602,6 +617,8 @@ def teq_main(
         fire_gamma_fi_q,
         beam_position_vertical,
         beam_position_horizontal))
+
+    # To calculate time equivalence
 
     res.update(solve_time_equivalence(
         fire_time,
@@ -657,7 +674,7 @@ if __name__ == '__main__':
         room_depth=31.25,
         room_height=3,
         room_wall_thermal_inertia=720,
-        solver_temperature_goal=550 + 273.15,
+        solver_temperature_goal=620+273.15,
         solver_max_iter=20,
         solver_thickness_lbound=0.0001,
         solver_thickness_ubound=0.0500,

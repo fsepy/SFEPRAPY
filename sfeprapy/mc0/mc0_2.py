@@ -7,20 +7,20 @@ import pandas as pd
 from tqdm import tqdm
 
 from sfeprapy.func.mcs_gen import main as mcs_gen
-from sfeprapy.mc0.mc0_func_main_2 import teq_main
-from sfeprapy.mc0.mc0_func_main_2 import teq_main_wrapper
+from sfeprapy.mc0.mc0_func_main_2 import teq_main, teq_main_wrapper, summerise_mcs_results
 
 warnings.filterwarnings('ignore')
 
 
-def main_args(dict_mc0_in, n_threads: int = 1):
+def main_args(dict_mc0_in, n_threads: int = 1) -> pd.DataFrame:
 
     df_mcs_in = mcs_gen(dict_mc0_in, dict_mc0_in['n_simulations'])
     list_mcs_in = df_mcs_in.to_dict(orient='records')
 
     if n_threads == 1:
-        for i in tqdm(list_mcs_in):
-            mcs_out = teq_main(**i)
+        mcs_out = list()
+        for i in tqdm(list_mcs_in, ncols=60):
+            mcs_out.append(teq_main(**i))
     else:
         import multiprocessing as mp
         m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
@@ -48,88 +48,55 @@ def main_args(dict_mc0_in, n_threads: int = 1):
         pass
     df_mcs_out.sort_values('solver_time_equivalence_solved', inplace=True)  # sort base on time equivalence
 
+    print(summerise_mcs_results(df_mcs_out))
+
     return df_mcs_out
 
 
-def main_test():
-    from sfeprapy.func.fire_iso834 import fire as isofire
+def test():
+    import time
 
-    fire_time = np.arange(0, 3 * 60 * 60 + 30, 30, dtype=float)
-    fire_temperature_iso834 = isofire(fire_time, 293.15)
+    def test_standard_case():
+        import copy
+        from sfeprapy.mc0 import EXAMPLE_INPUT
+        from scipy.interpolate import interp1d
+        input_ = copy.copy(EXAMPLE_INPUT)
+        teq = main_args(input_, 4)['solver_time_equivalence_solved'] / 60.
+        hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
+        x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
+        assert abs(interp1d(y, x)(0.8) - 60) < 2
 
-    dict_mc0_in = dict(
-        n_simulations=1000,
-        probability_weight=0.2,
-        time_step=30,
-        time_duration=18000,
+    def test_single_thread():
+        import copy
+        from sfeprapy.mc0 import EXAMPLE_INPUT
+        input_ = copy.copy(EXAMPLE_INPUT)
+        input_['n_simulations'] = 100
+        input_['n_threads'] = 1
+        main_args(input_, 1)
 
-        beam_position_horizontal=dict(
-            dist='uniform_',
-            lbound=31.25 * 0.666,
-            ubound=31.25 * 0.999
-        ),
-        fire_hrr_density=dict(
-            dist='uniform_',
-            lbound=0.25 - 0.001,
-            ubound=0.25 + 0.001),
-        fire_load_density=dict(
-            dist='gumbel_r_',
-            lbound=10,
-            ubound=1500,
-            mean=420,
-            sd=126),
-        fire_spread_speed=dict(
-            dist='uniform_',
-            lbound=0.0035,
-            ubound=0.0190),
-        fire_nft_limit=dict(
-            dist='norm_',
-            lbound=623.15,
-            ubound=2023.15,
-            mean=1323.15,
-            sd=93),
-        fire_combustion_efficiency=dict(
-            dist='uniform_',
-            lbound=0.8,
-            ubound=1.0),
-        window_open_fraction=dict(
-            dist='lognorm_mod_',
-            ubound=0.9999,
-            lbound=0.0001,
-            mean=0.2,
-            sd=0.2),
+    def test_multiple_threads():
+        import copy
+        from sfeprapy.mc0 import EXAMPLE_INPUT
+        input_ = copy.copy(EXAMPLE_INPUT)
+        input_['n_simulations'] = 100
+        input_['n_threads'] = 1
+        main_args(input_, 2)
 
-        beam_cross_section_area=0.017,
-        beam_position_vertical=2.5,
-        beam_rho=7850,
-        fire_time=fire_time,
-        fire_mode=3,
-        fire_gamma_fi_q=1,
-        fire_t_alpha=300,
-        fire_tlim=0.333,
-        fire_temperature_iso834=fire_temperature_iso834,
-        fire_time_iso834=fire_time,
-        protection_c=1700,
-        protection_k=0.2,
-        protection_protected_perimeter=2.14,
-        protection_rho=7850,
-        room_breadth=16,
-        room_depth=31.25,
-        room_height=3,
-        room_wall_thermal_inertia=720,
-        solver_temperature_goal=550 + 273.15,
-        solver_max_iter=20,
-        solver_thickness_lbound=0.0001,
-        solver_thickness_ubound=0.0500,
-        solver_tol=1.,
-        window_height=2.5,
-        window_width=72
-    )
+    print("Testing standard benchmark case...")
+    test_standard_case()
+    time.sleep(0.5)
+    print("Successful.")
 
-    return main_args(dict_mc0_in, 4)
+    print("Testing standard benchmark case...")
+    test_single_thread()
+    time.sleep(0.5)
+    print("Successful.")
+
+    print("Testing standard benchmark case...")
+    test_multiple_threads()
+    time.sleep(0.5)
+    print("Successful.")
 
 
 if __name__ == '__main__':
-    res = main_test()
-    res.to_csv('test.csv')
-    print(res.to_string())
+    test()
