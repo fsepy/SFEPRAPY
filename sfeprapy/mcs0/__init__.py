@@ -3,7 +3,7 @@ example_input = dict(
         is_live=1,
         fire_mode=3,
         probability_weight=1,
-        n_simulations=1000,
+        n_simulations=100,
         time_step=30,
         time_duration=18000,
         fire_hrr_density_lbound=0.25,
@@ -49,7 +49,7 @@ example_input = dict(
         is_live=1,
         fire_mode=3,
         probability_weight=1,
-        n_simulations=1000,
+        n_simulations=100,
         time_step=30,
         time_duration=18000,
         fire_hrr_density_lbound=0.75,
@@ -102,7 +102,7 @@ EXAMPLE_CONFIG_DICT = dict(
 EXAMPLE_INPUT_DICT = {
     "Standard Case 1": dict(
         case_name='Standard Case 1',
-        n_simulations=1000,
+        n_simulations=100,
         probability_weight=0.5,
         fire_time_step=30,
         fire_time_duration=18000,
@@ -167,7 +167,7 @@ EXAMPLE_INPUT_DICT = {
     ),
     "Standard Case 2": dict(
         case_name='Standard Case 2',
-        n_simulations=1000,
+        n_simulations=100,
         probability_weight=0.5,
         fire_time_step=30,
         fire_time_duration=18000,

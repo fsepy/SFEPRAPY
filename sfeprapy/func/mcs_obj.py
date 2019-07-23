@@ -1,16 +1,16 @@
+import json
 import os
 import time
-import json
 import warnings
-import pandas as pd
-from typing import Union
 from tkinter import filedialog, Tk, StringVar
+from typing import Union
 
+import pandas as pd
 from tqdm import tqdm
 
 
 class MCS:
-    DEFAULT_TEMP_FOLDER_NAME = 'temp'
+    DEFAULT_TEMP_FOLDER_NAME = 'mcs.out'
     DEFAULT_CONFIG_FILE_NAME = 'config.json'
     DEFAULT_CONFIG = dict(n_threads=1, output_fires=0)
 
@@ -114,12 +114,12 @@ class MCS:
 
         # to get configuration: try to parse from cwd if there is any, otherwise chose default values
 
-        if self.path_wd is None:
-            self.config = self.DEFAULT_CONFIG
-        elif os.path.isfile(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME)):
+        if config:  # first to check whether config is provided as parameter
+            self.config = config
+        elif os.path.isfile(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME)):  # second try to read config f
             with open(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), 'r') as f:
                 self.config = json.load(f)
-        else:
+        else:  # otherwise
             self.config = self.DEFAULT_CONFIG
 
     def define_stochastic_parameter_generator(self, func):
@@ -174,6 +174,8 @@ class MCS:
         for k, v in x2.items():
             x3[k] = self._mcs_mp(self.func_mcs_calc, self.func_mcs_calc_mp, x=v, n_threads=self.config['n_threads'])
             if self.path_wd:
+                if not os.path.exists(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME)):
+                    os.makedirs(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME))
                 x3[k].to_csv(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME, f'{k}.csv'))
 
         self.mcs_out = pd.concat([v for v in x3.values()])
@@ -185,9 +187,11 @@ class MCS:
     def _mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int):
         list_mcs_in = x.to_dict(orient='records')
 
+        time.sleep(0.5)  # to avoid clashes between the prints and progress bar
         print('{:<24.24}: {}'.format("CASE", list_mcs_in[0]['case_name']))
         print('{:<24.24}: {}'.format("NO. OF THREADS", n_threads))
         print('{:<24.24}: {}'.format("NO. OF SIMULATIONS", len(x.index)))
+        time.sleep(0.5)  # to avoid clashes between the prints and progress bar
 
         if n_threads == 1:
             mcs_out = list()
@@ -226,7 +230,6 @@ class MCS:
 
     @staticmethod
     def _get_file_path_gui():
-        # get a list of dict()s representing different scenarios
         root = Tk()
         root.withdraw()
         folder_path = StringVar()
@@ -239,7 +242,7 @@ class MCS:
             path_input_file_csv = os.path.realpath(path_input_file_csv.name)
             return path_input_file_csv
         except AttributeError:
-            raise FileNotFoundError('file not found.')
+            raise FileNotFoundError('File not found.')
 
 
 def test():
