@@ -123,6 +123,20 @@ def dict_unflatten(dict_in: dict):
                 dict_out[k1] = dict(k2 = dict_in[k])
 
 
+def dict_flatten(dict_in: dict):
+
+    dict_out = dict()
+
+    for k in list(dict_in.keys()):
+        if isinstance(dict_in[k], dict):
+            for kk, vv in dict_in[k].items():
+                dict_out[f'{k}:{kk}'] = vv
+        else:
+            dict_out[k] = dict_in[k]
+            
+    return dict_in
+
+
 def main(x: dict, num_samples: int):
 
     dict_out = dict()

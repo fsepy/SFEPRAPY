@@ -193,7 +193,7 @@ class MCS:
         print('{:<24.24}: {}'.format("NO. OF SIMULATIONS", len(x.index)))
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
 
-        if n_threads == 1:
+        if n_threads == 1 or func_mp is None:
             mcs_out = list()
             for i in tqdm(list_mcs_in, ncols=60):
                 mcs_out.append(func(**i))
@@ -272,6 +272,7 @@ def test():
 
     test_gui()
     test_arg_dict()
+
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
