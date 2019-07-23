@@ -99,7 +99,6 @@ EXAMPLE_CONFIG_DICT = dict(
     output_summary=1,
 )
 
-
 EXAMPLE_INPUT_DICT = dict(
     case_name='Standard Case',
     n_simulations=1000,
