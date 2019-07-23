@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
-from sfeprapy.func.fire_travelling_depreciated import fire as fire_travelling
+from sfeprapy.func.fire_travelling import fire as fire_travelling
 from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as _steel_temperature
 from sfeprapy.func.heat_transfer_protected_steel_ec import \
     protected_steel_eurocode_max_temperature as _steel_temperature_max
@@ -20,7 +20,6 @@ def _fire_travelling(**kwargs):
 
         kwarg_ht_ec = dict(
             time=kwargs['t'],
-            temperature_ambient=None,
             rho_steel=7850,
             area_steel_section=0.017,
             k_protection=0.2,
