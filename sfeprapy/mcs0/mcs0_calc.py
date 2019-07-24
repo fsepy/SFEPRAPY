@@ -460,9 +460,8 @@ def solve_time_equivalence(
     return results
 
 
-def summerise_mcs_results(df_res: pd.DataFrame):
-
-    df_res = copy.copy(df_res)
+def mcs_out_post(df: pd.DataFrame):
+    df_res = copy.copy(df)
     df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
     df_res = df_res.dropna(axis=0, how="any")
 
@@ -479,7 +478,14 @@ def summerise_mcs_results(df_res: pd.DataFrame):
 
     list_ = [f'{k:<24.24}: {v}' for k, v in dict_.items()]
 
-    return '\n'.join(list_)
+    print('\n'.join(list_), '\n')
+
+    try:
+        df.pop('fire_temperature')
+    except KeyError:
+        pass
+
+    return df
 
 
 def teq_main_wrapper(args):

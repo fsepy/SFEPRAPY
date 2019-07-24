@@ -95,8 +95,6 @@ example_input = dict(
 
 EXAMPLE_CONFIG_DICT = dict(
     n_threads=2,
-    output_fires=1,
-    output_summary=1,
 )
 
 EXAMPLE_INPUT_DICT = {

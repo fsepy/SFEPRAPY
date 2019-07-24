@@ -1,9 +1,10 @@
+import copy
 import json
 import os
 import time
 import warnings
 from tkinter import filedialog, Tk, StringVar
-from typing import Union
+from typing import Union, Callable
 
 import pandas as pd
 from tqdm import tqdm
@@ -23,6 +24,7 @@ class MCS:
         self._func_mcs_gen = None
         self._func_mcs_calc = None
         self._func_mcs_calc_mp = None
+        self._func_mcs_post = None
 
         self._df_mcs_out = None
 
@@ -39,16 +41,20 @@ class MCS:
         return self._dict_config
 
     @property
-    def func_mcs_gen(self):
+    def func_mcs_gen(self) -> Callable:
         return self._func_mcs_gen
 
     @property
-    def func_mcs_calc_mp(self):
+    def func_mcs_calc(self) -> Callable:
+        return self._func_mcs_calc
+
+    @property
+    def func_mcs_calc_mp(self) -> Callable:
         return self._func_mcs_calc_mp
 
     @property
-    def func_mcs_calc(self):
-        return self._func_mcs_calc
+    def func_mcs_post(self) -> Callable:
+        return self._func_mcs_post
 
     @property
     def mcs_out(self) -> pd.DataFrame:
@@ -68,16 +74,20 @@ class MCS:
         self._dict_config = dict_config
 
     @func_mcs_gen.setter
-    def func_mcs_gen(self, func_mcs_gen):
+    def func_mcs_gen(self, func_mcs_gen: Callable):
         self._func_mcs_gen = func_mcs_gen
 
     @func_mcs_calc.setter
-    def func_mcs_calc(self, func_mcs_calc):
+    def func_mcs_calc(self, func_mcs_calc: Callable):
         self._func_mcs_calc = func_mcs_calc
 
     @func_mcs_calc_mp.setter
-    def func_mcs_calc_mp(self, func_mcs_calc_mp):
+    def func_mcs_calc_mp(self, func_mcs_calc_mp: Callable):
         self._func_mcs_calc_mp = func_mcs_calc_mp
+
+    @func_mcs_post.setter
+    def func_mcs_post(self, func_mcs_post: Callable):
+        self._func_mcs_post = func_mcs_post
 
     @mcs_out.setter
     def mcs_out(self, df_out: pd.DataFrame):
@@ -125,9 +135,10 @@ class MCS:
     def define_stochastic_parameter_generator(self, func):
         self.func_mcs_gen = func
 
-    def define_calculation_routine(self, func, func_mp=None):
-        self.func_mcs_calc = func
-        self.func_mcs_calc_mp = func_mp
+    def define_calculation_routine(self, func_mcs, func_mcs_mp=None, func_mcs_out_post=None):
+        self.func_mcs_calc = func_mcs
+        self.func_mcs_calc_mp = func_mcs_mp
+        self.func_mcs_post = func_mcs_out_post
 
     def run_mcs(self):
         # Check whether required parameters are defined
@@ -172,11 +183,16 @@ class MCS:
         # Run mcs simulation
         x3 = dict()
         for k, v in x2.items():
-            x3[k] = self._mcs_mp(self.func_mcs_calc, self.func_mcs_calc_mp, x=v, n_threads=self.config['n_threads'])
+
+            x3_ = self._mcs_mp(self.func_mcs_calc, self.func_mcs_calc_mp, x=v, n_threads=self.config['n_threads'])
+            if self.func_mcs_post:
+                x3_ = self.func_mcs_post(x3_)
+            x3[k] = copy.copy(x3_)
+
             if self.path_wd:
                 if not os.path.exists(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME)):
                     os.makedirs(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME))
-                x3[k].to_csv(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME, f'{k}.csv'))
+                x3_.to_csv(os.path.join(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME), f'{k}.csv'))
 
         self.mcs_out = pd.concat([v for v in x3.values()])
 
@@ -184,7 +200,7 @@ class MCS:
             self.mcs_out.to_csv(os.path.join(self.path_wd, 'mcs_out.csv'), index=False)
 
     @staticmethod
-    def _mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int):
+    def _mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient='records')
 
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
@@ -217,15 +233,9 @@ class MCS:
                 p.join()
                 mcs_out = jobs.get()
 
+        # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)
-
-        try:
-            df_mcs_out.drop('fire_temperature', inplace=True, axis=1)
-        except KeyError:
-            pass
-
         df_mcs_out.sort_values('solver_time_equivalence_solved', inplace=True)  # sort base on time equivalence
-
         return df_mcs_out
 
     @staticmethod
