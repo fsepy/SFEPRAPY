@@ -14,9 +14,11 @@
 
 # Pycharm development files
 *.idea
+.idea*
 
 # Visual Studio Code development files
 /.vscode
+.DS_Store
 
 # Environment files
 *.env
@@ -29,3 +31,11 @@
 
 # Jupyter notebook temp files
 /.ipynb_checkpoints
+
+# Input templates, delete all test outputs
+/input_template/*
+!/input_template/config.json
+!/input_template/mc0*
+!/input_template/mc1*
+!/input_template/mcr1*
+!/input_template/benchmarks.csv

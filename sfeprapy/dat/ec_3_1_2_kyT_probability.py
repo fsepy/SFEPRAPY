@@ -46,8 +46,6 @@ def ky2T_probabilistic_vectorised(T: np.ndarray, epsilon_q: np.ndarray):
 
     k_y_2_T_bar = ky2T_vectorised(T)
 
-    T = T - 273.15
-
     k_y_2_T_star = (k_y_2_T_bar + 1e-6) / 1.7
 
     epsilon = stats.norm.ppf(epsilon_q)

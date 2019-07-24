@@ -2,22 +2,26 @@
 
 ### KNOWN ISSUES AND TASKS LIST
 
-- [ ] Work out the most onerous beam location, which would give the worst time equivalence result.
-
+- [ ] sfeprapy.mc0 to remove intermediate json files, to run MCS for all cases in one go.
+- [ ] sfeprapy.mc0.mc0_func_gen, combine all MCS input DataFrames for individual cases into one DataFrame. One more column is needed to record case names.
+- [ ] sfeprapy.mc0.mc0 to refactor `path_work`, `input_master` and `config_master`, so the function handles inputs from Python rather than GUI file picker.
+- [ ] sfeprapy.mc0.mc0 to implement MCS for multiple cases in one DataFrame, to run MCS on case to case basis in alphabetical order, to to_csv after individual cases are run, to able to set `is_live` for individual cases.
 
 ### VERSIONS
 
 **XX/XX/2019 VERSION: 0.6**
 
-- New: `sfeprapy.func.fire_travelling:fire_v` vectorised travelling fire module.
-- Improved: `sfeprapy.mc` removed stochastic parameter beam_loc from input file, beam location for travelling fire is solved (i.e. to give the worst steel temperature).
+- New: `sfeprapy.mc0` when `beam_loc` is removed, the most onerous location will be calculated and used based on specific fire curve.
+- Improved: `sfeprapy.mc1` MCS routine is converted to an object, MonteCarloCase and MonteCarlo classes are provided to substitute existing factions.
+- Fixed: `sfeprapy.mc1` convergence of protection thickness maybe failed to find.
+- Fixed: `sfeprapy.dat.ec_3_1_2kyT` units fixed, used degree K but should be degree C.
 
 **15/04/2019 VERSION: 0.5**
 
-- New: `sfeprapy.pd6688.annex_b_equivalent_time_of_fire_exposure` Time equivalence calculation as per PD 6688. Usage can be found in its docstring `annex_b_equivalent_time_of_fire_exposure.__doc__`.
+- New: `sfeprapy.pd6688.annex_b_equivalent_time_of_fire_exposure` PD 6688 equivalent time exposure calculation. Manual can be found in its docstring `annex_b_equivalent_time_of_fire_exposure.__doc__`.
 - New: (WIP) `sfeprapy.mc1` new equivalent time exposure procedure.
 - Improved: `sfeprapy.mc` optimised temperature dependent steel heat capacity routine, resulted in 65% less simulation time. Tested case shows 32.8 seconds reduced to 16.7 seconds for 1000 simulations on i7-7660U with 2 threads.
-- Fixed: `sfeprapy.mc.mc_inputs_generator.py:mc_inputs_generator` Positive and negative inf in sampled stochastic parameters. Extreme values are replaced by upper and lower limits.
+- Fixed: `sfeprapy.mc.mc_inputs_generator.py:mc_inputs_generator` eliminated nan values in sampled stochastic variables - it is discovered negative or positive values are sampled even with predefined boundary limits, these extreme values (i.e. ±inf) are replaced with prescribed (user defined) limits (i.e. lbound and ubound).
 
 **31/03/2019 VERSION: 0.4**
 
@@ -40,7 +44,7 @@
 
 **07/03/2019 VERSION: 0.0.8**
 
-- Improved: Capable of combine individual time equivalence curves into one with corresponding `probability_weight` (see new input file template).
+- Improved: Able to combine individual time equivalence curves into one with corresponding `probability_weight` (see new input file template).
 
 **17/02/2019 VERSION: 0.0.7**
 
@@ -60,27 +64,27 @@
 
 **31/10/2018 VERSION: 0.0.4**
 
-- Additional returned results from the Monte Carlo simulation tool `sfeprapy.time_equivalence_core.calc_time_equivalence`. Window opening factor `opening_factor` is added to be returned from the function.
-- `sfeprapy.time_equivalence.app` is now able to run a single simulation. When 'simulations=1' is defined, all distributed variables are disabled and mean or mean(upper, lower) is used for stochastic parameters.
+- Additional returned results from the Monte Carlo simulation tool `sfeprapy.time_equivalence_core.grouped_a_b`. Window opening factor `opening_factor` is added to be returned from the function.
+- `sfeprapy.time_equivalence.app` is now able to main_args a single simulation. When 'simulations=1' is defined, all distributed variables are disabled and mean or mean(upper, lower) is used for stochastic parameters.
 - New testing input file 'benchmark_file_1' is added for single simulation testing, all other parameters are identical to 'benchmark_file_0'. Benchmark files are moved to validation folder, contained in root directory.
 
 **21/08/2018 VERSION: 0.0.3**
 
-- Updated code relating simulation output result \*.p and \*res.csv files. This is to fix an issue which output fires do not align with input / output index numbering. The new \*.p and \*res.csv files are sorted by time equivalence. The new output files are significantly larger than previous versions due to more variables are being passed in and out from the main calculation function `sfeprapy.time_equivalence_core.calc_time_equivalence()`.
+- Updated code relating simulation output result \*.p and \*res.csv files. This is to fix an issue which output fires do not align with input / output index numbering. The new \*.p and \*res.csv files are sorted by time equivalence. The new output files are significantly larger than previous versions due to more variables are being passed in and out from the grouped_a_b calculation function `sfeprapy.time_equivalence_core.grouped_a_b()`.
 - Fire duration `fire_duration` is checked and reassigned if necessary so that the slowest travelling fire is able to travel the entire room `room_depth`. `fire_duration` defined in the input file will be the minimum fire duration.
 - Verification procedures are added for part of the project, including parametric fire testing, travelling fire testing and Eurocode protected steel heat transfer.
 
 **15/08/2018 VERSION: 0.0.2**
 
 - Graphical folder select dialog is available;
-- Fixed an issue associated with `sfeprapy.time_equivalence.run()` where would not ask for new input folder directory when run more than once without re-import the module;
+- Fixed an issue associated with `sfeprapy.time_equivalence.main_args()` where would not ask for new input folder directory when main_args more than once without re-import the module;
 - Fixed window opening fraction factor distribution. Previously the mean $\mu$ and standard deviation $\sigma$ are adopted based on $x$, however, the `scipy.stats.lognorm` module takes $\mu$ and $\sigma$ based on $ln(x)$. This has been corrected;
 
 **04/08/2018 VERSION: 0.0.1**
 
 - Renamed the packaged from `sfepy` to `sfeprapy` (Structural Fire Engineering Probabilistic Risk Assessment Python);
 - Github repository created;
-- Updated progress bar appearance in `sfeprapy.time_equivalence.run()`;
+- Updated progress bar appearance in `sfeprapy.time_equivalence.main_args()`;
 - Implemented new window opening fraction distribution `window_open_fraction`, linear distribution is now replaced by inverse truncated log normal distribution;
 - Updated plot appearance; and
 - Project now can be installed through `pip install sfeprapy`.

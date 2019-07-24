@@ -3,7 +3,7 @@
 def time_equivalence_core():
 
     import numpy as np
-    from sfeprapy.mc.mc_inputs_generator import calc_time_equivalence
+    from sfeprapy.mc0.mc0_func_gen import calc_time_equivalence
     from sfeprapy.func.fire_iso834 import fire as _fire_standard
     from sfeprapy.dat.steel_carbon import Thermal
 

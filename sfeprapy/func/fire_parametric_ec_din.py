@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 import warnings
 
+import numpy as np
 
-def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_MJm2, gamma_fi_Q=1.0, q_ref=1300, alpha=0.0117):
-    """
-    Description: This piece of code calculates a time dependent temeprature array in accordance of Eurocode 1991-1-2 German Annex
-    parametric fire.
-    Author: Ian Fu (fuyans@gmail.com)
-    Date: 11 March 2019
 
-    Variables:
+def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_MJm2, gamma_fi_Q=1.0, q_ref=1300, alpha=0.0117, hrrpua_MWm2=0.25):
+    """This piece of code calculates a time dependent temeprature array in accordance of Appendix AA in German Annex "
+    Simplified natural fire model for fully developed room fires" to Eurocode 1991-1-2 (DIN EN 1991-1-2/NA:2010-12).
+    Limitations are detailed in the Section AA.2 and they are:
+      - minimum fuel load 100 MJ/sq.m
+      - maximum fuel load 1,300 MJ/sq.m
+      - maximum floor area 400 sq.m
+      - maximum ceiling height 5 m
+      - minimum vertical vent opening to floor area 12.5 %
+      - maximum vertical vent opening to floor area 50 %
+
+    PARAMETERS:
     :param t_array_s: numpy.array, in [s], time
     :param A_w_m2: float, [m2], is window opening area
     :param h_w_m2: float, [m2], is weighted window opening height
@@ -22,9 +27,10 @@ def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_
     :param gamma_fi_Q: float, is the partial factor according to BB.5.3
     :param q_ref: float, [MJ/m2], is the reference upper bound heat release rate, 1300 [MJ/m2] for offices and residential
     :param alpha: float, [kW/s2], is the growth constant for t-square fire
-    :return T: numpy.array, in [K], is calculated gas temperature within fire enclosure
+    :param hrrpua_MWm2: float, [MW], is the heat release rate per unit area
+    :return T: numpy.ndarray, in [K], is calculated gas temperature within fire enclosure
 
-    References:
+    SUPPLEMENTAL DATA:
 
     DIN EN 1991-1-2/NA:1010-12 (English translation)
 
@@ -47,14 +53,13 @@ def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_
     |    7 | Shop, shopping centre                      | fast             |         150 |          0.25 |
     |    8 | Place of public assembly (theatre, cinema) | fast             |         150 |          0.50 |
     |    9 | Public transport                           | slow             |         600 |          0.25 |
-
     """
 
     # AA.1
     Q_max_v_k = 1.21 * A_w_m2 * np.sqrt(h_w_m2)  # [MW] AA.1
 
     # AA.2
-    Q_max_f_k = 0.25 * A_f_m2  # [MW] AA.2
+    Q_max_f_k = hrrpua_MWm2 * A_f_m2  # [MW] AA.2
 
     # AA.3, Characteristic value of the maximum HRR, is the lower value of the Q_max_f_k and Q_max_v_k
     Q_max_k = min(Q_max_f_k, Q_max_v_k)  # [MW]
@@ -67,12 +72,14 @@ def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_
     Q_max_d = gamma_fi_Q * Q_max_k
 
     # Work out fire type
-    if Q_max_v_k == Q_max_f_k:
+    if Q_max_v_k == Q_max_k:
         fire_type = 0
-    elif Q_max_f_k == Q_max_f_k:
+    elif Q_max_f_k == Q_max_k:
         fire_type = 1
     else:
         fire_type = np.nan
+
+    # print(fire_type)
 
     # AA.7 - AA.19: Calculate location of t and Q
     O = A_w_m2 * h_w_m2 ** 0.5 / A_t_m2
@@ -182,8 +189,17 @@ def T_t(t, t_1, t_2, t_2_x, t_3_x, T_1, T_2_x, T_3_x, A_t, A_w, h_w, t_alpha, T_
     # Initialise container for return value
     T = np.zeros(len(t))
 
+    # Check flash-over
+    # AA.30
+    Q_fo = 0.0078 * A_t + 0.378 * A_w * h_w ** 0.5  # [MW]
+    # AA.29
+    t_1_fo = (t_alpha ** 2 * Q_fo) ** 0.5  # [s]
+
+    t_1 = min(t_1, t_1_fo)
+
     # AA.26
     t_1_ = np.logical_and(0 <= t, t <= t_1)
+
     T_1_ = (T_1 - 20) / t_1 ** 2 * t[t_1_] ** 2 + 20
     T[t_1_] = T_1_  # [deg.C]
 
@@ -207,53 +223,103 @@ def T_t(t, t_1, t_2, t_2_x, t_3_x, T_1, T_2_x, T_3_x, A_t, A_w, h_w, t_alpha, T_
     T_3_ = (T_3_x - T_2_x) * ((t[t_3_] - t_2_x) / (t_3_x - t_2_x)) ** 0.5 + T_2_x
     T[t_3_] = T_3_  # [deg.C]
 
-    # Check flashover
-    # AA.30
-    Q_fo = 0.0078 * A_t + 0.378 * A_w * h_w ** 0.5  # [MW]
-
-    # AA.29
-    t_1_fo = (t_alpha ** 2 * Q_fo) ** 0.5  # [s]
-
-    # print(t_1, t_1_fo)
-    if t_1_fo < t_1:
-        t_1_fo_ = np.logical_and(t_1_fo < t, t <= t_1)
-        T[t_1_fo_] = T[t_1_][-1]
-
     # No temperate below T_initial
     T[T < T_initial] = T_initial
 
     return T
 
 
-if __name__ == '__main__':
+def plot_variable_of():
     import matplotlib.pyplot as plt
     plt.style.use('seaborn-paper')
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{circ}C$]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
 
-    xx = []
-    yy = []
-    ii = np.arange(1., 0, -0.1)
+    # define geometry
+    w = 16
+    l = 32
+    h = 3
 
-    for i in [1]:
+    h_v = 2
+
+    oo = (0.02, 0.04, 0.06, 0.10, 0.14, 0.20)  # desired opening factor
+
+    def of2wv(of, w, l, h, h_v):
+        # opening factor = Av * sqrt(hv) / At
+        # Av = h_v * w_v
+        # of * At / sqrt(h_v) = h_v * w_v
+        # w_v = of * At / sqrt(h_v) / h_v
+        return of * (2 * (w * l + l * h + h * w)) / h_v ** 0.5 / h_v
+
+    w_v_ = [of2wv(o, w, l, h, h_v) for o in oo]
+
+    print(w_v_)
+
+    for w_v in w_v_:
         q_ref = 1300
-        x = np.arange(0, 5*60*60+1, 1)
+        x = np.arange(0, 5 * 60 * 60 + 1, 1)
         y = fire(
-            t_array_s=x,
-            A_w_m2=8,
-            h_w_m2=2.5,
-            A_t_m2=80,
-            A_f_m2=16,
-            t_alpha_s=600,
-            b_Jm2s05K=750,
-            q_x_d_MJm2=q_ref*i,
+            t_array_s = x,
+            A_w_m2 = h_v * w_v,
+            h_w_m2 = h_v,
+            A_t_m2 = 2 * (l*w+w*h+h*l),
+            A_f_m2 = w*l,
+            t_alpha_s=300,
+            b_Jm2s05K=720,
+            q_x_d_MJm2=600,
             gamma_fi_Q=1.0,
             q_ref=q_ref
         )
-        ax.plot(x / 60, y, label="Fire load {q_fd:04.0f} [kW]".format(q_fd=i*q_ref))
-        xx.append(x)
-        yy.append(y)
+        ax.plot(x / 60, y, label="Opening Factor {:.2f}".format((h_v * w_v) * h_v**0.5 / (2*(w*h+h*l+l*w))))
 
     ax.legend().set_visible(True)
+    ax.grid(color='k', linestyle='--')
+    plt.tight_layout()
     plt.show()
+
+
+def plot_variable_qfd():
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-paper')
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    ax.set_xlabel('Time [minute]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
+
+    # define geometry
+
+    w = 16
+    l = 32
+    h = 3
+
+    h_v = 2
+    w_v = 5
+
+    q_fd_ = [150, 300, 450, 600]
+
+    for q_fd in q_fd_:
+        q_ref = 1300
+        x = np.arange(0, 5 * 60 * 60 + 1, 1)
+        y = fire(
+            t_array_s=x,
+            A_w_m2=h_v*w_v,
+            h_w_m2=h_v,
+            A_t_m2=2*(w*l+l*h+h*w),  # 80,
+            A_f_m2=w*l,
+            t_alpha_s=300,
+            b_Jm2s05K=750,
+            q_x_d_MJm2=q_fd,
+            gamma_fi_Q=1.0,
+            q_ref=q_ref
+        )
+        ax.plot(x / 60, y, label="Fuel load density {q_fd:4.0f} $MJ/m^2$".format(q_fd=q_fd))
+
+    ax.legend(loc=4).set_visible(True)
+    ax.grid(color='k', linestyle='--')
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == '__main__':
+    # plot_variable_qfd()
+    plot_variable_of()
