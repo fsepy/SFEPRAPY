@@ -1,7 +1,7 @@
-import copy
 
 
 def test_standard_case():
+    import copy
     from sfeprapy.func.mcs_obj import MCS
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
     from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
@@ -24,8 +24,8 @@ def test_standard_case():
     teq = mcs_out['solver_time_equivalence_solved'] / 60.
     hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
-    print(abs(interp1d(y, x)(0.8) - 60))
-    assert abs(interp1d(y, x)(0.8) - 60) < 1
+    teq_at_80_percentile = interp1d(y, x)(0.8)
+    assert 58 < teq_at_80_percentile < 62
 
 
 # test gui version
@@ -57,16 +57,7 @@ def test_arg_dict():
     mcs.run_mcs()
 
 
-
-
 if __name__ == '__main__':
-    import warnings
-    warnings.filterwarnings('ignore')
-    import time
-
     test_standard_case()
-    time.sleep(0.5)
     test_arg_dict()
-    time.sleep(0.5)
     test_gui()
-    time.sleep(0.5)
