@@ -13,7 +13,7 @@ from tqdm import tqdm
 class MCS:
     DEFAULT_TEMP_FOLDER_NAME = 'mcs.out'
     DEFAULT_CONFIG_FILE_NAME = 'config.json'
-    DEFAULT_CONFIG = dict(n_threads=1, output_fires=0)
+    DEFAULT_CONFIG = dict(n_threads=1)
 
     def __init__(self):
         self._path_wd = None
