@@ -233,6 +233,7 @@ class MCS:
                 p.close()
                 p.join()
                 mcs_out = jobs.get()
+                time.sleep(0.5)
 
         # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)
