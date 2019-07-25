@@ -126,9 +126,6 @@ class MCS:
 
         if config:  # first to check whether config is provided as parameter
             self.config = config
-        elif os.path.isfile(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME)):  # second try to read config f
-            with open(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), 'r') as f:
-                self.config = json.load(f)
         else:  # otherwise
             try:
                 with open(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), 'r') as f:
