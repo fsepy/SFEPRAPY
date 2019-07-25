@@ -130,7 +130,7 @@ class MCS:
             try:
                 with open(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), 'r') as f:
                     self.config = json.load(f)
-            except TypeError:
+            except (TypeError, FileNotFoundError):
                 self.config = self.DEFAULT_CONFIG
 
     def define_stochastic_parameter_generator(self, func):
