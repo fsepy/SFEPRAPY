@@ -16,7 +16,7 @@ setuptools.setup(
 
     name='sfeprapy',
 
-    version='0.6.1',
+    version='0.6.2',
 
     description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
