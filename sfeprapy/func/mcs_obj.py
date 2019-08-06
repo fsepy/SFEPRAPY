@@ -246,7 +246,8 @@ class MCS:
         root.withdraw()
         folder_path = StringVar()
 
-        path_input_file_csv = filedialog.askopenfile(title='Select Input File', filetypes=[('csv', ['.csv'])])
+        path_input_file_csv = filedialog.askopenfile(title='Select Input File',
+                                                     filetypes=[('MCS IN', ['.csv', '.xlsx'])])
         folder_path.set(path_input_file_csv)
         root.update()
 
