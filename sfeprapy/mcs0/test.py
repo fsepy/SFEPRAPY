@@ -25,6 +25,7 @@ def test_standard_case():
     hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     teq_at_80_percentile = interp1d(y, x)(0.8)
+    print(teq_at_80_percentile)
     assert 58 < teq_at_80_percentile < 62
 
 

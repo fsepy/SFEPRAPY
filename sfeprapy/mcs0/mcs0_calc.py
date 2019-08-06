@@ -195,10 +195,6 @@ def evaluate_fire_temperature(
     # Room internal surface area, total, including window openings
     room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
 
-    # if beam_position is not provided, solve for the worst case
-    if beam_position_horizontal < 0:
-        beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
-
     if fire_type == 0:
         kwargs_fire_0_paramec = dict(
             t=fire_time,
@@ -216,6 +212,9 @@ def evaluate_fire_temperature(
         fire_temperature = _fire_param(**kwargs_fire_0_paramec)
 
     elif fire_type == 1:
+        if beam_position_horizontal < 0:
+            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
+
         kwargs_fire_1_travel = dict(
             t=fire_time,
             fire_load_density_MJm2=fire_load_density_deducted,
@@ -231,6 +230,9 @@ def evaluate_fire_temperature(
             opening_fraction=window_open_fraction,
         )
         fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
+
+        if beam_position_horizontal < 0:
+            print(beam_position_horizontal)
 
     elif fire_type == 2:
         kwargs_fire_2_paramdin = dict(
@@ -250,7 +252,8 @@ def evaluate_fire_temperature(
         fire_temperature = None
 
     results = dict(
-        fire_temperature=fire_temperature
+        fire_temperature=fire_temperature,
+        beam_position_horizontal=beam_position_horizontal
     )
 
     return results
@@ -479,11 +482,6 @@ def mcs_out_post(df: pd.DataFrame):
     list_ = [f'{k:<24.24}: {v}' for k, v in dict_.items()]
 
     print('\n'.join(list_), '\n')
-
-    try:
-        df.pop('fire_temperature')
-    except KeyError:
-        pass
 
     return df
 

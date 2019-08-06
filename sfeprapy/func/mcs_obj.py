@@ -29,7 +29,7 @@ class MCS:
         self._df_mcs_out = None
 
     @property
-    def path_wd(self):
+    def path_wd(self) -> str:
         return self._path_wd
 
     @property
@@ -37,7 +37,7 @@ class MCS:
         return self._dict_master_input
 
     @property
-    def config(self):
+    def config(self) -> dict:
         return self._dict_config
 
     @property

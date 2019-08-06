@@ -1,98 +1,3 @@
-example_input = dict(
-    example_case_1=dict(
-        is_live=1,
-        fire_mode=3,
-        probability_weight=1,
-        n_simulations=100,
-        time_step=30,
-        time_duration=18000,
-        fire_hrr_density_lbound=0.25,
-        fire_hrr_density_ubound=0.25,
-        fire_hrr_density_mean=0.25,
-        fire_hrr_density_std=100,
-        fire_qfd_std=126,
-        fire_qfd_mean=420,
-        fire_qfd_ubound=1500,
-        fire_qfd_lbound=10,
-        fire_spread_lbound=0.0035,
-        fire_spread_ubound=0.019,
-        fire_nft_mean=1050,
-        fire_com_eff_lbound=0.75,
-        fire_com_eff_ubound=0.999,
-        fire_tlim=0.333,
-        fire_t_alpha=300,
-        fire_gamma_fi_q=1,
-        room_breadth=16,
-        room_depth=31.25,
-        room_height=3,
-        room_window_width=72,
-        room_window_height=2.8,
-        room_opening_fraction_std=0.2,
-        room_opening_fraction_mean=0.2,
-        room_opening_fraction_ubound=0.999,
-        room_opening_fraction_lbound=0.001,
-        room_opening_permanent_fraction=0,
-        room_wall_thermal_inertia=720,
-        beam_cross_section_area=0.017,
-        beam_rho=7850,
-        beam_temperature_goal=893,
-        beam_protection_protected_perimeter=2.14,
-        beam_protection_thickness=0,
-        beam_protection_k=0.2,
-        beam_protection_rho=800,
-        beam_protection_c=1700,
-        beam_loc_z=3,
-        beam_loc_ratio_lbound=0.666,
-        beam_loc_ratio_ubound=0.999,
-    ),
-    example_case_2=dict(
-        is_live=1,
-        fire_mode=3,
-        probability_weight=1,
-        n_simulations=100,
-        time_step=30,
-        time_duration=18000,
-        fire_hrr_density_lbound=0.75,
-        fire_hrr_density_ubound=0.75,
-        fire_hrr_density_mean=0.75,
-        fire_hrr_density_std=100,
-        fire_qfd_std=126,
-        fire_qfd_mean=420,
-        fire_qfd_ubound=1500,
-        fire_qfd_lbound=10,
-        fire_spread_lbound=0.0035,
-        fire_spread_ubound=0.019,
-        fire_nft_mean=1050,
-        fire_com_eff_lbound=0.75,
-        fire_com_eff_ubound=0.999,
-        fire_tlim=0.333,
-        fire_t_alpha=300,
-        fire_gamma_fi_q=1,
-        room_breadth=16,
-        room_depth=31.25,
-        room_height=3,
-        room_window_width=72,
-        room_window_height=2.8,
-        room_opening_fraction_std=0.2,
-        room_opening_fraction_mean=0.2,
-        room_opening_fraction_ubound=0.999,
-        room_opening_fraction_lbound=0.001,
-        room_opening_permanent_fraction=0,
-        room_wall_thermal_inertia=720,
-        beam_cross_section_area=0.017,
-        beam_rho=7850,
-        beam_temperature_goal=893,
-        beam_protection_protected_perimeter=2.14,
-        beam_protection_thickness=0,
-        beam_protection_k=0.2,
-        beam_protection_rho=800,
-        beam_protection_c=1700,
-        beam_loc_z=3,
-        beam_loc_ratio_lbound=0.666,
-        beam_loc_ratio_ubound=0.999,
-    )
-)
-
 EXAMPLE_CONFIG_DICT = dict(
     n_threads=2,
 )
@@ -105,10 +10,6 @@ EXAMPLE_INPUT_DICT = {
         fire_time_step=30,
         fire_time_duration=18000,
 
-        beam_position_horizontal=dict(
-            dist='uniform_',
-            lbound=31.25 * 0.666,
-            ubound=31.25 * 0.999),
         fire_hrr_density=dict(
             dist='uniform_',
             lbound=0.25 - 0.001,
@@ -141,6 +42,7 @@ EXAMPLE_INPUT_DICT = {
             sd=0.2),
 
         beam_cross_section_area=0.017,
+        beam_position_horizontal=-1,
         beam_position_vertical=3.2,
         beam_rho=7850,
         fire_mode=3.0,
@@ -155,7 +57,7 @@ EXAMPLE_INPUT_DICT = {
         room_depth=31.25,
         room_height=3.3,
         room_wall_thermal_inertia=720,
-        solver_temperature_goal=620 + 273.15,
+        solver_temperature_goal=893.15,
         solver_max_iter=20,
         solver_thickness_lbound=0.0001,
         solver_thickness_ubound=0.0500,
@@ -170,10 +72,6 @@ EXAMPLE_INPUT_DICT = {
         fire_time_step=30,
         fire_time_duration=18000,
 
-        beam_position_horizontal=dict(
-            dist='uniform_',
-            lbound=31.25 * 0.666,
-            ubound=31.25 * 0.999),
         fire_hrr_density=dict(
             dist='uniform_',
             lbound=0.25 - 0.001,
@@ -206,6 +104,7 @@ EXAMPLE_INPUT_DICT = {
             sd=0.2),
 
         beam_cross_section_area=0.017,
+        beam_position_horizontal=-1,
         beam_position_vertical=3.2,
         beam_rho=7850,
         fire_mode=3.0,
@@ -236,9 +135,6 @@ n_simulations,1000,1000
 probability_weight,0.5,0.5
 fire_time_step,30,30
 fire_time_duration,18000,18000
-beam_position_horizontal:dist,uniform_,uniform_
-beam_position_horizontal:lbound,20.8125,20.8125
-beam_position_horizontal:ubound,31.21875,31.21875
 fire_hrr_density:dist,uniform_,uniform_
 fire_hrr_density:lbound,0.26,0.26
 fire_hrr_density:ubound,0.24,0.24
@@ -263,6 +159,7 @@ window_open_fraction:ubound,0.9999,0.9999
 window_open_fraction:lbound,0.0001,0.0001
 window_open_fraction:mean,0.2,0.2
 window_open_fraction:sd,0.2,0.2
+beam_position_horizontal,-1,-1
 beam_cross_section_area,0.017,0.017
 beam_position_vertical,3.2,3.2
 beam_rho,7850,7850
