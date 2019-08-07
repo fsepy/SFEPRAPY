@@ -110,7 +110,7 @@ def decide_fire(
 
         fire_type = fire_mode
     elif fire_mode == 3:  # enforced to ec parametric + travelling
-        if fire_spread_entire_room_time < burn_out_time and 0.02 < opening_factor <= 0.2 and 50 <= fire_load_density_total <= 1000:
+        if fire_spread_entire_room_time < burn_out_time and 0.01 < opening_factor <= 0.2 and 50 <= fire_load_density_total <= 1000:
             fire_type = 0  # parametric fire
         else:  # Otherwise, it is a travelling fire
             fire_type = 1  # travelling fire
