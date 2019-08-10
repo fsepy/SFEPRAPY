@@ -531,8 +531,11 @@ def teq_main(
         window_height,
         window_open_fraction,
         window_width,
+        window_open_fraction_permanent,
         **_
 ):
+
+    window_open_fraction = window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent
 
     # Calculate fire time, this is used for all fire curves in the calculation
 

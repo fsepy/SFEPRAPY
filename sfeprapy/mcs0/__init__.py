@@ -63,7 +63,8 @@ EXAMPLE_INPUT_DICT = {
         solver_thickness_ubound=0.0500,
         solver_tol=1.,
         window_height=2.8,
-        window_width=72
+        window_width=72,
+        window_open_fraction_permanent=0
     ),
     "Standard Case 2": dict(
         case_name='Standard Case 2',
@@ -125,7 +126,8 @@ EXAMPLE_INPUT_DICT = {
         solver_thickness_ubound=0.0500,
         solver_tol=1.,
         window_height=2.8,
-        window_width=72
+        window_width=72,
+        window_open_fraction_permanent=0.2
     )
 }
 
@@ -182,4 +184,5 @@ solver_thickness_ubound,0.05,0.05
 solver_tol,1,1
 window_height,2.8,2.8
 window_width,72,72
+window_open_fraction_permanent,0,0.2
 """
