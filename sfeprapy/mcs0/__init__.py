@@ -127,7 +127,7 @@ EXAMPLE_INPUT_DICT = {
         solver_tol=1.,
         window_height=2.8,
         window_width=72,
-        window_open_fraction_permanent=0.2
+        window_open_fraction_permanent=0
     )
 }
 

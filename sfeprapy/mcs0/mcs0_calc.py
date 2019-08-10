@@ -231,11 +231,11 @@ def evaluate_fire_temperature(
         )
         fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
 
-        if beam_position_horizontal < 0:
-            print(beam_position_horizontal)
+        if beam_position_horizontal <= 0:
+            raise ValueError("Beam position less or equal to 0.")
 
     elif fire_type == 2:
-        kwargs_fire_2_paramdin = dict(
+        kwargs_fire_2_param_din = dict(
             t_array_s=fire_time,
             A_w_m2=window_area,
             h_w_m2=window_height,
@@ -246,7 +246,7 @@ def evaluate_fire_temperature(
             q_x_d_MJm2=fire_load_density_deducted,
             gamma_fi_Q=fire_gamma_fi_q
         )
-        fire_temperature = _fire_param_ger(**kwargs_fire_2_paramdin)
+        fire_temperature = _fire_param_ger(**kwargs_fire_2_param_din)
 
     else:
         fire_temperature = None
