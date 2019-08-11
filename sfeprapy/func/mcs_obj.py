@@ -25,7 +25,6 @@ class MCS:
         self._func_mcs_calc = None
         self._func_mcs_calc_mp = None
         self._func_mcs_post_1 = None
-        self._func_mcs_post_1_write = None
 
         self._df_mcs_out = None
 
@@ -56,10 +55,6 @@ class MCS:
     @property
     def func_mcs_post(self) -> Callable:
         return self._func_mcs_post_1
-
-    @property
-    def func_mcs_post_1_write(self) -> Callable:
-        return self._func_mcs_post_1_write
 
     @property
     def mcs_out(self) -> pd.DataFrame:
@@ -93,10 +88,6 @@ class MCS:
     @func_mcs_post.setter
     def func_mcs_post(self, func_mcs_post: Callable):
         self._func_mcs_post_1 = func_mcs_post
-
-    @func_mcs_post_1_write.setter
-    def func_mcs_post_1_write(self, func_mcs_post_write: Callable):
-        self._func_mcs_post_1_write = func_mcs_post_write
 
     @mcs_out.setter
     def mcs_out(self, df_out: pd.DataFrame):
@@ -203,16 +194,6 @@ class MCS:
                 if not os.path.exists(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME)):
                     os.makedirs(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME))
                 x3_.to_csv(os.path.join(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME), f'{k}.csv'))
-
-                # fires
-                x4 = copy.copy(x3_)
-                fires = x4['fire_temperature'].values
-                fire_label = x4['index'].values
-                dict_fires = {fire_label[i]: fire for i, fire in enumerate(fires)}
-                df_fires = pd.DataFrame.from_dict(dict_fires)
-                df_fires.to_csv(
-                    os.path.join(os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME), f'{k}.fires.csv'),
-                    index=False)
 
         self.mcs_out = pd.concat([v for v in x3.values()])
 
