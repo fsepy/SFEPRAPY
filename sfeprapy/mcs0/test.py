@@ -26,7 +26,8 @@ def test_standard_case():
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     teq_at_80_percentile = interp1d(y, x)(0.8)
     print(teq_at_80_percentile)
-    assert 58 < teq_at_80_percentile < 62
+    target, target_tol = 65, 1
+    assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
 # test gui version
