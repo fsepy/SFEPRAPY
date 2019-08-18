@@ -81,10 +81,6 @@ def decide_fire(
 
     fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
 
-    # Make the longest dimension between (room_depth, room_breadth) as room_depth
-    room_depth, room_breadth = max(
-        room_depth, room_breadth), min(room_depth, room_breadth)
-
     # Total window opening area
     window_area = window_height * window_width * window_open_fraction
 
@@ -92,12 +88,10 @@ def decide_fire(
     room_floor_area = room_breadth * room_depth
 
     # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + \
-                      ((room_breadth + room_depth) * 2 * room_height)
+    room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
 
     # Fire load density related to the total surface area A_t
-    fire_load_density_total = fire_load_density_deducted * \
-                              room_floor_area / room_total_area
+    fire_load_density_total = fire_load_density_deducted * room_floor_area / room_total_area
 
     # Opening factor
     opening_factor = window_area * np.sqrt(window_height) / room_total_area
@@ -180,11 +174,6 @@ def evaluate_fire_temperature(
 
     fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
 
-    # Make the longest dimension between (room_depth, room_breadth) should be room_depth
-    if room_depth < room_breadth:
-        room_depth += room_breadth
-        room_breadth = room_depth - room_breadth
-        room_depth -= room_breadth
 
     # Total window opening area
     window_area = window_height * window_width * window_open_fraction
@@ -534,6 +523,11 @@ def teq_main(
         window_open_fraction_permanent,
         **_
 ):
+    # Make the longest dimension between (room_depth, room_breadth) as room_depth
+    if room_depth < room_breadth:
+        room_depth += room_breadth
+        room_breadth = room_depth - room_breadth
+        room_depth -= room_breadth
 
     window_open_fraction = window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent
 
