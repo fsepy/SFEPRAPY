@@ -227,7 +227,7 @@ def protected_steel_eurocode_max_temperature(
 
         T += dT * d
 
-        if not (T >= 0 or T <=0):
+        if not (T >= 0 or T <= 0):
             print('d')
 
         if not flag_heating_started:
