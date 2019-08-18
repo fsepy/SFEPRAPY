@@ -6,9 +6,10 @@
 
 ## VERSIONS
 
-### 25/07/2019 VERSION: 0.6.4
+### 18/08/2019 VERSION: 0.6.4
 
 - Fixed: `window_open_fraction_permanent` in `sfeprapy.mcs0`.
+- Fixed: added `long_description_content_type` to setup.py to change description type to markdown.
 - Improved: README.md updated to reflect the new `sfeprapy.mcs0`.
 
 ### 25/07/2019 VERSION: 0.6.1
