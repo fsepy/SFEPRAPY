@@ -6,6 +6,11 @@
 
 ## VERSIONS
 
+### XX/XX/2019 VERSION: 0.6.5
+
+- New: `sfeprapy.mcs0.test` automated tests for `sfeprapy.mcs0`.
+- Improved: `sfeprapy.mcs0` changed criteria for parametric fire when `fire_mode` is set to 3. `opening_factor` should be within 0.01 and 0.2 (instead 0.02 and 0.2) to compliant to UK NA to Eurocode 1991-1-2.
+
 ### 18/08/2019 VERSION: 0.6.4
 
 - Fixed: `window_open_fraction_permanent` in `sfeprapy.mcs0`.
@@ -96,6 +101,7 @@
 - Project now can be installed through `pip install sfeprapy`.
 
 ### 02/01/2018 VERSION: 0.0.0
+
 - Implemented Latin hypercube sampling function, `pyDOE` external library is no longer required;
 - Boundary for `q_fd`, defined as `q_fd_ubound` and `q_fd_lbound` (upper and lower limit);
 - Now output plot for peak steel temperature according to input 'protection_thickness';

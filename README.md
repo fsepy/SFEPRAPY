@@ -14,15 +14,20 @@ Python 3.7 or later is required.
 
 pip is a package management system for installing and updating Python packages. pip comes with Python, so you get pip simply by installing Python. On Ubuntu and Fedora Linux, you can simply use your system package manager to install the `python3-pip` package. [The Hitchhiker's Guide to Python](https://docs.python-guide.org/starting/installation/) provides some guidance on how to install Python on your system if it isn't already; you can also install Python directly from [python.org](https://www.python.org/getit/). You might want to [upgrade pip](https://pip.pypa.io/en/stable/installing/) before using it to install other programs.
 
-1.	If you are using Windows with Python version 3.3 or higher, use the [Python Launcher for Windows](https://docs.python.org/3/using/windows.html?highlight=shebang#python-launcher-for-windows) to use `pip` with Python version 3:
+1. If you are using Windows with Python version 3.3 or higher, use the [Python Launcher for Windows](https://docs.python.org/3/using/windows.html?highlight=shebang#python-launcher-for-windows) to use `pip` with Python version 3:
+
     ```bash
     py -3 -m pip install SfePrapy
     ```
-2.	If your system has a `python3` command (standard on Unix-like systems), install with:
+
+2. If your system has a `python3` command (standard on Unix-like systems), install with:
+
     ```bash
     python3 -m pip install SfePrapy
     ```
-3.	You can also just use the `python` command directly, but this will use the _current_ version of Python in your environment:
+
+3. You can also just use the `python` command directly, but this will use the _current_ version of Python in your environment:
+
     ```bash
     python -m pip install SfePrapy
     ```
@@ -111,7 +116,6 @@ The following table summerises the parameters that are required by `sfeprapy.mcs
 | `fire_combustion_efficiency`     | Float, in [-]. Combustion efficiency.                        |
 | `fire_gamma_fi_q`                | Float, in [-]. The partial factor for EC fire (German Annex). |
 | `fire_t_alpha`                   | Float, in [s]. The fire growth factor.                       |
-|                                  |                                                              |
 | **Section Properties**           |                                                              |
 | `beam_cross_section_area`        | Float, in [m²]. Cross sectional area of beam                 |
 | `beam_rho`                       | Float, in [kg/m³]. Density of beam                           |
@@ -128,7 +132,7 @@ The following table summerises the parameters that are required by `sfeprapy.mcs
 | `solver_thickness_ubound`        | Float. The greatest value that the solved protection thickness can be. |
 | `solver_tol`                     | Float, in [K]. Tolerance of the temperature to be solved for. Set to 1 means convergence will be satisfied when the solved value is within `solver_temperature_goal`-1 and `solver_temperature_goal`+1. |
 
-##Limitations
+## Limitations
 
 Todo
 
