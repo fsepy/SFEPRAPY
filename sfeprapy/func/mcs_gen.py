@@ -104,6 +104,9 @@ def random_variable_generator(dict_in: dict, num_samples: int):
     samples[samples == np.inf] = ubound
     samples[samples == -np.inf] = lbound
 
+    if 'permanent' in dict_in:
+        samples += dict_in['permanent']
+
     np.random.shuffle(samples)
 
     return samples

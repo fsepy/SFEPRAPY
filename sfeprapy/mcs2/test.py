@@ -3,8 +3,8 @@
 def test_standard_case():
     import copy
     from sfeprapy.func.mcs_obj import MCS
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
+    from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    from sfeprapy.mcs2.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
     from sfeprapy.func.mcs_gen import main as gen
     from scipy.interpolate import interp1d
     import numpy as np
@@ -33,8 +33,8 @@ def test_standard_case():
 # test gui version
 def test_gui():
     from sfeprapy.func.mcs_obj import MCS
-    from sfeprapy.mcs0.mcs0_calc import teq_main as calc
-    from sfeprapy.mcs0.mcs0_calc import teq_main_wrapper as calc_mp
+    from sfeprapy.mcs2.mcs0_calc import teq_main as calc
+    from sfeprapy.mcs2.mcs0_calc import teq_main_wrapper as calc_mp
     from sfeprapy.func.mcs_gen import main as gen
     mcs = MCS()
     mcs.define_problem()
@@ -46,20 +46,22 @@ def test_gui():
 # test non-gui version
 def test_arg_dict():
     from sfeprapy.func.mcs_obj import MCS
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    from sfeprapy.mcs0.mcs0_calc import teq_main as calc
-    from sfeprapy.mcs0.mcs0_calc import teq_main_wrapper as calc_mp
+    from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    from sfeprapy.mcs2.mcs0_calc import teq_main as calc
+    from sfeprapy.mcs2.mcs0_calc import teq_main_wrapper as calc_mp
+    from sfeprapy.mcs2.mcs0_calc import mcs_out_post
     from sfeprapy.func.mcs_gen import main as gen
     for k in list(EXAMPLE_INPUT_DICT.keys()):
-        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 2
+        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 1000
+    EXAMPLE_CONFIG_DICT['n_threads'] = 5
     mcs = MCS()
     mcs.define_problem(data=EXAMPLE_INPUT_DICT, config=EXAMPLE_CONFIG_DICT)
     mcs.define_stochastic_parameter_generator(gen)
-    mcs.define_calculation_routine(calc, calc_mp)
+    mcs.define_calculation_routine(calc, calc_mp, mcs_out_post)
     mcs.run_mcs()
 
 
 if __name__ == '__main__':
-    test_standard_case()
+    # test_standard_case()
     test_arg_dict()
-    test_gui()
+    # test_gui()
