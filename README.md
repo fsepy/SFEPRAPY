@@ -111,7 +111,6 @@ The following table summerises the parameters that are required by `sfeprapy.mcs
 | `fire_combustion_efficiency`     | Float, in [-]. Combustion efficiency.                        |
 | `fire_gamma_fi_q`                | Float, in [-]. The partial factor for EC fire (German Annex). |
 | `fire_t_alpha`                   | Float, in [s]. The fire growth factor.                       |
-|                                  |                                                              |
 | **Section Properties**           |                                                              |
 | `beam_cross_section_area`        | Float, in [m²]. Cross sectional area of beam                 |
 | `beam_rho`                       | Float, in [kg/m³]. Density of beam                           |
@@ -126,7 +125,7 @@ The following table summerises the parameters that are required by `sfeprapy.mcs
 | `solver_max_iter`                | Float. The maximum iteration for the solver to find convergence. Suggest 20 as most (if not all) cases converge in less than 20 iterations. |
 | `solver_thickness_lbound`        | Float. The smallest value that the solved protection thickness can be. |
 | `solver_thickness_ubound`        | Float. The greatest value that the solved protection thickness can be. |
-| `solver_tol`                     | Float, in [K]. Tolerance of the temperature to be solved for. Set to 1 means convergence will be satisfied when the solved value is within `solver_temperature_goal`-1 and `solver_temperature_goal`+1. |
+| `solver_tol`                     | Float, in [K]. Tolerance of the temperature to be solved for. Set to 1 means convergence will be satisfied when the solved value is greater than `solver_temperature_goal`-1 and less than `solver_temperature_goal`+1. |
 
 ##Limitations
 
