@@ -9,14 +9,14 @@ from codecs import open
 import setuptools
 
 # Get the long description from the README file
-with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')) as file:
-    long_description = file.read()
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')) as f:
+    long_description = f.read()
 
 setuptools.setup(
 
     name='sfeprapy',
 
-    version='0.6.3',
+    version='0.6.4',
 
     description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
@@ -40,7 +40,9 @@ setuptools.setup(
         "Topic :: Scientific/Engineering",
     ],
 
-    long_description='Structural Fire Engineering - Probabilistic Reliability Assessment',
+    long_description=long_description,
+
+    long_description_content_type="text/markdown",
 
     packages=[
         'sfeprapy', 

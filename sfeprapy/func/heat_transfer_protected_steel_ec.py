@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from scipy.interpolate import interp1d
-import warnings
 
 
 def protected_steel_eurocode(
@@ -44,7 +42,7 @@ def protected_steel_eurocode(
 
         temperature -= 273.15
         if temperature < 20:
-            warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+            # warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
             return 425 + 0.773 * 20 - 1.69e-3 * np.power(20, 2) + 2.22e-6 * np.power(20, 3)
         if 20 <= temperature < 600:
             return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
@@ -55,10 +53,10 @@ def protected_steel_eurocode(
         elif 900 <= temperature <= 1200:
             return 650
         elif temperature > 1200:
-            warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+            # warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
             return 650
         else:
-            warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+            # warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
             return 0
 
     V = area_steel_section
@@ -151,7 +149,6 @@ def protected_steel_eurocode_max_temperature(
     :param time:                    {ndarray} [s]
     :param temperature_ambient:     {ndarray} [K]
     :param rho_steel:               {float} [kg/m3]
-    :param c_steel_T:               {Func} [J/kg/K]
     :param area_steel_section:      {float} [m2]
     :param k_protection:            {float} [K/kg/m]
     :param rho_protection:          {float} [kg/m3]
@@ -170,7 +167,7 @@ def protected_steel_eurocode_max_temperature(
 
         temperature -= 273.15
         if temperature < 20:
-            warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+            # warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
             return 425 + 0.773 * 20 - 1.69e-3 * np.power(20, 2) + 2.22e-6 * np.power(20, 3)
         if 20 <= temperature < 600:
             return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
@@ -181,10 +178,10 @@ def protected_steel_eurocode_max_temperature(
         elif 900 <= temperature <= 1200:
             return 650
         elif temperature > 1200:
-            warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+            # warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
             return 650
         else:
-            warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+            # warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
             return 0
 
     V = area_steel_section
@@ -230,7 +227,7 @@ def protected_steel_eurocode_max_temperature(
 
         T += dT * d
 
-        if not (T >= 0 or T <=0):
+        if not (T >= 0 or T <= 0):
             print('d')
 
         if not flag_heating_started:

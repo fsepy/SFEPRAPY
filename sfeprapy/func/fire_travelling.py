@@ -39,11 +39,15 @@ def fire(
     # re-assign variable names for equation readability
     q_fd = fire_load_density_MJm2
     HRRPUA = fire_hrr_density_MWm2
-    l = max([room_length_m, room_width_m])
-    w = min([room_length_m, room_width_m])
     s = fire_spread_rate_ms
     h_s = beam_location_height_m
     l_s = beam_location_length_m
+    l = room_length_m
+    w = room_width_m
+    if l < w:
+        l += w
+        w = l - w
+        l -= w
 
     # work out ventilation conditions
 

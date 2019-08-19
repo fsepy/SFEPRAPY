@@ -81,10 +81,6 @@ def decide_fire(
 
     fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
 
-    # Make the longest dimension between (room_depth, room_breadth) as room_depth
-    room_depth, room_breadth = max(
-        room_depth, room_breadth), min(room_depth, room_breadth)
-
     # Total window opening area
     window_area = window_height * window_width * window_open_fraction
 
@@ -92,12 +88,10 @@ def decide_fire(
     room_floor_area = room_breadth * room_depth
 
     # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + \
-                      ((room_breadth + room_depth) * 2 * room_height)
+    room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
 
     # Fire load density related to the total surface area A_t
-    fire_load_density_total = fire_load_density_deducted * \
-                              room_floor_area / room_total_area
+    fire_load_density_total = fire_load_density_deducted * room_floor_area / room_total_area
 
     # Opening factor
     opening_factor = window_area * np.sqrt(window_height) / room_total_area
@@ -110,7 +104,7 @@ def decide_fire(
 
         fire_type = fire_mode
     elif fire_mode == 3:  # enforced to ec parametric + travelling
-        if fire_spread_entire_room_time < burn_out_time and 0.02 < opening_factor <= 0.2 and 50 <= fire_load_density_total <= 1000:
+        if fire_spread_entire_room_time < burn_out_time and 0.01 < opening_factor <= 0.2 and 50 <= fire_load_density_total <= 1000:
             fire_type = 0  # parametric fire
         else:  # Otherwise, it is a travelling fire
             fire_type = 1  # travelling fire
@@ -180,11 +174,6 @@ def evaluate_fire_temperature(
 
     fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
 
-    # Make the longest dimension between (room_depth, room_breadth) should be room_depth
-    if room_depth < room_breadth:
-        room_depth += room_breadth
-        room_breadth = room_depth - room_breadth
-        room_depth -= room_breadth
 
     # Total window opening area
     window_area = window_height * window_width * window_open_fraction
@@ -194,10 +183,6 @@ def evaluate_fire_temperature(
 
     # Room internal surface area, total, including window openings
     room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
-
-    # if beam_position is not provided, solve for the worst case
-    if beam_position_horizontal < 0:
-        beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
 
     if fire_type == 0:
         kwargs_fire_0_paramec = dict(
@@ -216,6 +201,9 @@ def evaluate_fire_temperature(
         fire_temperature = _fire_param(**kwargs_fire_0_paramec)
 
     elif fire_type == 1:
+        if beam_position_horizontal < 0:
+            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
+
         kwargs_fire_1_travel = dict(
             t=fire_time,
             fire_load_density_MJm2=fire_load_density_deducted,
@@ -232,8 +220,11 @@ def evaluate_fire_temperature(
         )
         fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
 
+        if beam_position_horizontal <= 0:
+            raise ValueError("Beam position less or equal to 0.")
+
     elif fire_type == 2:
-        kwargs_fire_2_paramdin = dict(
+        kwargs_fire_2_param_din = dict(
             t_array_s=fire_time,
             A_w_m2=window_area,
             h_w_m2=window_height,
@@ -244,13 +235,14 @@ def evaluate_fire_temperature(
             q_x_d_MJm2=fire_load_density_deducted,
             gamma_fi_Q=fire_gamma_fi_q
         )
-        fire_temperature = _fire_param_ger(**kwargs_fire_2_paramdin)
+        fire_temperature = _fire_param_ger(**kwargs_fire_2_param_din)
 
     else:
         fire_temperature = None
 
     results = dict(
-        fire_temperature=fire_temperature
+        fire_temperature=fire_temperature,
+        beam_position_horizontal=beam_position_horizontal
     )
 
     return results
@@ -480,11 +472,6 @@ def mcs_out_post(df: pd.DataFrame):
 
     print('\n'.join(list_), '\n')
 
-    try:
-        df.pop('fire_temperature')
-    except KeyError:
-        pass
-
     return df
 
 
@@ -533,8 +520,16 @@ def teq_main(
         window_height,
         window_open_fraction,
         window_width,
+        window_open_fraction_permanent,
         **_
 ):
+    # Make the longest dimension between (room_depth, room_breadth) as room_depth
+    if room_depth < room_breadth:
+        room_depth += room_breadth
+        room_breadth = room_depth - room_breadth
+        room_depth -= room_breadth
+
+    window_open_fraction = window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent
 
     # Calculate fire time, this is used for all fire curves in the calculation
 

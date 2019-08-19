@@ -2,14 +2,17 @@
 
 ## KNOWN ISSUES AND TASKS LIST
 
-- [ ] sfeprapy.mc0 to remove intermediate json files, to run MCS for all cases in one go.
-- [ ] sfeprapy.mc0.mc0_func_gen, combine all MCS input DataFrames for individual cases into one DataFrame. One more column is needed to record case names.
-- [ ] sfeprapy.mc0.mc0 to refactor `path_work`, `input_master` and `config_master`, so the function handles inputs from Python rather than GUI file picker.
-- [ ] sfeprapy.mc0.mc0 to implement MCS for multiple cases in one DataFrame, to run MCS on case to case basis in alphabetical order, to to_csv after individual cases are run, to able to set `is_live` for individual cases.
+- None.
 
 ## VERSIONS
 
-### XX/XX/2019 VERSION: 0.6.1
+### 18/08/2019 VERSION: 0.6.4
+
+- Fixed: `window_open_fraction_permanent` in `sfeprapy.mcs0`.
+- Fixed: added `long_description_content_type` to setup.py to change description type to markdown.
+- Improved: README.md updated to reflect the new `sfeprapy.mcs0`.
+
+### 25/07/2019 VERSION: 0.6.1
 
 - New: `sfeprapy.func.mcs_gen` general purpose stochastic variable generator.
 - New: `sfeprapy.func_mcs_obj` general purpose Monte Carlo Simulation object.

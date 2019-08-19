@@ -13,7 +13,7 @@ from tqdm import tqdm
 class MCS:
     DEFAULT_TEMP_FOLDER_NAME = 'mcs.out'
     DEFAULT_CONFIG_FILE_NAME = 'config.json'
-    DEFAULT_CONFIG = dict(n_threads=1, output_fires=0)
+    DEFAULT_CONFIG = dict(n_threads=1)
 
     def __init__(self):
         self._path_wd = None
@@ -24,12 +24,12 @@ class MCS:
         self._func_mcs_gen = None
         self._func_mcs_calc = None
         self._func_mcs_calc_mp = None
-        self._func_mcs_post = None
+        self._func_mcs_post_1 = None
 
         self._df_mcs_out = None
 
     @property
-    def path_wd(self):
+    def path_wd(self) -> str:
         return self._path_wd
 
     @property
@@ -37,7 +37,7 @@ class MCS:
         return self._dict_master_input
 
     @property
-    def config(self):
+    def config(self) -> dict:
         return self._dict_config
 
     @property
@@ -54,7 +54,7 @@ class MCS:
 
     @property
     def func_mcs_post(self) -> Callable:
-        return self._func_mcs_post
+        return self._func_mcs_post_1
 
     @property
     def mcs_out(self) -> pd.DataFrame:
@@ -87,7 +87,7 @@ class MCS:
 
     @func_mcs_post.setter
     def func_mcs_post(self, func_mcs_post: Callable):
-        self._func_mcs_post = func_mcs_post
+        self._func_mcs_post_1 = func_mcs_post
 
     @mcs_out.setter
     def mcs_out(self, df_out: pd.DataFrame):
@@ -130,7 +130,7 @@ class MCS:
             try:
                 with open(os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), 'r') as f:
                     self.config = json.load(f)
-            except TypeError:
+            except (TypeError, FileNotFoundError):
                 self.config = self.DEFAULT_CONFIG
 
     def define_stochastic_parameter_generator(self, func):
@@ -233,6 +233,7 @@ class MCS:
                 p.close()
                 p.join()
                 mcs_out = jobs.get()
+                time.sleep(0.5)
 
         # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)
@@ -245,7 +246,8 @@ class MCS:
         root.withdraw()
         folder_path = StringVar()
 
-        path_input_file_csv = filedialog.askopenfile(title='Select Input File', filetypes=[('csv', ['.csv'])])
+        path_input_file_csv = filedialog.askopenfile(title='Select Input File',
+                                                     filetypes=[('MCS IN', ['.csv', '.xlsx'])])
         folder_path.set(path_input_file_csv)
         root.update()
 

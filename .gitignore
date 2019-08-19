@@ -39,3 +39,6 @@
 !/input_template/mc1*
 !/input_template/mcr1*
 !/input_template/benchmarks.csv
+
+# Dev files
+/sfeprapy/dev
