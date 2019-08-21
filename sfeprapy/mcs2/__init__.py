@@ -66,9 +66,11 @@ EXAMPLE_INPUT_DICT = {
         window_width=72,
         window_open_fraction_permanent=0,
 
-        timber_charring_rate=0.7,
-        timber_hc=13200,
+        timber_charring_rate=0.7,  # mm/min
+        timber_hc=13.2,  # MJ/kg
         timber_density=400,
         timber_exposed_area=10,
+        timber_solver_ilim=20,
+        timber_solver_tol=1
     )
 }

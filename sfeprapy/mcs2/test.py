@@ -52,8 +52,8 @@ def test_arg_dict():
     from sfeprapy.mcs2.mcs2_calc import mcs_out_post
     from sfeprapy.func.mcs_gen import main as gen
     for k in list(EXAMPLE_INPUT_DICT.keys()):
-        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 1000
-    EXAMPLE_CONFIG_DICT['n_threads'] = 5
+        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 5
+    EXAMPLE_CONFIG_DICT['n_threads'] = 2
     mcs = MCS()
     mcs.define_problem(data=EXAMPLE_INPUT_DICT, config=EXAMPLE_CONFIG_DICT)
     mcs.define_stochastic_parameter_generator(gen)

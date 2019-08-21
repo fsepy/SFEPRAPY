@@ -592,7 +592,11 @@ def teq_main(
         timber_solver_tol=timber_solver_tol,
         timber_solver_ilim=timber_solver_ilim,
     )
-    
+
+    # UNITS CONVERSTION
+    timber_charring_rate *= 1/1000  # [mm/min] -> [m/min]
+    timber_charring_rate *= 1/60  # [m/min] -> [m/s]
+
     # initial timber exposure time
     if timber_exposed_area > 0:
         timber_exposed_duration = 1200
@@ -601,7 +605,8 @@ def teq_main(
 
     for timber_solver_iter in range(int(timber_solver_ilim)):
 
-        timber_charred_volume = timber_charring_rate * (timber_exposed_duration / 60) / 1000  # m3
+        timber_charred_depth = timber_charring_rate * timber_exposed_duration
+        timber_charred_volume = timber_charred_depth * timber_exposed_area
         timber_charred_mass = timber_density * timber_charred_volume
         timber_fire_load = timber_charred_mass * timber_hc
         timber_fire_load_density = timber_fire_load / (room_breadth * room_depth)
