@@ -137,7 +137,7 @@ def dict_flatten(dict_in: dict):
         else:
             dict_out[k] = dict_in[k]
             
-    return dict_in
+    return dict_out
 
 
 def main(x: dict, num_samples: int):
