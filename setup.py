@@ -64,6 +64,7 @@ setuptools.setup(
         'scipy>=1.1.0',
         'seaborn>=0.9.0',
         'tqdm',
+        'xlrd',
     ],
 
     include_package_data=True,
