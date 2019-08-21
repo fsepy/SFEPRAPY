@@ -66,7 +66,6 @@ EXAMPLE_INPUT_DICT = {
         window_width=72,
         window_open_fraction_permanent=0,
 
-        timber_teq_ppf_target=0.8,
         timber_charring_rate=0.7,
         timber_hc=13200,
         timber_density=400,
