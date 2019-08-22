@@ -1,6 +1,6 @@
 # SfePrapy
 
-A probabilistic analysis tool that estimates the `str`uctural reliability for a given scenario (such as enclosure geometry, building type, window areas etc.) against equivalent time exposure to the ISO 834 fire curve.
+A probabilistic analysis tool that estimates the structural reliability for a given scenario (such as enclosure geometry, building type, window areas etc.) against equivalent time exposure to the ISO 834 fire curve.
 
 ## Getting Started
 
@@ -9,8 +9,6 @@ These in`str`uctions will get you a copy of the project up and running on your l
 Python 3.7 or later is required.
 
 ### Installation
-
-#### pip
 
 pip is a package management system for installing and updating Python packages. pip comes with Python, so you get pip simply by installing Python. On Ubuntu and Fedora Linux, you can simply use your system package manager to install the `python3-pip` package. [The Hitchhiker's Guide to Python](https://docs.python-guide.org/starting/installation/) provides some guidance on how to install Python on your system if it isn't already; you can also install Python directly from [python.org](https://www.python.org/getit/). You might want to [upgrade pip](https://pip.pypa.io/en/stable/installing/) before using it to install other programs.
 
@@ -28,7 +26,7 @@ pip is a package management system for installing and updating Python packages. 
 
 ### Usage
 
-#### MCS for `str`uctural PRA method 0: `sfeprapy.mcs0`
+#### MCS for structural PRA method 0: `sfeprapy.mcs0`
 
 Introduction of `sfeprapy.mcs0` is current NOT covered here but will provide notebook tutorials in near future.
 
@@ -38,7 +36,7 @@ To run `sfeprapy.mcs0` from source (or when it is installed via, i.e. pip):
 python -m SfePrapy.mcs0
 ```
 
-A window will be popped up asking for input a input / problem definition file. The input file should be in '.csv' or '.xlsx' format. `str`ucture of the input file is addressed in the following paragraphs.
+A window will be popped up asking for input a input / problem definition file. The input file should be in '.csv' or '.xlsx' format. Structure of the input file is addressed in the following paragraphs.
 
 When a configuration file with the name 'config.json' is provided in the same directory, the program will attempt to read it and use parameters contained therein. Number of threads (multi-processing) along with few other parameters can be defined in this file.
 
@@ -93,8 +91,8 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 | `room_height`                    | `float`, in [m]. Height of room (floor slab to ceiling slab). |
 | `window_width`                   | `float`, in [m]. Total width of all opening areas for a compartment. |
 | `window_height`                  | `float`, in [m]. Weighted height of all opening areas.       |
-| `beam_position_vertical`         | `float`, in [m]. Height of test `str`ucture element within the compartment for TFM. This can be altered to assess the influence of height in tall compartments. Need to assess worst case height for columns. |
-| `beam_position_horizontal`       | `float`, in [m]. Minimum beam location relative to compartment length for TFM - Linear di`str`ibution |
+| `beam_position_vertical`         | `float`, in [m]. Height of test structure element within the compartment for TFM. This can be altered to assess the influence of height in tall compartments. Need to assess worst case height for columns. |
+| `beam_position_horizontal`       | `float`, in [m]. Minimum beam location relative to compartment length for TFM - Linear distribution |
 | **Windows/Natural Vent**         |                                                              |
 | `window_open_fraction`           | `float`. Glazing fall-out fraction.                          |
 | `window_open_fraction_permanent` | `float`. Use this to force a ratio of open   windows. If there is a vent to the outside this can be included here. |
@@ -120,7 +118,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 | `protection_rho`                 | `float`, in [kg/m³]. Density of protection to beam           |
 | `protection_c`                   | `float`, in [J/kg/K]. Specific heat of protection            |
 | **Solver Settings**              |                                                              |
-| `solver_temperature_goal`        | `float`, in [K]. The temperature to be solved for. This is critical temperature of the beam `str`uctural element, i.e. 550 or 620 °C. |
+| `solver_temperature_goal`        | `float`, in [K]. The temperature to be solved for. This is critical temperature of the beam structural element, i.e. 550 or 620 °C. |
 | `solver_max_iter`                | `float`, dimensionless. The maximum iteration for the solver to find convergence. Suggest 20 as most (if not all) cases converge in less than 20 iterations. |
 | `solver_thickness_lbound`        | `float`, in [m]. The smallest value that the solved protection thickness can be. |
 | `solver_thickness_ubound`        | `float`, in [m]. The greatest value that the solved protection thickness can be. |
@@ -133,7 +131,7 @@ To-do
 
 ## Authors
 
-* **Yan Fu** - *fuyans@gmail.com*
+* **Ian Fu** - *fuyans@gmail.com*
 * **Danny Hopkin** - *danny.hopkin@ofrconsultants.com*
 * **Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
 
