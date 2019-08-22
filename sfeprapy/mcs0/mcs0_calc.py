@@ -527,6 +527,12 @@ def teq_main(
         window_width,
         window_open_fraction_permanent,
         phi_teq,
+        timber_charring_rate,
+        timber_hc,
+        timber_density,
+        timber_exposed_area,
+        timber_solver_tol,
+        timber_solver_ilim,
         **_
 ):
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
@@ -587,63 +593,103 @@ def teq_main(
         phi_teq=phi_teq,
     )
 
-    # To check what design fire to use
+    # UNITS CONVERSTION
+    timber_charring_rate *= 1 / 1000  # [mm/min] -> [m/min]
+    timber_charring_rate *= 1 / 60  # [m/min] -> [m/s]
 
-    res.update(decide_fire(
-        window_height,
-        window_width,
-        window_open_fraction,
-        room_breadth,
-        room_depth,
-        room_height,
-        fire_mode,
-        fire_load_density,
-        fire_combustion_efficiency,
-        fire_hrr_density,
-        fire_spread_speed))
+    # initial timber exposure time
+    if timber_exposed_area > 0:
+        timber_exposed_duration = 1200
+    else:
+        timber_exposed_duration = 0
 
-    # To calculate design fire temperature
+    for timber_solver_iter in range(int(timber_solver_ilim)):
 
-    res.update(evaluate_fire_temperature(
-        window_height,
-        window_width,
-        window_open_fraction,
-        room_breadth,
-        room_depth,
-        room_height,
-        room_wall_thermal_inertia,
-        fire_tlim,
-        res['fire_type'],
-        fire_time,
-        fire_nft_limit,
-        fire_load_density,
-        fire_combustion_efficiency,
-        fire_hrr_density,
-        fire_spread_speed,
-        fire_t_alpha,
-        fire_gamma_fi_q,
-        beam_position_vertical,
-        beam_position_horizontal))
+        timber_charred_depth = timber_charring_rate * timber_exposed_duration
+        timber_charred_volume = timber_charred_depth * timber_exposed_area
+        timber_charred_mass = timber_density * timber_charred_volume
+        timber_fire_load = timber_charred_mass * timber_hc
+        timber_fire_load_density = timber_fire_load / (room_breadth * room_depth)
 
-    # To calculate time equivalence
+        # To check what design fire to use
 
-    res.update(solve_time_equivalence(
-        fire_time,
-        res['fire_temperature'],
-        beam_cross_section_area,
-        beam_rho,
-        protection_k,
-        protection_rho,
-        protection_c,
-        protection_protected_perimeter,
-        fire_time_iso834,
-        fire_temperature_iso834,
-        solver_temperature_goal,
-        solver_max_iter,
-        solver_thickness_ubound,
-        solver_thickness_lbound,
-        solver_tol,
-        phi_teq))
+        res_decide_fire = decide_fire(
+            window_height,
+            window_width,
+            window_open_fraction,
+            room_breadth,
+            room_depth,
+            room_height,
+            fire_mode,
+            fire_load_density + timber_fire_load_density,
+            fire_combustion_efficiency,
+            fire_hrr_density,
+            fire_spread_speed)
+
+        # To calculate design fire temperature
+
+        res_evaluate_fire_temperature = evaluate_fire_temperature(
+            window_height,
+            window_width,
+            window_open_fraction,
+            room_breadth,
+            room_depth,
+            room_height,
+            room_wall_thermal_inertia,
+            fire_tlim,
+            res_decide_fire['fire_type'],
+            fire_time,
+            fire_nft_limit,
+            fire_load_density + timber_fire_load_density,
+            fire_combustion_efficiency,
+            fire_hrr_density,
+            fire_spread_speed,
+            fire_t_alpha,
+            fire_gamma_fi_q,
+            beam_position_vertical,
+            beam_position_horizontal)
+
+        # To calculate time equivalence
+
+        res_solve_time_equivalence = solve_time_equivalence(
+            fire_time,
+            res_evaluate_fire_temperature['fire_temperature'],
+            beam_cross_section_area,
+            beam_rho,
+            protection_k,
+            protection_rho,
+            protection_c,
+            protection_protected_perimeter,
+            fire_time_iso834,
+            fire_temperature_iso834,
+            solver_temperature_goal,
+            solver_max_iter,
+            solver_thickness_ubound,
+            solver_thickness_lbound,
+            solver_tol)
+
+        if timber_exposed_area <= 0:  # no timber
+            break
+        elif not res_solve_time_equivalence['solver_convergence_status']:  # no time equivalence solution
+            break
+        elif abs(timber_exposed_duration - res_solve_time_equivalence[
+            'solver_time_equivalence_solved']) <= timber_solver_tol:  # convergence sought
+            break
+        else:
+            timber_exposed_duration = res_solve_time_equivalence['solver_time_equivalence_solved']
+
+    res_timber_solver = dict(
+        timber_exposed_duration=timber_exposed_duration,
+        timber_solver_iter=timber_solver_iter,
+        timber_fire_load=timber_fire_load,
+        timber_charred_mass=timber_charred_mass,
+        timber_charred_volume=timber_charred_volume,
+    )
+
+    res.update(res_timber_solver)
+    res.update(res_decide_fire)
+    res.update(res_evaluate_fire_temperature)
+    res.update(res_solve_time_equivalence)
 
     return res
 
