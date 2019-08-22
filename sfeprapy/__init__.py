@@ -34,16 +34,14 @@ Public version identifiers are separated into up to five segments:
 
 """
 
-__version__ = '0.6.5d'
+__version__ = '0.6.5.dev0'
 
 if __name__ == '__main__':
     import re
-
 
     def is_canonical(version):
         return re.match(
             r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$',
             version) is not None
-
 
     print(str(is_canonical(__version__)))
