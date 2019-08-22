@@ -47,19 +47,28 @@ def test_gui():
 def test_arg_dict():
     from sfeprapy.func.mcs_obj import MCS
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    from sfeprapy.mcs0.mcs0_calc import teq_main as calc
-    from sfeprapy.mcs0.mcs0_calc import teq_main_wrapper as calc_mp
+    from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
     from sfeprapy.func.mcs_gen import main as gen
+    from scipy.interpolate import interp1d
+    import numpy as np
     for k in list(EXAMPLE_INPUT_DICT.keys()):
-        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 2
+        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 500
+        EXAMPLE_INPUT_DICT[k]['phi_teq'] = 1
+
+    EXAMPLE_CONFIG_DICT['n_threads'] = 3
     mcs = MCS()
     mcs.define_problem(data=EXAMPLE_INPUT_DICT, config=EXAMPLE_CONFIG_DICT)
     mcs.define_stochastic_parameter_generator(gen)
-    mcs.define_calculation_routine(calc, calc_mp)
+    mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
     mcs.run_mcs()
+    mcs_out = mcs.mcs_out
+    teq = mcs_out['solver_time_equivalence_solved'] / 60.
+    hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
+    x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
+    teq_at_80_percentile = interp1d(y, x)(0.8)
+    print(teq_at_80_percentile)
 
 
 if __name__ == '__main__':
-    test_standard_case()
+    # test_standard_case()
     test_arg_dict()
-    test_gui()
