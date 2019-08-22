@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 class MCS:
     DEFAULT_TEMP_FOLDER_NAME = 'mcs.out'
+    DEFAULT_MCS_OUTPUT_FILE_NAME = 'mcs.out.csv'
     DEFAULT_CONFIG_FILE_NAME = 'config.json'
     DEFAULT_CONFIG = dict(n_threads=1)
 
@@ -198,7 +199,7 @@ class MCS:
         self.mcs_out = pd.concat([v for v in x3.values()])
 
         if self.path_wd:
-            self.mcs_out.to_csv(os.path.join(self.path_wd, 'mcs_out.csv'), index=False)
+            self.mcs_out.to_csv(os.path.join(self.path_wd, self.DEFAULT_MCS_OUTPUT_FILE_NAME), index=False)
 
     @staticmethod
     def _mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int) -> pd.DataFrame:
