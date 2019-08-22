@@ -44,4 +44,5 @@ if __name__ == '__main__':
             r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$',
             version) is not None
 
-    print(str(is_canonical(__version__)))
+
+    assert is_canonical(__version__)
