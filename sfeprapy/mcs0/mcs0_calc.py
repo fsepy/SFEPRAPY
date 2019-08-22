@@ -650,11 +650,15 @@ if __name__ == '__main__':
 
     _res_ = teq_main(
         index=0,
+        case_name='Standard 1',
+        probability_weight=1,
+        fire_time_step=30,
+        fire_time_duration=5*60*60,
+        n_simulations=1,
         beam_cross_section_area=0.017,
         beam_position_vertical=2.5,
         beam_position_horizontal=18,
         beam_rho=7850,
-        fire_time=fire_time_,
         fire_combustion_efficiency=0.8,
         fire_gamma_fi_q=1,
         fire_hrr_density=0.25,
@@ -681,12 +685,5 @@ if __name__ == '__main__':
         solver_tol=1.,
         window_height=2,
         window_open_fraction=0.8,
-        window_width=72)
-    
-    for _k_, _v_ in _res_.items():
-        print('{:<30}: {}'.format(_k_, _v_))
-
-    import matplotlib.pyplot as plt
-    fig, ax1 = plt.subplots()
-    ax1.plot(fire_time_, _res_['fire_temperature'])
-    plt.show()
+        window_width=72,
+        window_open_fraction_permanent=0)
