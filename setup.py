@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-# from distutils.core import setup
-
 import os
-# To use a consistent encoding
-from codecs import open
+from codecs import open  # To use a consistent encoding
 
 import setuptools
+
+import sfeprapy
 
 # Get the long description from the README file
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')) as f:
@@ -16,7 +15,7 @@ setuptools.setup(
 
     name='sfeprapy',
 
-    version='0.6.4',
+    version=sfeprapy.__version__,
 
     description='Structural Fire Engineering - Probabilistic Reliability Assessment',
 
@@ -55,8 +54,6 @@ setuptools.setup(
         'sfeprapy.func',
         'sfeprapy.func.heat_transfer_1d'
         ],
-
-    # entry_points={'console_scripts': ['sfeprapy.mcs0 = sfeprapy.mc0.__main__:main_args']},
 
     install_requires=[
         'matplotlib>=2.2.2',
