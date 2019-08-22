@@ -78,7 +78,7 @@ def __example_input_dict():
         window_open_fraction_permanent=0
     ),
     "Standard Case 2": dict(
-        case_name='Standard Case 1',
+        case_name='Standard Case 2',
         n_simulations=100,
         probability_weight=0.5,
         fire_time_step=30,

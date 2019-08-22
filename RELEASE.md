@@ -9,6 +9,8 @@
 ### XX/XX/2019 VERSION: 0.6.5
 
 - New: `sfeprapy.mcs0.test` automated tests for `sfeprapy.mcs0`.
+- New: `sfeprapy.mcs0` a model uncertainty factor `phi_teq` is added.
+- New: `sfeprapy.mcs2` a 
 - Improved: `sfeprapy.mcs0` changed criteria for parametric fire when `fire_mode` is set to 3. `opening_factor` should be within 0.01 and 0.2 (instead 0.02 and 0.2) to compliant to UK NA to Eurocode 1991-1-2.
 
 ### 18/08/2019 VERSION: 0.6.4

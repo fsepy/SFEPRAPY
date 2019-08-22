@@ -11,10 +11,12 @@ def test_standard_case():
     # increase the number of simulations so it gives sensible results
     mcs_input = EXAMPLE_INPUT_DICT
     for k in list(mcs_input.keys()):
-        mcs_input[k]['n_simulations'] = 2500
+        EXAMPLE_INPUT_DICT[k]['phi_teq'] = 1
+        mcs_input[k]['n_simulations'] = 1000
+
     # increase the number of threads so it runs faster
     mcs_config = copy.copy(EXAMPLE_CONFIG_DICT)
-    mcs_config['n_threads'] = 4
+    mcs_config['n_threads'] = 3
     mcs = MCS()
     mcs.define_problem(data=mcs_input, config=mcs_config)
     mcs.define_stochastic_parameter_generator(gen)
@@ -52,8 +54,7 @@ def test_arg_dict():
     from scipy.interpolate import interp1d
     import numpy as np
     for k in list(EXAMPLE_INPUT_DICT.keys()):
-        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 500
-        EXAMPLE_INPUT_DICT[k]['phi_teq'] = 1
+        EXAMPLE_INPUT_DICT[k]['n_simulations'] = 1000
 
     EXAMPLE_CONFIG_DICT['n_threads'] = 3
     mcs = MCS()
