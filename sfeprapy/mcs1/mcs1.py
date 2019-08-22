@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import matplotlib
-from sfeprapy.mc1.mc1_obj import MonteCarlo
 
+from sfeprapy.mcs1.mcs1_obj import MonteCarlo
 
 matplotlib.use('agg')
 

@@ -48,7 +48,7 @@ setuptools.setup(
         'sfeprapy.dat', 
         'sfeprapy.mc0', 
         'sfeprapy.mcs0',
-        'sfeprapy.mc1',
+        'sfeprapy.mcs1',
         'sfeprapy.mcs2',
         'sfeprapy.dist_fit', 
         'sfeprapy.func',

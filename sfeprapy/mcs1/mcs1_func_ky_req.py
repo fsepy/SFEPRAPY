@@ -2,13 +2,11 @@
 # __email__= "Danny.Hopkin@OFRconsultants.com"
 # __date__= "02-05-19"
 
-from scipy.stats import gamma
-from scipy.stats import norm
-from scipy.stats import lognorm
-
-from matplotlib import pyplot as plt
-
 import numpy as np
+from scipy.stats import gamma
+from scipy.stats import lognorm
+from scipy.stats import norm
+
 
 ## inverse CDF function ##
 

@@ -1,18 +1,17 @@
-import multiprocessing as mp
+import json
 import os
+import types
+import warnings
+from tkinter import filedialog, Tk, StringVar
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import json
-import warnings
-import types
-from tkinter import filedialog, Tk, StringVar
 from scipy.interpolate import interp1d
 
 from sfeprapy.func.fire_iso834 import fire as _fire_standard
-from sfeprapy.mc1.mc1_func_main import main as func_main
-from sfeprapy.mc1.mc1_func_gen import mc_inputs_generator
-from sfeprapy.mc1.mc1_func_ky_req import ky_req_calc
+from sfeprapy.mcs1.mcs1_func_gen import mc_inputs_generator
+from sfeprapy.mcs1.mcs1_func_main import main as func_main
 
 
 class MonteCarloCase:

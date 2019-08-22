@@ -1,7 +1,7 @@
 if __name__ == '__main__':
     import sys
     import warnings
-    import sfeprapy.mc1.mc1 as mc1
+    import sfeprapy.mcs1.mcs1 as mc1
 
     warnings.filterwarnings('ignore')
 
