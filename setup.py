@@ -48,14 +48,15 @@ setuptools.setup(
         'sfeprapy', 
         'sfeprapy.dat', 
         'sfeprapy.mc0', 
-        'sfeprapy.mcs0', 
-        'sfeprapy.mc1', 
+        'sfeprapy.mcs0',
+        'sfeprapy.mc1',
+        'sfeprapy.mcs2',
         'sfeprapy.dist_fit', 
         'sfeprapy.func',
         'sfeprapy.func.heat_transfer_1d'
         ],
 
-    # entry_points={'console_scripts': ['sfeprapymc = sfeprapy.mc0.__main__:main_args']},
+    # entry_points={'console_scripts': ['sfeprapy.mcs0 = sfeprapy.mc0.__main__:main_args']},
 
     install_requires=[
         'matplotlib>=2.2.2',
