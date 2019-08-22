@@ -464,7 +464,8 @@ def mcs_out_post(df: pd.DataFrame):
     dict_ = dict()
     dict_['fire_type'] = str({k: np.sum(df_res['fire_type'].values == k) for k in np.unique(df_res['fire_type'].values)})
 
-    for k in ['beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_load_density', 'fire_nft_limit', 'fire_spread_speed']:
+    for k in ['beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_load_density',
+              'fire_nft_limit', 'fire_spread_speed', 'window_open_fraction', 'phi_teq']:
         try:
             x = df_res[k].values
             x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
@@ -583,6 +584,7 @@ def teq_main(
         # window_height=window_height,
         window_open_fraction=window_open_fraction,
         # window_width=window_width,
+        phi_teq=phi_teq,
     )
 
     # To check what design fire to use
