@@ -1,12 +1,13 @@
 """
-VERSIONING IDENTIFICATION RULES DOCUMENTED IN PEP 440 ARE FOLLOWED.
+VERSION IDENTIFICATION RULES DOCUMENTED IN PEP 440 ARE FOLLOWED.
 
 Version scheme
 ==============
 
 Distributions are identified by a public version identifier which supports all defined version comparison operations
 
-The version scheme is used both to describe the distribution version provided by a particular distribution archive, as well as to place constraints on the version of dependencies needed in order to build or run the software.
+The version scheme is used both to describe the distribution version provided by a particular distribution archive, as
+well as to place constraints on the version of dependencies needed in order to build or run the software.
 
 Public version identifiers
 --------------------------
@@ -19,7 +20,9 @@ Public version identifiers MUST NOT include leading or trailing whitespace.
 
 Public version identifiers MUST be unique within a given distribution.
 
-See also Appendix B : Parsing version strings with regular expressions which provides a regular expression to check strict conformance with the canonical format, as well as a more permissive regular expression accepting inputs that may require subsequent normalization.
+See also Appendix B : Parsing version strings with regular expressions which provides a regular expression to check
+strict conformance with the canonical format, as well as a more permissive regular expression accepting inputs that may
+require subsequent normalization.
 
 Public version identifiers are separated into up to five segments:
 
