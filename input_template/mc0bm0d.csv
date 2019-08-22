@@ -1,9 +1,0 @@
-PARAMETERS,A
-v1:dist,gumbel_r
-v1:sd,126
-v1:mean,420
-v1:ubound,1500
-v1:lbound,10
-v2:dist,uniform
-v2:ubound,100
-v2:lbound,0
