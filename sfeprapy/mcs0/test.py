@@ -70,5 +70,5 @@ def test_arg_dict():
 
 
 if __name__ == '__main__':
-    # test_standard_case()
+    test_standard_case()
     test_arg_dict()
