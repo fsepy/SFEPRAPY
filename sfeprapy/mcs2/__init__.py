@@ -83,8 +83,9 @@ def __example_input_csv(x:dict):
     from sfeprapy.func.mcs_gen import dict_flatten
     import pandas as pd
     y = {k: dict_flatten(v) for k, v in x.items()}
-    y = pd.DataFrame.from_dict(y)
-    y = y.to_csv(index=False)
+    y = pd.DataFrame.from_dict(y, orient='columns')
+    y.index.name = 'PARAMETERS'
+    y = y.to_csv(index=True)
     return y
 
 EXAMPLE_CONFIG_DICT = __example_config_dict()
