@@ -465,7 +465,7 @@ def mcs_out_post(df: pd.DataFrame):
     dict_['fire_type'] = str({k: np.sum(df_res['fire_type'].values == k) for k in np.unique(df_res['fire_type'].values)})
 
     for k in ['beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_load_density',
-              'fire_nft_limit', 'fire_spread_speed', 'window_open_fraction', 'phi_teq']:
+              'fire_nft_limit', 'fire_spread_speed', 'window_open_fraction', 'phi_teq', 'timber_fire_load']:
         try:
             x = df_res[k].values
             x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
@@ -593,7 +593,7 @@ def teq_main(
         phi_teq=phi_teq,
     )
 
-    # UNITS CONVERSTION
+    # UNITS CONVERSATION
     timber_charring_rate *= 1 / 1000  # [mm/min] -> [m/min]
     timber_charring_rate *= 1 / 60  # [m/min] -> [m/s]
 
@@ -603,7 +603,10 @@ def teq_main(
     else:
         timber_exposed_duration = 0
 
-    for timber_solver_iter in range(int(timber_solver_ilim)):
+    timber_solver_iter = 0
+    while True:
+
+        timber_solver_iter += 1
 
         timber_charred_depth = timber_charring_rate * timber_exposed_duration
         timber_charred_volume = timber_charred_depth * timber_exposed_area
@@ -672,8 +675,10 @@ def teq_main(
             break
         elif not res_solve_time_equivalence['solver_convergence_status']:  # no time equivalence solution
             break
+        elif timber_solver_iter >= timber_solver_ilim:  # over the solver iteration limit
+            break
         elif abs(timber_exposed_duration - res_solve_time_equivalence[
-            'solver_time_equivalence_solved']) <= timber_solver_tol:  # convergence sought
+            'solver_time_equivalence_solved']) <= timber_solver_tol:  # convergence sought successfully
             break
         else:
             timber_exposed_duration = res_solve_time_equivalence['solver_time_equivalence_solved']
@@ -741,7 +746,13 @@ def test_teq():
         window_open_fraction=0.8,
         window_width=72,
         window_open_fraction_permanent=0,
-        phi_teq=1)
+        phi_teq=1,
+        timber_charring_rate=0.7,
+        timber_exposed_area=0,
+        timber_hc=400,
+        timber_density=500,
+        timber_solver_ilim=20,
+        timber_solver_tol=1)
 
     print(_res_['solver_time_equivalence_solved'])
     assert (_res_['solver_time_equivalence_solved'] - 2107) < 2
@@ -794,7 +805,14 @@ def test_teq_phi():
         window_open_fraction=0.8,
         window_width=72,
         window_open_fraction_permanent=0,
-        phi_teq=0.1)
+        phi_teq=0.1,
+        timber_exposed_area=10,
+        timber_charring_rate=0.7,  # mm/min
+        timber_hc=13.2,  # MJ/kg
+        timber_density=400,  # [kg/m3]
+        timber_solver_ilim=20,
+        timber_solver_tol=1
+    )
 
     print(_res_['solver_time_equivalence_solved'])
 
