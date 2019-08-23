@@ -45,19 +45,19 @@ def _fire_travelling(**kwargs):
 
 
 def decide_fire(
-        window_height,
-        window_width,
-        window_open_fraction,
-        room_breadth,
-        room_depth,
-        room_height,
-        fire_mode,
-        fire_load_density,
-        fire_combustion_efficiency,
-        fire_hrr_density,
-        fire_spread_speed,
+        window_height: float,
+        window_width: float,
+        window_open_fraction: float,
+        room_breadth: float,
+        room_depth: float,
+        room_height: float,
+        fire_mode: int,
+        fire_load_density: float,
+        fire_combustion_efficiency: float,
+        fire_hrr_density: float,
+        fire_spread_speed: float,
         **_
-):
+) -> dict:
     """Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
     opposing to the standard fire curve ISO 834.
 
@@ -125,27 +125,27 @@ def decide_fire(
 
 
 def evaluate_fire_temperature(
-        window_height,
-        window_width,
-        window_open_fraction,
-        room_breadth,
-        room_depth,
-        room_height,
-        room_wall_thermal_inertia,
-        fire_tlim,
-        fire_type,
-        fire_time,
-        fire_nft_limit,
-        fire_load_density,
-        fire_combustion_efficiency,
-        fire_hrr_density,
-        fire_spread_speed,
-        fire_t_alpha,
-        fire_gamma_fi_q,
-        beam_position_vertical,
-        beam_position_horizontal: Union[np.ndarray, list, float] = -1,
+        window_height: float,
+        window_width: float,
+        window_open_fraction: float,
+        room_breadth: float,
+        room_depth: float,
+        room_height: float,
+        room_wall_thermal_inertia: float,
+        fire_tlim: float,
+        fire_type: float,
+        fire_time: float,
+        fire_nft_limit: float,
+        fire_load_density: float,
+        fire_combustion_efficiency: float,
+        fire_hrr_density: float,
+        fire_spread_speed: float,
+        fire_t_alpha: float,
+        fire_gamma_fi_q: float,
+        beam_position_vertical: float,
+        beam_position_horizontal: Union[np.ndarray, list, float] = -1.,
         **_
-):
+) -> dict:
     """Calculate temperature array of pre-defined fire type `fire_type`.
 
     PARAMETERS:
@@ -249,29 +249,32 @@ def evaluate_fire_temperature(
 
 
 def solve_time_equivalence(
-        fire_time,
-        fire_temperature,
-        beam_cross_section_area,
-        beam_rho,
-        protection_k,
-        protection_rho,
-        protection_c,
-        protection_protected_perimeter,
-        fire_time_iso834,
-        fire_temperature_iso834,
-        solver_temperature_goal,
-        solver_max_iter=20,
-        solver_thickness_ubound=0.0500,
-        solver_thickness_lbound=0.0001,
-        solver_tol=1.,
-        phi_teq=1,
+        fire_time: Union[list, np.ndarray],
+        fire_temperature: Union[list, np.ndarray],
+        beam_cross_section_area: float,
+        beam_rho: float,
+        protection_k: float,
+        protection_rho: float,
+        protection_c: float,
+        protection_protected_perimeter: float,
+        fire_time_iso834: Union[list, np.ndarray],
+        fire_temperature_iso834: Union[list, np.ndarray],
+        solver_temperature_goal: float,
+        solver_max_iter: int = 20,
+        solver_thickness_ubound: float = 0.0500,
+        solver_thickness_lbound: float = 0.0001,
+        solver_tol: float = 1.,
+        phi_teq: float = 1,
         **_
-):
+) -> dict:
     """Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
     opposing to the standard fire curve ISO 834.
 
     PARAMETERS:
+    :param fire_time: [s], time array
+    :param fire_temperature: [K], temperature array
     :param beam_cross_section_area: [m2], the steel beam element cross section area
+    :param beam_rho: [kg/m3], steel beam element density
     :param solver_temperature_goal: [K], steel beam element expected failure temperature
     :param protection_k: steel beam element protection material thermal conductivity
     :param protection_rho: steel beam element protection material density
@@ -456,7 +459,7 @@ def solve_time_equivalence(
     return results
 
 
-def mcs_out_post(df: pd.DataFrame):
+def mcs_out_post(df: pd.DataFrame) -> pd.DataFrame:
     df_res = copy.copy(df)
     df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
     df_res = df_res.dropna(axis=0, how="any")
@@ -490,51 +493,51 @@ def teq_main_wrapper(args):
 
 
 def teq_main(
-        case_name,
-        n_simulations,
-        probability_weight,
-        index,
-        beam_cross_section_area,
-        beam_position_vertical,
-        beam_position_horizontal,
-        beam_rho,
-        fire_time_duration,
-        fire_time_step,
-        fire_combustion_efficiency,
-        fire_gamma_fi_q,
-        fire_hrr_density,
-        fire_load_density,
-        fire_mode,
-        fire_nft_limit,
-        fire_spread_speed,
-        fire_t_alpha,
-        fire_tlim,
-        protection_c,
-        protection_k,
-        protection_protected_perimeter,
-        protection_rho,
-        room_breadth,
-        room_depth,
-        room_height,
-        room_wall_thermal_inertia,
-        solver_temperature_goal,
-        solver_max_iter,
-        solver_thickness_lbound,
-        solver_thickness_ubound,
-        solver_tol,
-        window_height,
-        window_open_fraction,
-        window_width,
-        window_open_fraction_permanent,
-        phi_teq,
-        timber_charring_rate,
-        timber_hc,
-        timber_density,
-        timber_exposed_area,
-        timber_solver_tol,
-        timber_solver_ilim,
+        case_name: str,
+        n_simulations: int,
+        probability_weight: float,
+        index: int,
+        beam_cross_section_area: float,
+        beam_position_vertical: float,
+        beam_position_horizontal: float,
+        beam_rho: float,
+        fire_time_duration: float,
+        fire_time_step: float,
+        fire_combustion_efficiency: float,
+        fire_gamma_fi_q: float,
+        fire_hrr_density: float,
+        fire_load_density: float,
+        fire_mode: int,
+        fire_nft_limit: float,
+        fire_spread_speed: float,
+        fire_t_alpha: float,
+        fire_tlim: float,
+        protection_c: float,
+        protection_k: float,
+        protection_protected_perimeter: float,
+        protection_rho: float,
+        room_breadth: float,
+        room_depth: float,
+        room_height: float,
+        room_wall_thermal_inertia: float,
+        solver_temperature_goal: float,
+        solver_max_iter: int,
+        solver_thickness_lbound: float,
+        solver_thickness_ubound: float,
+        solver_tol: float,
+        window_height: float,
+        window_open_fraction: float,
+        window_width: float,
+        window_open_fraction_permanent: float,
+        phi_teq: float = 1.,
+        timber_charring_rate: float = None,
+        timber_hc: float = None,
+        timber_density: float = None,
+        timber_exposed_area: float = None,
+        timber_solver_tol: float = None,
+        timber_solver_ilim: float = None,
         **_
-):
+) -> dict:
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
     if room_depth < room_breadth:
         room_depth += room_breadth
@@ -591,6 +594,12 @@ def teq_main(
         window_open_fraction=window_open_fraction,
         # window_width=window_width,
         phi_teq=phi_teq,
+        # timber_charring_rate=timber_charring_rate,
+        # timber_hc=timber_hc,
+        # timber_density=timber_density,
+        # timber_exposed_area=timber_exposed_area,
+        # timber_solver_tol=timber_solver_tol,
+        # timber_solver_ilim=timber_solver_ilim,
     )
 
     # UNITS CONVERSATION
@@ -603,7 +612,8 @@ def teq_main(
     else:
         timber_exposed_duration = 0
 
-    timber_solver_iter = 0
+    timber_solver_iter = -1  # initialise solver iteration count for timber fuel contribution
+
     while True:
 
         timber_solver_iter += 1
@@ -671,7 +681,7 @@ def teq_main(
             solver_thickness_lbound,
             solver_tol)
 
-        if timber_exposed_area <= 0:  # no timber
+        if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
             break
         elif not res_solve_time_equivalence['solver_convergence_status']:  # no time equivalence solution
             break
