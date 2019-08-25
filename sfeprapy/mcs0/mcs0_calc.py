@@ -772,8 +772,12 @@ def test_teq_phi():
     input_param['phi_teq'] = 0.1
     teq_01 = teq_main(**input_param)['solver_time_equivalence_solved']
 
-    assert (abs(teq_10 / teq_01) - 10) < 0.001
+    assert abs(teq_10 / teq_01 - 10) < 0.001
+
+
+def test():
+    test_teq_phi()
 
 
 if __name__ == '__main__':
-    test_teq_phi()
+    test()
