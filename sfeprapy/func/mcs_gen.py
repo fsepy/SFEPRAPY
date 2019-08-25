@@ -54,6 +54,17 @@ def uniform_(ubound: float, lbound: float, **_):
 
 
 def random_variable_generator(dict_in: dict, num_samples: int):
+    """Generates samples of defined distribution. This is build upon scipy.stats library.
+
+    :param dict_in:     distribution inputs, required keys are distribution dependent, should be align with inputs
+                        required in the scipy.stats. Additional compulsory keys are:
+                            `dist`: str, distribution type;
+                            `ubound`: float, upper bound of the sampled values; and
+                            `lbound`: float, lower bound of the sampled values.
+    :param num_samples: number of samples to be generated.
+    :return samples:    sampled values based upon `dist` in the range [`lbound`, `ubound`] with `num_samples` number of
+                        values.
+    """
 
     # assign distribution type
     dist_0 = dict_in['dist']
@@ -99,7 +110,13 @@ def random_variable_generator(dict_in: dict, num_samples: int):
         samples = 1 - samples
 
     else:
-        raise ValueError('Unknown distribution type {}.'.format(dist))
+        try:
+            dict_in.pop('dist')
+            dict_in.pop('ubound')
+            dict_in.pop('lbound')
+            samples = generate_cfd_q(dist_=dist, dist_kw_=dict_in, lbound_=lbound, ubound_=ubound)
+        except AttributeError:
+            raise ValueError('Unknown distribution type {}.'.format(dist))
 
     samples[samples == np.inf] = ubound
     samples[samples == -np.inf] = lbound
@@ -112,7 +129,7 @@ def random_variable_generator(dict_in: dict, num_samples: int):
     return samples
 
 
-def dict_unflatten(dict_in: dict):
+def dict_unflatten(dict_in: dict) -> dict:
 
     dict_out = dict()
 
@@ -125,8 +142,14 @@ def dict_unflatten(dict_in: dict):
             else:
                 dict_out[k1] = dict(k2 = dict_in[k])
 
+    return dict_out
 
-def dict_flatten(dict_in: dict):
+
+def dict_flatten(dict_in: dict) -> dict:
+    """Converts two levels dict to single level dict. Example input and output see test_dict_flatten.
+    :param dict_in: Any two levels (or less) dict.
+    :return dict_out: Single level dict.
+    """
 
     dict_out = dict()
 
@@ -140,7 +163,34 @@ def dict_flatten(dict_in: dict):
     return dict_out
 
 
-def main(x: dict, num_samples: int):
+def test_dict_flatten():
+    x = dict(
+        A=dict(
+            a=0,
+            b=1,
+        ),
+        B=dict(
+            c=2,
+            d=3
+        )
+    )
+    y_expected = {
+        'A:a': 0,
+        'A:b': 1,
+        'B:c': 2,
+        'B:d': 3,
+    }
+    y = dict_flatten(x)
+    assert y == y_expected
+
+
+def main(x: dict, num_samples: int) -> pd.DataFrame:
+    """Generates samples based upon prescribed distribution types.
+
+    :param x: description of distribution function.
+    :param num_samples: number of samples to be produced.
+    :return df_out:
+    """
 
     dict_out = dict()
 
@@ -173,51 +223,87 @@ def main(x: dict, num_samples: int):
     return df_out
 
 
-def _test_random_variable_generator():
+def test_random_variable_generator():
+    x = dict(
+        v=np.pi,
+    )
+    y = main(x, 1000)
+    assert len(y['v'].values) == 1000
+    assert all([v == np.pi for v in y['v'].values])
 
-    dict_in = dict(
-        v1=np.pi,
-        v2='hello world.',
-        v3=np.array([0, 1, 2]),
-        v4=dict(
+    x = dict(
+        v='hello world.',
+    )
+    y = main(x, 1000)
+    assert len(y['v'].values) == 1000
+    assert all([v == 'hello world.' for v in y['v'].values])
+
+    x = dict(
+        v=[0., 1., 2.],
+    )
+    y = main(x, 1000)
+    assert len(y['v'].values) == 1000
+    assert all([all(v == np.array([0., 1., 2.])) for v in y['v'].values])
+
+    x = dict(
+        v=dict(
             dist='uniform_',
             ubound=10,
             lbound=-1
         ),
-        v5=dict(
+    )
+    y = main(x, 1000)
+    assert len(y['v'].values) == 1000
+    assert np.max(y['v'].values) == 10
+    assert np.min(y['v'].values) == -1
+    assert np.mean(y['v'].values) == (10 - 1) / 2
+
+    x = dict(
+        v=dict(
             dist='norm_',
             ubound=5+1,
             lbound=5-1,
             mean=5,
             sd=1
         ),
-        v6=dict(
+    )
+    y = main(x, 1000)
+    assert len(y['v'].values) == 1000
+    assert np.max(y['v'].values) == 6
+    assert np.min(y['v'].values) == 4
+    assert np.mean(y['v'].values) == 5
+
+    x = dict(
+        v=dict(
             dist='gumbel_r_',
-            ubound=2500,
+            ubound=2000,
             lbound=50,
             mean=420,
             sd=126
         ),
-        v7=dict(
-            dist='lognorm_',
-            ubound=1,
-            lbound=0,
-            mean=0.5,
-            sd=1,
-        ),
-        v8=dict(
-            dist='lognorm_mod_',
-            ubound=1,
-            lbound=0,
-            mean=0.5,
-            sd=1,
-        )
     )
+    y = main(x, 1000)
+    assert len(y['v'].values) == 1000
+    assert abs(np.max(y['v'].values) - 2000) <= 1
+    assert abs(np.min(y['v'].values) - 50) <= 1
+    assert abs(np.mean(y['v'].values) - 420) <= 1
 
-    df_out = main(dict_in, 10000)
-
-    print(df_out)
+    # todo: lognormal distribution need to be verified.
+    # x = dict(
+    #     v=dict(
+    #         dist='lognorm_',
+    #         ubound=2.5,
+    #         lbound=0.00001,
+    #         mean=0.00001,
+    #         sd=0.25,
+    #     ),
+    # )
+    # y = main(x, 1000)
+    # assert len(y['v'].values) == 1000
+    # print(np.mean(y['v'].values))
+    # assert abs(np.mean(y['v'].values) - 0.5) <= 0.001
 
 
 if __name__ == '__main__':
-    _test_random_variable_generator()
+    test_random_variable_generator()
+    test_dict_flatten()
