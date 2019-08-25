@@ -26,14 +26,12 @@ pip is a package management system for installing and updating Python packages. 
 
 #### MCS for structural PRA method 0: `sfeprapy.mcs0`
 
-Idealised MCS flow:
+Idealised Monte Carlo Simulation processes:
 
 1. PROBLEM DEFINITION;
 2. SAMPLE INPUTS;
 3. ITERATIVE CALCULATION; and
 4. POST-PROCESSING.
-
-Introduction of `sfeprapy.mcs0` is current NOT covered here but will provide notebook tutorials in near future.
 
 To run `sfeprapy.mcs0` from source (or when it is installed via, i.e. pip):
 
@@ -47,7 +45,7 @@ When a configuration file with the name 'config.json' is provided in the same di
 
 Once the input file is selected, the program will take the lead and run calculations until all simulations are complete. Results will be saved in the same folder. Conveniently, the software has the feature of displaying the progress and some statistics as per below.
 
-```
+```sh
 CASE                    : Standard Case 1
 NO. OF THREADS          : 4
 NO. OF SIMULATIONS      : 1000
