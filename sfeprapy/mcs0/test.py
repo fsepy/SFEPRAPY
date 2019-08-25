@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 def test_standard_case():
     import copy
     from sfeprapy.func.mcs_obj import MCS

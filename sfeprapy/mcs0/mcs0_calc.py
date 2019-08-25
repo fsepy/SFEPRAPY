@@ -134,7 +134,7 @@ def evaluate_fire_temperature(
         room_wall_thermal_inertia: float,
         fire_tlim: float,
         fire_type: float,
-        fire_time: float,
+        fire_time: Union[list, np.ndarray],
         fire_nft_limit: float,
         fire_load_density: float,
         fire_combustion_efficiency: float,
@@ -260,11 +260,11 @@ def solve_time_equivalence(
         fire_time_iso834: Union[list, np.ndarray],
         fire_temperature_iso834: Union[list, np.ndarray],
         solver_temperature_goal: float,
-        solver_max_iter: int = 20,
-        solver_thickness_ubound: float = 0.0500,
-        solver_thickness_lbound: float = 0.0001,
-        solver_tol: float = 1.,
-        phi_teq: float = 1,
+        solver_max_iter: int,
+        solver_thickness_ubound: float,
+        solver_thickness_lbound: float,
+        solver_tol: float,
+        phi_teq: float,
         **_
 ) -> dict:
     """Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
@@ -679,7 +679,8 @@ def teq_main(
             solver_max_iter,
             solver_thickness_ubound,
             solver_thickness_lbound,
-            solver_tol)
+            solver_tol,
+            phi_teq)
 
         if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
             break
@@ -709,65 +710,6 @@ def teq_main(
     return res
 
 
-def test_teq():
-    warnings.filterwarnings('ignore')
-
-    from sfeprapy.func.fire_iso834 import fire as fire_iso834
-
-    fire_time_ = np.arange(0, 2 * 60 * 60, 1)
-    fire_temperature_iso834_ = fire_iso834(fire_time_, 293.15)
-
-    _res_ = teq_main(
-        index=0,
-        case_name='Standard 1',
-        probability_weight=1,
-        fire_time_step=30,
-        fire_time_duration=5*60*60,
-        n_simulations=1,
-        beam_cross_section_area=0.017,
-        beam_position_vertical=2.5,
-        beam_position_horizontal=18,
-        beam_rho=7850,
-        fire_combustion_efficiency=0.8,
-        fire_gamma_fi_q=1,
-        fire_hrr_density=0.25,
-        fire_load_density=420,
-        fire_mode=0,
-        fire_nft_limit=1050,
-        fire_spread_speed=0.01,
-        fire_t_alpha=300,
-        fire_tlim=0.333,
-        fire_temperature_iso834=fire_temperature_iso834_,
-        fire_time_iso834=fire_time_,
-        protection_c=1700,
-        protection_k=0.2,
-        protection_protected_perimeter=2.14,
-        protection_rho=7850,
-        room_breadth=16,
-        room_depth=31.25,
-        room_height=3,
-        room_wall_thermal_inertia=720,
-        solver_temperature_goal=620+273.15,
-        solver_max_iter=20,
-        solver_thickness_lbound=0.0001,
-        solver_thickness_ubound=0.0500,
-        solver_tol=1.,
-        window_height=2,
-        window_open_fraction=0.8,
-        window_width=72,
-        window_open_fraction_permanent=0,
-        phi_teq=1,
-        timber_charring_rate=0.7,
-        timber_exposed_area=0,
-        timber_hc=400,
-        timber_density=500,
-        timber_solver_ilim=20,
-        timber_solver_tol=1)
-
-    print(_res_['solver_time_equivalence_solved'])
-    assert (_res_['solver_time_equivalence_solved'] - 2107) < 2
-
-
 def test_teq_phi():
     warnings.filterwarnings('ignore')
 
@@ -776,7 +718,7 @@ def test_teq_phi():
     fire_time_ = np.arange(0, 2 * 60 * 60, 1)
     fire_temperature_iso834_ = fire_iso834(fire_time_, 293.15)
 
-    _res_ = teq_main(
+    input_param = dict(
         index=0,
         case_name='Standard 1',
         probability_weight=1,
@@ -816,17 +758,22 @@ def test_teq_phi():
         window_width=72,
         window_open_fraction_permanent=0,
         phi_teq=0.1,
-        timber_exposed_area=10,
-        timber_charring_rate=0.7,  # mm/min
-        timber_hc=13.2,  # MJ/kg
-        timber_density=400,  # [kg/m3]
+        timber_charring_rate=0.7,
+        timber_exposed_area=0,
+        timber_hc=400,
+        timber_density=500,
         timber_solver_ilim=20,
-        timber_solver_tol=1
+        timber_solver_tol=1,
     )
 
-    print(_res_['solver_time_equivalence_solved'])
+    input_param['phi_teq'] = 1.0
+    teq_10 = teq_main(**input_param)['solver_time_equivalence_solved']
+
+    input_param['phi_teq'] = 0.1
+    teq_01 = teq_main(**input_param)['solver_time_equivalence_solved']
+
+    assert (abs(teq_10 / teq_01) - 10) < 0.001
 
 
 if __name__ == '__main__':
-    test_teq()
     test_teq_phi()
