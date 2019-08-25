@@ -4,8 +4,6 @@ A probabilistic analysis tool that estimates the structural reliability for a gi
 
 ## Getting Started
 
-These in`str`uctions will get you a copy of the project up and running on your local machine for development and testing purposes.
-
 Python 3.7 or later is required.
 
 ### Installation
