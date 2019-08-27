@@ -51,33 +51,33 @@ NO. OF THREADS          : 4
 NO. OF SIMULATIONS      : 1000
 100%|███████████████████| 1000/1000 [00:09<00:00, 86.15it/s]
 fire_type               : {0: 23, 1: 977}
-beam_position_horizontal: -1.000    27.534    28.646   
-fire_combustion_efficien: 0.800     0.900     1.000    
-fire_hrr_density        : 0.240     0.250     0.260    
-fire_load_density       : 10.000    420.399   1500.000 
-fire_nft_limit          : 623.150   1323.150  2023.152 
-fire_spread_speed       : 0.004     0.011     0.019     
+beam_position_horizontal: -1.000    27.534    28.646
+fire_combustion_efficien: 0.800     0.900     1.000
+fire_hrr_density        : 0.240     0.250     0.260
+fire_load_density       : 10.000    420.399   1500.000
+fire_nft_limit          : 623.150   1323.150  2023.152
+fire_spread_speed       : 0.004     0.011     0.019
 
 CASE                    : Standard Case 2
 NO. OF THREADS          : 4
 NO. OF SIMULATIONS      : 1000
 100%|███████████████████| 1000/1000 [00:10<00:00, 77.85it/s]
 fire_type               : {0: 10, 1: 990}
-beam_position_horizontal: -1.000    27.943    28.646   
-fire_combustion_efficien: 0.800     0.900     1.000    
-fire_hrr_density        : 0.240     0.250     0.260    
-fire_load_density       : 10.000    420.399   1500.000 
-fire_nft_limit          : 623.150   1323.150  2023.152 
-fire_spread_speed       : 0.004     0.011     0.019   
+beam_position_horizontal: -1.000    27.943    28.646
+fire_combustion_efficien: 0.800     0.900     1.000
+fire_hrr_density        : 0.240     0.250     0.260
+fire_load_density       : 10.000    420.399   1500.000
+fire_nft_limit          : 623.150   1323.150  2023.152
+fire_spread_speed       : 0.004     0.011     0.019
 ```
 
 ##### Input Parameters
 
 Example input template can be found at:
 
--  `sfeprapy.mcs0.EXAMPLE_CONFIG_DICT`: Example configuration file, dict object;
--  `sfeprapy.mcs0.EXAMPLE_INPUT_DICT`: Example input file, dict object; and
--  `sfeprapy.mcs0.EXAMPLE_INPUT_CSV`: Example input file, `str` in csv format.
+- `sfeprapy.mcs0.EXAMPLE_CONFIG_DICT`: Example configuration file, dict object;
+- `sfeprapy.mcs0.EXAMPLE_INPUT_DICT`: Example input file, dict object; and
+- `sfeprapy.mcs0.EXAMPLE_INPUT_CSV`: Example input file, `str` in csv format.
 
 The following table summarises the parameters that are required by `sfeprapy.mcs0` module.
 
@@ -90,11 +90,11 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 `fire_mode`: int
 
 > To define what design fires to use:
-> 	0 - EC parametric fire only;
-> 	1 - Travelling fire only;
-> 	2 - EC parametric fire, German Annex;
-> 	3 - Option 0 and 1 as above; or
-> 	4 - Option 2 and 2 as above.
+> 0 - EC parametric fire only;
+> 1 - Travelling fire only;
+> 2 - EC parametric fire, German Annex;
+> 3 - Option 0 and 1 as above; or
+> 4 - Option 2 and 2 as above.
 
 `n_simulations`: int
 
@@ -113,11 +113,11 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 
 `room_depth`: float
 > [m]
-> Depth of room (shorter dimension). 
+> Depth of room (shorter dimension).
 
 `room_height`: float
 > [m]
-> Height of room (floor slab to ceiling slab). 
+> Height of room (floor slab to ceiling slab).
 
 `room_wall_thermal_inertia`: float
 > [J/m²/K/√s].
@@ -130,7 +130,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 `window_height`: float
 
 > [m]
-> Weighted height of all opening areas. 
+> Weighted height of all opening areas.
 
 `beam_position_vertical` : float
 
@@ -159,7 +159,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 `fire_tlim`: float
 > [hour]
 > Time for maximum gas temperature in case of fuel-controlled fire, value options can be found in Annex A EN 1991-1-2.
-> Slow: 25/60 
+> Slow: 25/60
 > Medium: 20/60
 > Fast: 15/60
 
@@ -181,11 +181,11 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 
 `fire_spread_speed`: float
 > [MJ/m²]
-> Min spread rate for TFM. 
+> Min spread rate for TFM.
 
 `fire_nft_limit`: float
 > [°C]
-> TFM near field temperature. 
+> TFM near field temperature.
 
 `fire_combustion_efficiency`: float
 > Demensionless.
@@ -197,7 +197,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 
 `fire_t_alpha`: float
 > [s]
-> The fire growth factor. 
+> The fire growth factor.
 
 ###### Structural Element Section Properties
 
@@ -307,7 +307,7 @@ To set the `fire_load_density` as a stochastic variable ([gumbel_r](https://docs
 | fire_load_density:lbound | 50           |
 | ⋮                        | ⋮            |
 
-A full list of distributions are described in following sections. 
+A full list of distributions are described in following sections.
 
 ### Gumbel distribution (right-skewed)
 
@@ -333,17 +333,18 @@ A full list of distributions are described in following sections.
 
 `mean`: float
 > True mean of the distribution.
+
 `sd`: float
-
 > True Standard Deviation of the distribution.
-`ubound`: float
 
+`ubound`: float
 > Upper limit of the sampled values, i.e. the maximum value of the x-axis of a CDF.
 
 `lbound`: float
 > Lower limit of the sampled values, i.e. the minimum value of the x-axis of the CDF.
 
 ### Lognormal distribution (Modified)
+
 This distribution gives 1-φ, where φ is a lognormal distribution.
 
 `dist`: str
@@ -381,10 +382,10 @@ This distribution gives 1-φ, where φ is a lognormal distribution.
 ### Uniform distribution
 
 `ubound`: float
-> Upper limit of the sampled values, i.e. the maximum value of the x-axis of a CDF.
+> Upper limit of the values to be sampled, i.e. the maximum value of the x-axis of the distribution's CDF.
 
 `lbound`: float
-> Lower limit of the sampled values, i.e. the minimum value of the x-axis of the CDF.
+> Lower limit of the values to be sampled, i.e. the minimum value of the x-axis of the distribution's CDF.
 
 ## Limitations
 
@@ -392,9 +393,9 @@ To-do
 
 ## Authors
 
-* **Ian Fu** - *fuyans@gmail.com*
-* **Danny Hopkin** - *danny.hopkin@ofrconsultants.com*
-* **Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
+**Ian Fu** - *fuyans@gmail.com*
+**Danny Hopkin** - *danny.hopkin@ofrconsultants.com*
+**Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
 
 ## License
 
