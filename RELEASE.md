@@ -1,16 +1,26 @@
 # RELEASE NOTES
 
+Checklist before release of new versions:
+
+- Version is up to date in `sfeprapy.__init__:__version__`.
+
 ## KNOWN ISSUES AND TASKS LIST
 
-- None.
+- Log normal distribution in `sfeprapy.func.mcs_gen` need to be tested.
 
 ## VERSIONS
 
-### XX/XX/2019 VERSION: 0.6.5
+### 27/08/2019 VERSION: 0.6.5
 
+- New: `phi_teq` is added in `sfeprapy.mcs0` to include Model Uncertainty factor, see [README](README) for details.
+- New: `sfeprapy.mcs0` implemented timber fuel contribution.
+- New: `timber_exposed_area` is added in `sfeprapy.mcs0`, see [README](README) for details.
+- New: `timber_charring_rate` is added in `sfeprapy.mcs0`, see [README](README) for details.
+- New: `timber_density` is added in `sfeprapy.mcs0`, see [README](README) for details.
+- New: `timber_hc` is added in `sfeprapy.mcs0`, see [README](README) for details.
+- New: `timber_solver_ilim` is added in `sfeprapy.mcs0`, see [README](README) for details.
+- New: `timber_solver_tol` is added in `sfeprapy.mcs0`, see [README](README) for details.
 - New: `sfeprapy.mcs0.test` automated tests for `sfeprapy.mcs0`.
-- New: `sfeprapy.mcs0` a model uncertainty factor `phi_teq` is added.
-- New: `sfeprapy.mcs0` implemented timber fuel contribution, added `timber_*` parameters.
 - Improved: `sfeprapy.mcs0` changed criteria for parametric fire when `fire_mode` is set to 3. `opening_factor` should be within 0.01 and 0.2 (instead 0.02 and 0.2) to compliant to UK NA to Eurocode 1991-1-2.
 
 ### 18/08/2019 VERSION: 0.6.4
