@@ -45,7 +45,7 @@ When a configuration file with the name 'config.json' is provided in the same di
 
 Once the input file is selected, the program will take the lead and run calculations until all simulations are complete. Results will be saved in the same folder. Conveniently, the software has the feature of displaying the progress and some statistics as per below.
 
-```sh
+```
 CASE                    : Standard Case 1
 NO. OF THREADS          : 4
 NO. OF SIMULATIONS      : 1000
@@ -78,6 +78,25 @@ Example input template can be found at:
 - `sfeprapy.mcs0.EXAMPLE_CONFIG_DICT`: Example configuration file, dict object;
 - `sfeprapy.mcs0.EXAMPLE_INPUT_DICT`: Example input file, dict object; and
 - `sfeprapy.mcs0.EXAMPLE_INPUT_CSV`: Example input file, `str` in csv format.
+
+For example, to produce an example input file:
+
+```python
+>>> import sfeprapy
+>>> print(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
+```
+
+Copy the printed string (as per below) to a text file and replace the '.txt' extension with '.csv'.
+
+```shell
+PARAMETERS,Standard Case 1,Standard Case 2
+beam_cross_section_area,0.017,0.017
+beam_position_horizontal,-1,-1
+beam_position_vertical,3.2,3.2
+beam_rho,7850,7850
+case_name,Standard Case 1,Standard Case 2
+...
+```
 
 The following table summarises the parameters that are required by `sfeprapy.mcs0` module.
 
