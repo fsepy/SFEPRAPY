@@ -108,173 +108,168 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 ###### Compartment Parameters
 
 `room_breadth`: float
-> [m]
+> [m]  
 > Breadth of room (greater dimension).
 
 `room_depth`: float
-> [m]
+> [m]  
 > Depth of room (shorter dimension).
 
 `room_height`: float
-> [m]
+> [m]  
 > Height of room (floor slab to ceiling slab).
 
 `room_wall_thermal_inertia`: float
-> [J/m²/K/√s].
+> [J/m²/K/√s]  
 > Compartment lining thermal inertia.
 
 `window_width`: float
-> [m]
+> [m]  
 > Total width of all opening areas for a compartment.
 
 `window_height`: float
-
-> [m]
+> [m]  
 > Weighted height of all opening areas.
 
 `beam_position_vertical` : float
-
-> [m]
+> [m]  
 > Height of test structure element within the compartment for TFM. This can be altered to assess the influence of height in tall compartments. Need to assess worst case height for columns.
 
 `beam_position_horizontal`: float
-
-> [m]
+> [m]  
 > Minimum beam location relative to compartment length for TFM - Linear distribution.
 
 ###### Windows/Natural Vent
 
 `window_open_fraction`: float
-
-> Dimensionless.
+> Dimensionless.  
 > Glazing fall-out fraction.
 
 `window_open_fraction_permanent`: float
-
-> Dimensionless.
+> Dimensionless.  
 > Use this to force a ratio of open windows. If there is a vent to the outside this can be included here.
 
 ###### Design Fire Parameters
 
 `fire_tlim`: float
-> [hour]
+> [hour]  
 > Time for maximum gas temperature in case of fuel-controlled fire, value options can be found in Annex A EN 1991-1-2.
 > Slow: 25/60
 > Medium: 20/60
 > Fast: 15/60
 
 `fire_time_step`: float
-> [s]
+> [s]  
 > Time step used for the model, all fire time-temperature curves and heat transfer calculation. This is recommended to be less than 30 s.
 
 `fire_time_duration`: float
-> [s]
+> [s]  
 > End of simulation. This should be set so that output data is produced allowing the target reliability to be determined. Normally set it to 4 hours and longer period of time for greater room length in order for travelling fire to propagate the entire room.
 
 `fire_load_density`: float
-> [MJ/m²]
+> [MJ/m²]  
 > Fire load density. This should be selected based on occupancy characteristics. See literature for typical values for different occupancies.
 
 `fire_hrr_density`: float
-> [MW/m²]
+> [MW/m²]  
 > Heat release rate. This should be selected based on the fuel. See literature for typical values for different occupancies.
 
 `fire_spread_speed`: float
-> [MJ/m²]
+> [MJ/m²]  
 > Min spread rate for TFM.
 
 `fire_nft_limit`: float
-> [°C]
+> [°C]  
 > TFM near field temperature.
 
 `fire_combustion_efficiency`: float
-> Demensionless.
+> Demensionless.  
 > Combustion efficiency.
 
 `fire_gamma_fi_q`: float
-> Dimensionless.
+> Dimensionless.  
 > The partial factor for EC fire (German Annex).
 
 `fire_t_alpha`: float
-> [s]
+> [s]  
 > The fire growth factor.
 
 ###### Structural Element Section Properties
 
 `beam_cross_section_area`: float,
-> [m²]
+> [m²]  
 > Cross sectional area of the section.
 
 `beam_rho`: float
-> [kg/m³]
+> [kg/m³]  
 > Density of the structural member.
 
 `beam_temperature_goal`: float
-> [K]
+> [K]  
 > Structural element (i.e. steel) failure temperature in Kelvin for goal seek.
 
 `protection_protected_perimeter`: float
-> [m]
+> [m]  
 > Heated perimeter.
 
 `beam_protection_thickness`: float
-> [m]
+> [m]  
 > Thickness of protection.
 
 `protection_k`: float
-> [W/m/K]
+> [W/m/K]  
 > Protection conductivity.
 
 `protection_rho`: float
-> [kg/m³]
+> [kg/m³]  
 > Density of protection to beam.
 
 `protection_c`: float
-> [J/kg/K]
+> [J/kg/K]  
 > Specific heat of protection
 
 ###### Solver Settings (for Time Equivalence)
 
 `solver_temperature_goal`: float
-> [K]
+> [K]  
 > The temperature to be solved for. This is critical temperature of the beam structural element, i.e. 550 or 620 °C.
 
 `solver_max_iter`: float
-> Dimensionless.
+> Dimensionless.  
 > The maximum iteration for the solver to find convergence. Suggest 20 as most (if not all) cases converge in less than 20 iterations.
 
 `solver_thickness_lbound`: float
-> [m]
+> [m]  
 > The smallest value that the solved protection thickness can be.
 
 `solver_thickness_ubound`: float
-> [m]
+> [m]  
 > The greatest value that the solved protection thickness can be.
 
 `solver_tol`: float
-> [K]
+> [K]  
 > Tolerance of the temperature to be solved for. Set to 1 means convergence will be satisfied when the solved value is greater than `solver_temperature_goal-1` and less than `solver_temperature_goal+1`.
 
 `phi_teq`: float
-> Dimensionless.
+> Dimensionless.  
 > Model uncertainty factor multiplied with the evaluated characteristic time equivalence value to get the design time equivalence value.
 
 ###### Timber Properties
 
 `timber_exposed_area`: float
-> [m²]
+> [m²]  
 > Exposed timber surface within the compartment. Set `timber_exposed_area` to '0' to omitt timber involvement.
 
 `timber_charring_rate`: float
-> [m²]
+> [m²]  
 > Timber constant charring rate. This is currently independent of temperature or heat flux.
 
 `timber_hc`: float
-> [MJ/kg]
+> [MJ/kg]  
 > Heat of combustion of timber.
 
 `timber_density`: float
-> [kg/m³]
+> [kg/m³]  
 > Density of timber.
 
 `timber_solver_ilim`: float
@@ -282,7 +277,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > The maximum number of iterations that the solver can run. `timber_solver_iter` in the output file should be inspected to determine appropriate value for `timber_solver_ilim`. Consider to increase `timber_solver_ilim` (or increase `timber_solver_tol`) if many solved values have `timber_solver_iter` == `timber_solver_ilim`.
 
 `timber_solver_tol`: float
-> [s]
+> [s]  
 > Tolerance of the solver. Convergence is sought if change in time equivalence is less than `timber_solver_tol`.
 
 ## Available Distributions
@@ -393,8 +388,8 @@ To-do
 
 ## Authors
 
-**Ian Fu** - *fuyans@gmail.com*
-**Danny Hopkin** - *danny.hopkin@ofrconsultants.com*
+**Ian Fu** - *fuyans@gmail.com*  
+**Danny Hopkin** - *danny.hopkin@ofrconsultants.com*  
 **Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
 
 ## License
