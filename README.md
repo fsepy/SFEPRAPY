@@ -84,24 +84,23 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 ###### Non-Optional Miscellaneous Parameters
 
 `case_name`: str
-
 > A name for the case/compartment. Should be unique among all cases. This may be used in post-processing when combining time equivalence results.
 
 `fire_mode`: int
-
-> To define what design fires to use:
-> 0 - EC parametric fire only;
-> 1 - Travelling fire only;
-> 2 - EC parametric fire, German Annex;
-> 3 - Option 0 and 1 as above; or
-> 4 - Option 2 and 2 as above.
+> Should be an integer from 0 to 4, inclusive.
+> To define what design fires to use:  
+> 0 - EC parametric fire only;  
+> 1 - Travelling fire only;  
+> 2 - EC parametric fire, German Annex;  
+> 3 - Option 0 and 1 as above; or  
+> 4 - Option 2 and 2 as above.  
 
 `n_simulations`: int
-
+> Should be an integer greater than 1.
 > The number of simulations that will be running. A sensitivity analysis should be carried out to determine the appropriate number of simulations.
 
 `probability_weight`: float
-
+> Should be a real number between 0 and 1, inclusive.
 > The fire occurrence probability weight of this specific case (i.e. compartment) among all cases (i.e. entire building).
 > This parameter is not used in any calculation. `sfeprapy.mcs0` reference this parameter in its output for each single iteration and can be used during post-processing to combine time equivalence curves based on their probability weight to the entire building.
 
