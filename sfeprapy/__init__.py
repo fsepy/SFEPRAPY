@@ -34,7 +34,7 @@ Public version identifiers are separated into up to five segments:
 
 """
 
-__version__ = '0.6.5.dev0'
+__version__ = '0.6.5'
 
 if __name__ == '__main__':
     import re
