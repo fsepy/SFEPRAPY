@@ -291,7 +291,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > Density of timber.
 
 `timber_solver_ilim`: float
-> Dimensionless.
+> Dimensionless.  
 > The maximum number of iterations that the solver can run. `timber_solver_iter` in the output file should be inspected to determine appropriate value for `timber_solver_ilim`. Consider to increase `timber_solver_ilim` (or increase `timber_solver_tol`) if many solved values have `timber_solver_iter` == `timber_solver_ilim`.
 
 `timber_solver_tol`: float
