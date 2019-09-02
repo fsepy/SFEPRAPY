@@ -324,6 +324,8 @@ A full list of distributions are described in following sections.
 
 ### Gumbel distribution (right-skewed)
 
+![](misc/fig/gumbel_r_.png)
+
 `dist`: str
 > Set to 'gumbel_r_' for Gumbel Distribution (right-skewed).
 
@@ -340,6 +342,8 @@ A full list of distributions are described in following sections.
 > Lower limit of the sampled values, i.e. the minimum value of the x-axis of the CDF.
 
 ### Lognormal distribution
+
+![](misc/fig/lognorm_.png)
 
 `dist`: str
 > Set to 'lognorm_' for Lognormal Distribution.
@@ -358,9 +362,12 @@ A full list of distributions are described in following sections.
 
 ### Lognormal distribution (Modified)
 
+![](misc/fig/lognorm_mod_.png)
+
 This distribution gives 1-φ, where φ is a lognormal distribution.
 
 `dist`: str
+
 > Set to 'lognorm_mod_' for the modified lognormal distribution.
 
 `mean`: float
@@ -376,6 +383,8 @@ This distribution gives 1-φ, where φ is a lognormal distribution.
 > Lower limit of the sampled values, i.e. the minimum value of the x-axis of the CDF.
 
 ### Normal distribution
+
+![](misc/fig/norm_.png)
 
 `dist`: str
 > Set to 'norm_' for Normal Distribution.
@@ -393,6 +402,11 @@ This distribution gives 1-φ, where φ is a lognormal distribution.
 > Lower limit of the sampled values, i.e. the minimum value of the x-axis of the CDF.
 
 ### Uniform distribution
+
+![](misc/fig/uniform_.png)
+
+`dist`: str
+> Set to 'uniform_' for uniform distribution.
 
 `ubound`: float
 > Upper limit of the values to be sampled, i.e. the maximum value of the x-axis of the distribution's CDF.
