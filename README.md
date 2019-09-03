@@ -1,6 +1,6 @@
 # SfePrapy
 
-A probabilistic analysis tool that estimates the structural reliability for a given scenario (such as enclosure geometry, building type, window areas etc.) against equivalent time exposure to the ISO 834 fire curve.
+Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) in python (py) - is a probabilistic analysis tool that estimates the structural reliability for given scenarios (such as enclosure geometry, building type, window areas etc.) against equivalent time exposure to the ISO 834 fire curve.
 
 ## Getting Started
 
@@ -40,7 +40,7 @@ Idealised Monte Carlo Simulation processes:
 To run `sfeprapy.mcs0` from source (or when it is installed via, i.e. pip):
 
 ```sh
-python -m SfePrapy.mcs0
+python -m sfeprapy.mcs0
 ```
 
 A window will be popped up asking for input a input / problem definition file. The input file should be in '.csv' or '.xlsx' format. Structure of the input file is addressed in the following paragraphs.
