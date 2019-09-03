@@ -119,7 +119,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > 4 - Option 2 and 2 as above.  
 
 `n_simulations`: int
-> Should be an integer greater than 1.
+> Should be an integer greater or equal to1.
 > The number of simulations that will be running. A sensitivity analysis should be carried out to determine the appropriate number of simulations.
 
 `probability_weight`: float
@@ -131,11 +131,12 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 
 `room_breadth`: float
 > [m]  
-> Breadth of room (greater dimension).
+> Breadth of room (the shorter dimension).
 
 `room_depth`: float
+
 > [m]  
-> Depth of room (shorter dimension).
+> Depth of room (the greater dimension).
 
 `room_height`: float
 > [m]  
@@ -197,15 +198,15 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > Heat release rate. This should be selected based on the fuel. See literature for typical values for different occupancies.
 
 `fire_spread_speed`: float
-> [MJ/m²]  
-> Min spread rate for TFM.
+> [m/s]  
+> Min spread rate for travelling fire.
 
 `fire_nft_limit`: float
-> [°C]  
+> [K]  
 > TFM near field temperature.
 
 `fire_combustion_efficiency`: float
-> Demensionless.  
+> Dimensionless.  
 > Combustion efficiency.
 
 `fire_gamma_fi_q`: float
@@ -228,9 +229,10 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 
 `beam_temperature_goal`: float
 > [K]  
-> Structural element (i.e. steel) failure temperature in Kelvin for goal seek.
+> Structural element (steel) failure temperature in Kelvin for goal seek.
 
 `protection_protected_perimeter`: float
+
 > [m]  
 > Heated perimeter.
 
@@ -283,7 +285,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > Exposed timber surface within the compartment. Set `timber_exposed_area` to '0' to omitt timber involvement.
 
 `timber_charring_rate`: float
-> [m²]  
+> [mm/min]  
 > Timber constant charring rate. This is currently independent of temperature or heat flux.
 
 `timber_hc`: float
