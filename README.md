@@ -10,6 +10,8 @@ Python 3.7 or later is required.
 
 pip is a package management system for installing and updating Python packages. pip comes with Python, so you get pip simply by installing Python. On Ubuntu and Fedora Linux, you can simply use your system package manager to install the `python3-pip` package. [The Hitchhiker's Guide to Python](https://docs.python-guide.org/starting/installation/) provides some guidance on how to install Python on your system if it isn't already; you can also install Python directly from [python.org](https://www.python.org/getit/). You might want to [upgrade pip](https://pip.pypa.io/en/stable/installing/) before using it to install other programs.
 
+![demo_install_sfeprapy](misc/fig/demo_install_sfeprapy.gif)
+
 1. to use `pip` install from PyPI:
 
     ```sh
@@ -25,6 +27,8 @@ pip is a package management system for installing and updating Python packages. 
 ### Usage
 
 #### MCS for structural PRA method 0: `sfeprapy.mcs0`
+
+![demo_sfeprapy.mcs0](misc/fig/demo_sfeprapy.mcs0.gif)
 
 Idealised Monte Carlo Simulation processes:
 
