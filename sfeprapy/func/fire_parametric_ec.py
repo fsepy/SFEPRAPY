@@ -106,8 +106,6 @@ def fire(t, A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, temperature_initi
     T_g = np.minimum(T_heating_g, T_cooling_g)
     T_g[T_g < temperature_initial] = temperature_initial
 
-    data_all = {"fire_type": fire_type}
-
     # UNITS: Eq. -> SI
     t *= 3600
     T_g += 273.15
@@ -120,9 +118,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    sns.set_context(context='poster')
-    sns.set()
-    # plt.style.use('seaborn-poster')
+    sns.set_style('ticks')
+    sns.set_context(context='paper')
 
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
 
@@ -135,14 +132,14 @@ if __name__ == '__main__':
 
     oo = (0.02, 0.04, 0.06, 0.10, 0.14, 0.20)  # desired opening factor
 
-    def of2wv(of, w, l, h, h_v):
+    def opening_factor_2_window_width(of, w, l, h, h_v):
         # opening factor = Av * sqrt(hv) / At
         # Av = h_v * w_v
         # of * At / sqrt(h_v) = h_v * w_v
         # w_v = of * At / sqrt(h_v) / h_v
         return of * (2 * (w * l + l * h + h * w)) / h_v ** 0.5 / h_v
 
-    w_v_ = [of2wv(o, w, l, h, h_v) for o in oo]
+    w_v_ = [opening_factor_2_window_width(o, w, l, h, h_v) for o in oo]
 
     print(w_v_)
 
@@ -162,7 +159,7 @@ if __name__ == '__main__':
             t_lim=20 * 60,
             temperature_initial=293.15
         )
-        ax.plot(x / 60, y, label="Opening Factor {:.2f}".format((h_v * w_v) * h_v**0.5 / (2*(w*h+h*l+l*w))))
+        ax.plot(x / 60, y-273.15, label="Opening Factor {:.2f}".format((h_v * w_v) * h_v**0.5 / (2*(w*h+h*l+l*w))))
 
     ax.set_xlabel('Time [minute]')
     ax.set_ylabel('Temperature [$^{\circ}C$]')
