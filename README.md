@@ -79,8 +79,8 @@ fire_spread_speed       : 0.004     0.011     0.019
 
 Example input template can be found at:
 
-- `sfeprapy.mcs0.EXAMPLE_CONFIG_DICT`: Example configuration file, dict object;
-- `sfeprapy.mcs0.EXAMPLE_INPUT_DICT`: Example input file, dict object; and
+- `sfeprapy.mcs0.EXAMPLE_CONFIG_DICT`: Example configuration file, `dict` object;
+- `sfeprapy.mcs0.EXAMPLE_INPUT_DICT`: Example input file, `dict` object; and
 - `sfeprapy.mcs0.EXAMPLE_INPUT_CSV`: Example input file, `str` in csv format.
 
 For example, to produce an example input file:
@@ -155,20 +155,24 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > Weighted height of all opening areas.
 
 `beam_position_vertical` : float
+
 > [m]  
 > Height of test structure element within the compartment for TFM. This can be altered to assess the influence of height in tall compartments. Need to assess worst case height for columns.
 
 `beam_position_horizontal`: float
+
 > [m]  
 > Minimum beam location relative to compartment length for TFM - Linear distribution.
 
 ###### Windows/Natural Vent
 
 `window_open_fraction`: float
+
 > Dimensionless.  
 > Glazing fall-out fraction.
 
 `window_open_fraction_permanent`: float
+
 > Dimensionless.  
 > Use this to force a ratio of open windows. If there is a vent to the outside this can be included here.
 
@@ -182,6 +186,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > Fast: 15/60
 
 `fire_time_step`: float
+
 > [s]  
 > Time step used for the model, all fire time-temperature curves and heat transfer calculation. This is recommended to be less than 30 s.
 
@@ -190,26 +195,32 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > End of simulation. This should be set so that output data is produced allowing the target reliability to be determined. Normally set it to 4 hours and longer period of time for greater room length in order for travelling fire to propagate the entire room.
 
 `fire_load_density`: float
+
 > [MJ/m²]  
 > Fire load density. This should be selected based on occupancy characteristics. See literature for typical values for different occupancies.
 
 `fire_hrr_density`: float
+
 > [MW/m²]  
 > Heat release rate. This should be selected based on the fuel. See literature for typical values for different occupancies.
 
 `fire_spread_speed`: float
+
 > [m/s]  
 > Min spread rate for travelling fire.
 
 `fire_nft_limit`: float
+
 > [K]  
 > TFM near field temperature.
 
 `fire_combustion_efficiency`: float
+
 > Dimensionless.  
 > Combustion efficiency.
 
 `fire_gamma_fi_q`: float
+
 > Dimensionless.  
 > The partial factor for EC fire (German Annex).
 
@@ -220,6 +231,7 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 ###### Structural Element Section Properties
 
 `beam_cross_section_area`: float,
+
 > [m²]  
 > Cross sectional area of the section.
 
@@ -237,10 +249,12 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > Heated perimeter.
 
 `beam_protection_thickness`: float
+
 > [m]  
 > Thickness of protection.
 
 `protection_k`: float
+
 > [W/m/K]  
 > Protection conductivity.
 
@@ -259,18 +273,21 @@ The following table summarises the parameters that are required by `sfeprapy.mcs
 > The temperature to be solved for. This is critical temperature of the beam structural element, i.e. 550 or 620 °C.
 
 `solver_max_iter`: float
+
 > Dimensionless.  
 > The maximum iteration for the solver to find convergence. Suggest 20 as most (if not all) cases converge in less than 20 iterations.
 
 `solver_thickness_lbound`: float
+
 > [m]  
-> The smallest value that the solved protection thickness can be.
+> The smallest value that the protection thickness can be. This is used to solve the maximum steel temperature at `solver_temperature_goal`.
 
 `solver_thickness_ubound`: float
 > [m]  
-> The greatest value that the solved protection thickness can be.
+> The greatest value that the protection thickness can be. This is used to solve the maximum steel temperature at `solver_temperature_goal`.
 
 `solver_tol`: float
+
 > [K]  
 > Tolerance of the temperature to be solved for. Set to 1 means convergence will be satisfied when the solved value is greater than `solver_temperature_goal-1` and less than `solver_temperature_goal+1`.
 
