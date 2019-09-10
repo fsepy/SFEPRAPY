@@ -33,7 +33,7 @@ pip is a package management system for installing and updating Python packages. 
 To produce an example input file:
 
 ```python
->>> import sfeprapy
+>>> import sfeprapy.mcs0
 >>> with open('example_input.csv', 'w') as f:
 >>> 	f.write(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
 ```
@@ -46,7 +46,7 @@ To produce an example input file:
 
 ```python
 >>> import json
->>> import sfeprapy
+>>> import sfeprapy.mcs0
 >>> with open('config.json', 'w') as f:
 >>> 	json.dump(sfeprapy.mcs0.EXAMPLE_CONFIG_DICT, f)
 ```
