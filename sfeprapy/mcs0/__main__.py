@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 if __name__ == '__main__':
+    import os
     import sys
     import warnings
     from sfeprapy.func.mcs_obj import MCS
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     mcs = MCS()
 
     if len(sys.argv) > 1:
-        mcs.define_problem(sys.argv[1])
+        mcs.define_problem(os.path.realpath(sys.argv[1]))
         for arg in sys.argv[2:]:
             print(arg)
             if 'sim' in arg:
