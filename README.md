@@ -10,8 +10,6 @@ Python 3.7 or later is required.
 
 pip is a package management system for installing and updating Python packages. pip comes with Python, so you get pip simply by installing Python. On Ubuntu and Fedora Linux, you can simply use your system package manager to install the `python3-pip` package. [The Hitchhiker's Guide to Python](https://docs.python-guide.org/starting/installation/) provides some guidance on how to install Python on your system if it isn't already; you can also install Python directly from [python.org](https://www.python.org/getit/). You might want to [upgrade pip](https://pip.pypa.io/en/stable/installing/) before using it to install other programs.
 
-![demo_install_sfeprapy](misc/fig/demo_install_sfeprapy.gif)
-
 1. to use `pip` install from PyPI:
 
     ```sh
@@ -24,11 +22,40 @@ pip is a package management system for installing and updating Python packages. 
     pip install --upgrade "git+https://github.com/fsepy/SfePrapy.git@master"
     ```
 
+![demo_save_example_input_file](./misc/fig/demo_install_sfeprapy.gif)
+
 ### Usage
 
 #### MCS for structural PRA method 0: `sfeprapy.mcs0`
 
-![demo_sfeprapy.mcs0](misc/fig/demo_sfeprapy.mcs0.gif)
+##### Get an example problem definition file
+
+To produce an example input file:
+
+```python
+>>> import sfeprapy
+>>> with open('example_input.csv', 'w') as f:
+>>> 	f.write(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
+```
+
+![demo_save_example_input_file](./misc/fig/demo_save_example_input_file.gif)
+
+##### Get an example configuration file
+
+To produce an example input file:
+
+```python
+>>> import json
+>>> import sfeprapy
+>>> with open('config.json', 'w') as f:
+>>> 	json.dump(sfeprapy.mcs0.EXAMPLE_CONFIG_DICT, f)
+```
+
+![demo_save_example_input_file](./misc/fig/demo_save_example_config_file.gif)
+
+##### To run `sfeprapy.mcs0` simulation
+
+The following table summarises the parameters that are required by `sfeprapy.mcs0` module.
 
 Idealised Monte Carlo Simulation processes:
 
@@ -42,6 +69,8 @@ To run `sfeprapy.mcs0` from source (or when it is installed via, i.e. pip):
 ```sh
 python -m sfeprapy.mcs0
 ```
+
+![demo_running_sfeprapy.mcs0](misc/fig/demo_running_sfeprapy.mcs0.gif)
 
 A window will be popped up asking for input a input / problem definition file. The input file should be in '.csv' or '.xlsx' format. Structure of the input file is addressed in the following paragraphs.
 
@@ -75,34 +104,7 @@ fire_nft_limit          : 623.150   1323.150  2023.152
 fire_spread_speed       : 0.004     0.011     0.019
 ```
 
-##### Input Parameters
 
-Example input template can be found at:
-
-- `sfeprapy.mcs0.EXAMPLE_CONFIG_DICT`: Example configuration file, `dict` object;
-- `sfeprapy.mcs0.EXAMPLE_INPUT_DICT`: Example input file, `dict` object; and
-- `sfeprapy.mcs0.EXAMPLE_INPUT_CSV`: Example input file, `str` in csv format.
-
-For example, to produce an example input file:
-
-```python
->>> import sfeprapy
->>> print(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
-```
-
-Copy the printed string (as per below) to a text file and replace the '.txt' extension with '.csv'.
-
-```shell
-PARAMETERS,Standard Case 1,Standard Case 2
-beam_cross_section_area,0.017,0.017
-beam_position_horizontal,-1,-1
-beam_position_vertical,3.2,3.2
-beam_rho,7850,7850
-case_name,Standard Case 1,Standard Case 2
-...
-```
-
-The following table summarises the parameters that are required by `sfeprapy.mcs0` module.
 
 ###### Non-Optional Miscellaneous Parameters
 
