@@ -1,6 +1,111 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
+def save_figure(mcs_out, fp):
+    import numpy as np
+    import plotly.graph_objects as go
+    import plotly.io
+
+    def cdf_xy(v, xlim, bin_width=0.1):
+        edges = np.arange(*xlim, bin_width)
+        x = (edges[1:] + edges[:-1]) / 2
+        y_pdf = np.histogram(v, edges)[0] / len(v)
+        y_cdf = np.cumsum(y_pdf)
+        return x, y_cdf
+
+    fig_size = (3.5, 3.5)
+    fig_x_limit = (0, 120)
+    fig_y_limit = (0, 1)
+    bin_width = 0.1
+
+    dict_teq = dict()
+    for case_name in set(mcs_out['case_name'].values):
+        dict_teq[case_name] = np.asarray(
+            mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, dtype=float) / 60.
+
+    xlim = (0, np.max([np.max(v) for k, v in dict_teq.items()]) + bin_width)
+    y_cdf = dict()
+    for k, v in dict_teq.items():
+        x, y_cdf[k] = cdf_xy(v, xlim)
+
+    # Create random data with numpy
+
+    fig = go.Figure()
+
+    # Add traces
+    for case_name, y in y_cdf.items():
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y,
+                mode='lines',
+                name=case_name
+            )
+        )
+
+    fig.update_layout(
+        autosize=False,
+        width=400,
+        height=400,
+        margin=dict(
+            l=20,
+            r=20,
+            b=20,
+            t=20,
+            pad=0
+        ),
+        paper_bgcolor='White',
+        plot_bgcolor='White',
+        xaxis=dict(
+            title="Equivalent of time exposure [min]",
+            dtick=30,
+            range=fig_x_limit,
+            showline=True,
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+            visible=True,
+            showgrid=True,
+            gridcolor='Black',
+            gridwidth=1,
+            ticks='outside',
+            zeroline=False,
+        ),
+        yaxis=dict(
+            title='CDF',
+            dtick=0.2,
+            range=fig_y_limit,
+            showline=True,
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+            visible=True,
+            showgrid=True,
+            gridcolor='Black',
+            gridwidth=1,
+            ticks='outside',
+            zeroline=False,
+        ),
+        legend=dict(
+            x=0.98,
+            xanchor='right',
+            y=0.02,
+            yanchor='bottom',
+            traceorder="normal",
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color="black"
+            ),
+            bgcolor="White",
+            bordercolor="Black",
+            borderwidth=1,
+        ),
+    )
+    plotly.io.write_html(fig, file=fp, auto_open=False)
+
+
 if __name__ == '__main__':
     import os
     import sys
@@ -11,25 +116,27 @@ if __name__ == '__main__':
 
     warnings.filterwarnings('ignore')
 
-    mcs = MCS()
-
+    mcs_problem_definition = None
+    n_threads = None
+    fig = None
     if len(sys.argv) > 1:
-        mcs.define_problem(os.path.realpath(sys.argv[1]))
+        mcs_problem_definition = os.path.realpath(sys.argv[1])
+    if len(sys.argv) > 2:
         for arg in sys.argv[2:]:
-            print(arg)
-            if 'sim' in arg:
-                print(arg)
-                n_simulations = int(str(arg).replace('sim', ''))
-                if mcs.config is None:
-                    print(mcs.config)
+            if 'mp' in arg:
+                n_threads = int(str(arg).replace('mp', ''))
+            if 'fig' in arg:
+                fig = True
 
-                    mcs.config = dict(n_simulations=n_simulations)
-                else:
-                    mcs.config['n_simulations'] = int(str(arg).replace('sim', ''))
-                break
-    else:
-        mcs.define_problem()
-
+    mcs = MCS()
+    mcs.define_problem(mcs_problem_definition)
     mcs.define_stochastic_parameter_generator(gen)
     mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+
+    if n_threads:
+        mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
+
     mcs.run_mcs()
+
+    if fig:
+        save_figure(mcs_out=mcs.mcs_out, fp=os.path.join(os.path.dirname(mcs_problem_definition), 'mcs.out.html'))
