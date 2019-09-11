@@ -11,25 +11,21 @@ if __name__ == '__main__':
 
     warnings.filterwarnings('ignore')
 
-    mcs = MCS()
-
+    mcs_problem_definition = None
+    n_threads = None
     if len(sys.argv) > 1:
-        mcs.define_problem(os.path.realpath(sys.argv[1]))
+        mcs_problem_definition = os.path.realpath(sys.argv[1])
+    if len(sys.argv) > 2:
         for arg in sys.argv[2:]:
-            print(arg)
-            if 'sim' in arg:
-                print(arg)
-                n_simulations = int(str(arg).replace('sim', ''))
-                if mcs.config is None:
-                    print(mcs.config)
+            if 'mp' in arg:
+                n_threads = int(str(arg).replace('mp', ''))
 
-                    mcs.config = dict(n_simulations=n_simulations)
-                else:
-                    mcs.config['n_simulations'] = int(str(arg).replace('sim', ''))
-                break
-    else:
-        mcs.define_problem()
-
+    mcs = MCS()
+    mcs.define_problem(mcs_problem_definition)
     mcs.define_stochastic_parameter_generator(gen)
     mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+
+    if n_threads:
+        mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
+
     mcs.run_mcs()
