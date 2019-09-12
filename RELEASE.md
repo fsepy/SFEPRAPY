@@ -10,6 +10,10 @@ Checklist before release of new versions:
 
 ## VERSIONS
 
+### 12/09/2019 VERSION: 0.6.6
+
+- New: system arguments added to `python -m sfeprapy.mcs0` command line call. For example, calling `python -m sfeprapy.mcs0 example_input.csv mp4` will run the problem definition file `example_input.csv` with 4 processes.
+
 ### 27/08/2019 VERSION: 0.6.5
 
 - New: `phi_teq` is added in `sfeprapy.mcs0` to include Model Uncertainty factor, see [README](README) for details.
