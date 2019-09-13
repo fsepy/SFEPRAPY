@@ -63,6 +63,7 @@ setuptools.setup(
         'seaborn>=0.9.0',
         'tqdm',
         'xlrd',
+        'plotly',
     ],
 
     include_package_data=True,
