@@ -21,8 +21,9 @@ def save_figure(mcs_out, fp):
 
     dict_teq = dict()
     for case_name in set(mcs_out['case_name'].values):
-        dict_teq[case_name] = np.asarray(
-            mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, dtype=float) / 60.
+        teq = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, float)
+        teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
+        dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
 
     xlim = (0, np.max([np.max(v) for k, v in dict_teq.items()]) + bin_width)
     y_cdf = dict()
