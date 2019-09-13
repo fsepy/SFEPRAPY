@@ -14,7 +14,7 @@ def save_figure(mcs_out, fp):
         y_cdf = np.cumsum(y_pdf)
         return x, y_cdf
 
-    fig_size = (3.5, 3.5)
+    fig_size = (3.5, 3.5)  # in inch
     fig_x_limit = (0, 120)
     fig_y_limit = (0, 1)
     bin_width = 0.1
@@ -26,6 +26,7 @@ def save_figure(mcs_out, fp):
         dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
 
     xlim = (0, np.max([np.max(v) for k, v in dict_teq.items()]) + bin_width)
+    x = None
     y_cdf = dict()
     for k, v in dict_teq.items():
         x, y_cdf[k] = cdf_xy(v, xlim)
@@ -47,8 +48,8 @@ def save_figure(mcs_out, fp):
 
     fig.update_layout(
         autosize=False,
-        width=400,
-        height=400,
+        width=fig_size[0] * 96,
+        height=fig_size[1] * 96,
         margin=dict(
             l=20,
             r=20,
@@ -59,7 +60,7 @@ def save_figure(mcs_out, fp):
         paper_bgcolor='White',
         plot_bgcolor='White',
         xaxis=dict(
-            title="Equivalent of time exposure [min]",
+            title="Equivalent of time exposure [minute]",
             dtick=30,
             range=fig_x_limit,
             showline=True,
@@ -134,8 +135,11 @@ if __name__ == '__main__':
     mcs.define_stochastic_parameter_generator(gen)
     mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
 
-    if n_threads:
-        mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
+    try:
+        if n_threads:
+            mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
+    except KeyError:
+        pass
 
     mcs.run_mcs()
 
