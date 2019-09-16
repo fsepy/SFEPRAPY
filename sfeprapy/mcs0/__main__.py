@@ -23,7 +23,7 @@ def save_figure(mcs_out, fp: str):
     for case_name in set(mcs_out['case_name'].values):
         teq = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, float)
         teq[teq == np.inf] = np.max(teq[teq != np.inf])
-        teq[teq == -np.inf] = np.min(teq[teq != np.inf])
+        teq[teq == -np.inf] = np.min(teq[teq != -np.inf])
         teq = teq[teq != np.nan]
         teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
         dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
