@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-def save_figure(mcs_out, fp):
+def save_figure(mcs_out, fp: str):
     import numpy as np
     import plotly.graph_objects as go
     import plotly.io
@@ -14,14 +14,17 @@ def save_figure(mcs_out, fp):
         y_cdf = np.cumsum(y_pdf)
         return x, y_cdf
 
-    fig_size = (3.5, 3.5)  # in inch
-    fig_x_limit = (0, 120)
+    fig_size = np.array([3.5, 3.5]) * 1  # in inch
+    fig_x_limit = (0, 180)
     fig_y_limit = (0, 1)
     bin_width = 0.1
 
     dict_teq = dict()
     for case_name in set(mcs_out['case_name'].values):
         teq = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, float)
+        teq[teq == np.inf] = np.max(teq[teq != np.inf])
+        teq[teq == -np.inf] = np.min(teq[teq != np.inf])
+        teq = teq[teq != np.nan]
         teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
         dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
 
@@ -47,16 +50,16 @@ def save_figure(mcs_out, fp):
         )
 
     fig.update_layout(
-        autosize=False,
-        width=fig_size[0] * 96,
-        height=fig_size[1] * 96,
-        margin=dict(
-            l=20,
-            r=20,
-            b=20,
-            t=20,
-            pad=0
-        ),
+        autosize=True,
+        # width=fig_size[0] * 96,
+        # height=fig_size[1] * 96,
+        # margin=dict(
+        #     l=20,
+        #     r=20,
+        #     b=20,
+        #     t=20,
+        #     pad=0
+        # ),
         paper_bgcolor='White',
         plot_bgcolor='White',
         xaxis=dict(
@@ -97,7 +100,7 @@ def save_figure(mcs_out, fp):
             traceorder="normal",
             font=dict(
                 family="sans-serif",
-                size=12,
+                size=9,
                 color="black"
             ),
             bgcolor="White",
@@ -120,7 +123,8 @@ if __name__ == '__main__':
 
     mcs_problem_definition = None
     n_threads = None
-    fig = None
+    fig = False
+    fig_only = False
     if len(sys.argv) > 1:
         mcs_problem_definition = os.path.realpath(sys.argv[1])
     if len(sys.argv) > 2:
@@ -129,19 +133,26 @@ if __name__ == '__main__':
                 n_threads = int(str(arg).replace('mp', ''))
             if 'fig' in arg:
                 fig = True
+            if 'figonly' in arg:
+                fig_only = True
 
-    mcs = MCS()
-    mcs.define_problem(mcs_problem_definition)
-    mcs.define_stochastic_parameter_generator(gen)
-    mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+    if fig_only:
+        import pandas as pd
+        mcs_out = pd.read_csv(mcs_problem_definition)
+        save_figure(mcs_out=mcs_out, fp=os.path.join(os.path.dirname(mcs_problem_definition), 'mcs.out.html'))
+    else:
+        mcs = MCS()
+        mcs.define_problem(mcs_problem_definition)
+        mcs.define_stochastic_parameter_generator(gen)
+        mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
 
-    try:
-        if n_threads:
-            mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
-    except KeyError:
-        pass
+        try:
+            if n_threads:
+                mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
+        except KeyError:
+            pass
 
-    mcs.run_mcs()
+        mcs.run_mcs()
 
-    if fig:
-        save_figure(mcs_out=mcs.mcs_out, fp=os.path.join(os.path.dirname(mcs_problem_definition), 'mcs.out.html'))
+        if fig:
+            save_figure(mcs_out=mcs.mcs_out, fp=os.path.join(os.path.dirname(mcs_problem_definition), 'mcs.out.html'))
