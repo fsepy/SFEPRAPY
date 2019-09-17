@@ -7,14 +7,14 @@ def save_figure(mcs_out, fp: str):
     import plotly.graph_objects as go
     import plotly.io
 
-    def cdf_xy(v, xlim, bin_width=0.1):
+    def cdf_xy(v, xlim, bin_width=0.1, weights=None):
         edges = np.arange(*xlim, bin_width)
         x = (edges[1:] + edges[:-1]) / 2
-        y_pdf = np.histogram(v, edges)[0] / len(v)
+        y_pdf = np.histogram(v, bins=edges, weights=weights)[0] / len(v)
         y_cdf = np.cumsum(y_pdf)
         return x, y_cdf
 
-    fig_size = np.array([3.5, 3.5]) * 1  # in inch
+    # fig_size = np.array([3.5, 3.5]) * 1  # in inch
     fig_x_limit = (0, 180)
     fig_y_limit = (0, 1)
     bin_width = 0.1
@@ -32,17 +32,10 @@ def save_figure(mcs_out, fp: str):
         teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
         dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
 
-        teq_all_case.append(teq)
-        pweight_all_case.append(pweight_all_case)
-        print(pweight)
-    print(pweight_all_case)
-    # print(teq_all_case)
-    # if True:
-    # return 0
+        teq_all_case.append(teq / 60.)
+        pweight_all_case.append(pweight)
     teq_all_case = np.concatenate(teq_all_case, axis=0)
     pweight_all_case = np.concatenate(pweight_all_case, axis=0)
-    print(np.shape(teq_all_case))
-    print(np.shape(pweight_all_case))
 
     xlim = (0, np.max([np.max(v) for k, v in dict_teq.items()]) + bin_width)
     x = None
@@ -52,18 +45,17 @@ def save_figure(mcs_out, fp: str):
 
     # Create random data with numpy
 
+    y_cdf_combined = np.histogram(teq_all_case, bins=np.arange(*xlim, bin_width))[0]
+    y_cdf_combined = np.cumsum(y_cdf_combined)
+    print(np.max(y_cdf_combined))
+    y_cdf_combined = np.divide(y_cdf_combined, np.max(y_cdf_combined))
+
     fig = go.Figure()
 
     # Add traces
+    fig.add_trace(go.Scatter(x=x, y=y_cdf_combined, mode='lines', name='Combined'))
     for case_name, y in y_cdf.items():
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode='lines',
-                name=case_name
-            )
-        )
+        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name=case_name))
 
     fig.update_layout(
         autosize=True,
