@@ -8,8 +8,6 @@ def profile_standard_case():
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
     from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
     from sfeprapy.func.mcs_gen import main as gen
-    from scipy.interpolate import interp1d
-    import numpy as np
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
