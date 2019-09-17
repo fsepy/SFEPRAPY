@@ -20,13 +20,29 @@ def save_figure(mcs_out, fp: str):
     bin_width = 0.1
 
     dict_teq = dict()
+    teq_all_case = list()
+    pweight_all_case = list()
     for case_name in set(mcs_out['case_name'].values):
         teq = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, float)
         teq[teq == np.inf] = np.max(teq[teq != np.inf])
         teq[teq == -np.inf] = np.min(teq[teq != -np.inf])
+        pweight = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['probability_weight'].values, float)
+        pweight = np.array(pweight[teq != np.nan] / 1., dtype=np.float64)
         teq = teq[teq != np.nan]
         teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
         dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
+
+        teq_all_case.append(teq)
+        pweight_all_case.append(pweight_all_case)
+        print(pweight)
+    print(pweight_all_case)
+    # print(teq_all_case)
+    # if True:
+    # return 0
+    teq_all_case = np.concatenate(teq_all_case, axis=0)
+    pweight_all_case = np.concatenate(pweight_all_case, axis=0)
+    print(np.shape(teq_all_case))
+    print(np.shape(pweight_all_case))
 
     xlim = (0, np.max([np.max(v) for k, v in dict_teq.items()]) + bin_width)
     x = None
