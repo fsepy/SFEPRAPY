@@ -702,6 +702,12 @@ def teq_main(
         timber_charred_volume=timber_charred_volume,
     )
 
+    # delete fire array, i.e. to save memory.
+    try:
+        del res_evaluate_fire_temperature['fire_temperature']
+    except:
+        pass
+
     res.update(res_timber_solver)
     res.update(res_decide_fire)
     res.update(res_evaluate_fire_temperature)

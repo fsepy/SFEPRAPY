@@ -7,6 +7,7 @@ def save_figure(mcs_out, fp: str):
     import plotly.graph_objects as go
     import plotly.io
 
+    # A helper function to produce (x, y) line plot based upon samples
     def cdf_xy(v, xlim, bin_width=0.1, weights=None):
         edges = np.arange(*xlim, bin_width)
         x = (edges[1:] + edges[:-1]) / 2
@@ -14,48 +15,46 @@ def save_figure(mcs_out, fp: str):
         y_cdf = np.cumsum(y_pdf)
         return x, y_cdf
 
+    # Settings
     # fig_size = np.array([3.5, 3.5]) * 1  # in inch
     fig_x_limit = (0, 180)
     fig_y_limit = (0, 1)
     bin_width = 0.1
 
-    dict_teq = dict()
-    teq_all_case = list()
-    pweight_all_case = list()
-    for case_name in set(mcs_out['case_name'].values):
+    # Process time equivalence value, obtain `probability_weight` and `n_simulations`
+    list_case_name = list(set(mcs_out['case_name'].values))
+    list_t_eq = list()
+    list_weight = list()
+    list_n_simulation = list()
+    for case_name in list_case_name:
         teq = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, float)
         teq[teq == np.inf] = np.max(teq[teq != np.inf])
         teq[teq == -np.inf] = np.min(teq[teq != -np.inf])
-        pweight = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['probability_weight'].values, float)
-        pweight = np.array(pweight[teq != np.nan] / 1., dtype=np.float64)
         teq = teq[teq != np.nan]
         teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
-        dict_teq[case_name] = teq / 60.  # unit conversion: seconds -> minute
+        list_t_eq.append(teq / 60.)
+        list_weight.append(np.average(mcs_out[mcs_out['case_name'] == case_name]['probability_weight'].values))
+        list_n_simulation.append(np.average(mcs_out[mcs_out['case_name'] == case_name]['n_simulations'].values))
 
-        teq_all_case.append(teq / 60.)
-        pweight_all_case.append(pweight)
-    teq_all_case = np.concatenate(teq_all_case, axis=0)
-    pweight_all_case = np.concatenate(pweight_all_case, axis=0)
+    # Time equivalence samples -> x, y of cumulative density function
+    xlim = (0, np.max([np.max(v) for v in list_t_eq]) + bin_width)
+    x = np.arange(*xlim, bin_width)
+    list_cdf_t_eq_y = [cdf_xy(t_eq, xlim, bin_width, weights=None)[1] for t_eq in list_t_eq]
 
-    xlim = (0, np.max([np.max(v) for k, v in dict_teq.items()]) + bin_width)
-    x = None
-    y_cdf = dict()
-    for k, v in dict_teq.items():
-        x, y_cdf[k] = cdf_xy(v, xlim)
+    # Combined time equivalence cdf
+    cdf_t_eq_y_combined = np.array([list_weight[i] * v for i, v in enumerate(list_cdf_t_eq_y)])
+    cdf_t_eq_y_combined = np.sum(cdf_t_eq_y_combined, axis=0)
 
-    # Create random data with numpy
-
-    y_cdf_combined = np.histogram(teq_all_case, bins=np.arange(*xlim, bin_width))[0]
-    y_cdf_combined = np.cumsum(y_cdf_combined)
-    print(np.max(y_cdf_combined))
-    y_cdf_combined = np.divide(y_cdf_combined, np.max(y_cdf_combined))
-
+    # Plot figure
     fig = go.Figure()
 
-    # Add traces
-    fig.add_trace(go.Scatter(x=x, y=y_cdf_combined, mode='lines', name='Combined'))
-    for case_name, y in y_cdf.items():
-        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name=case_name))
+    # add combined time equivalence to the plot
+    if len(list_case_name) > 1:
+        fig.add_trace(go.Scatter(x=x, y=cdf_t_eq_y_combined, mode='lines', name='Combined'))
+
+    # add individual time equivalence to the plot
+    for i, t_eq in enumerate(list_cdf_t_eq_y):
+        fig.add_trace(go.Scatter(x=x, y=t_eq, mode='lines', name=list_case_name[i]))
 
     fig.update_layout(
         autosize=True,
@@ -116,7 +115,7 @@ def save_figure(mcs_out, fp: str):
             borderwidth=1,
         ),
     )
-    plotly.io.write_html(fig, file=fp, auto_open=False)
+    plotly.io.write_html(fig, file=fp, auto_open=True)
 
 
 if __name__ == '__main__':
