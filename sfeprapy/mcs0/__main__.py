@@ -115,7 +115,16 @@ def save_figure(mcs_out, fp: str):
             borderwidth=1,
         ),
     )
-    plotly.io.write_html(fig, file=fp, auto_open=True)
+
+    config = {
+        'scrollZoom': False,
+        'displayModeBar': True,
+        'editable': True,
+        'showLink': False,
+        'displaylogo': False
+    }
+
+    plotly.io.write_html(fig, file=fp, auto_open=True, config=config)
 
 
 if __name__ == '__main__':
