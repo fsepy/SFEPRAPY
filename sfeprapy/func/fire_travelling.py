@@ -178,6 +178,39 @@ def fire_backup(
     return T_g
 
 
+def example_plot_interflam():
+    time = np.arange(0, 210 * 60, 30)
+    list_l = [25, 50, 100, 150]
+
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-paper')
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    ax.set_xlabel('Time [minute]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
+
+    for length in list_l:
+        temperature = fire(
+            t=time,
+            fire_load_density_MJm2=600,
+            fire_hrr_density_MWm2=0.25,
+            room_length_m=length,
+            room_width_m=16,
+            fire_spread_rate_ms=0.012,
+            beam_location_height_m=3,
+            beam_location_length_m=length / 2,
+            fire_nft_limit_c=1050,
+        )
+
+        ax.plot(time / 60, temperature, label="Room length {:4.0f} m".format(length))
+
+    ax.legend(loc=4).set_visible(True)
+    ax.set_xlim((0, 180))
+    ax.set_ylim((0, 1400))
+    ax.grid(color='k', linestyle='--')
+    plt.tight_layout()
+    plt.savefig(fname='fire-travelling.png', dpi=300)
+
+
 def test():
     def test_fire_backup():
         import numpy as np
@@ -273,8 +306,9 @@ def test():
         plt.tight_layout()
         plt.show()
 
-    test_fire_multiple_beam_location()
+    test_fire()
+    # test_fire_multiple_beam_location()
 
 
 if __name__ == '__main__':
-    test()
+    example_plot_interflam()

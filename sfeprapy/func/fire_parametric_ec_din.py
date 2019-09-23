@@ -5,7 +5,7 @@ import numpy as np
 
 
 def fire(t_array_s, A_w_m2, h_w_m2, A_t_m2, A_f_m2, t_alpha_s, b_Jm2s05K, q_x_d_MJm2, gamma_fi_Q=1.0, q_ref=1300, alpha=0.0117, hrrpua_MWm2=0.25):
-    """This piece of code calculates a time dependent temeprature array in accordance of Appendix AA in German Annex "
+    """This piece of code calculates a time dependent temperature array in accordance of Appendix AA in German Annex "
     Simplified natural fire model for fully developed room fires" to Eurocode 1991-1-2 (DIN EN 1991-1-2/NA:2010-12).
     Limitations are detailed in the Section AA.2 and they are:
       - minimum fuel load 100 MJ/sq.m
@@ -229,7 +229,7 @@ def T_t(t, t_1, t_2, t_2_x, t_3_x, T_1, T_2_x, T_3_x, A_t, A_w, h_w, t_alpha, T_
     return T
 
 
-def plot_variable_of():
+def example_plot_interflam():
     import matplotlib.pyplot as plt
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
@@ -271,12 +271,15 @@ def plot_variable_of():
             gamma_fi_Q=1.0,
             q_ref=q_ref
         )
-        ax.plot(x / 60, y, label="Opening Factor {:.2f}".format((h_v * w_v) * h_v**0.5 / (2*(w*h+h*l+l*w))))
+        ax.plot(x / 60, y - 273.15,
+                label="Opening Factor {:.2f}".format((h_v * w_v) * h_v ** 0.5 / (2 * (w * h + h * l + l * w))))
 
     ax.legend().set_visible(True)
     ax.grid(color='k', linestyle='--')
+    ax.set_ylim((0, 1400))
+    ax.set_xlim((0, 300))
     plt.tight_layout()
-    plt.show()
+    plt.savefig(fname='fire-ec_din.png', dpi=300)
 
 
 def plot_variable_qfd():
@@ -312,14 +315,16 @@ def plot_variable_qfd():
             gamma_fi_Q=1.0,
             q_ref=q_ref
         )
-        ax.plot(x / 60, y, label="Fuel load density {q_fd:4.0f} $MJ/m^2$".format(q_fd=q_fd))
+        ax.plot(x / 60, y - 273.15, label="Fuel load density {q_fd:4.0f} $MJ/m^2$".format(q_fd=q_fd))
 
     ax.legend(loc=4).set_visible(True)
     ax.grid(color='k', linestyle='--')
+    ax.set_ylim((-10, 1310))
     plt.tight_layout()
+    plt.savefig(fname='fire-ec_din.png', dpi=300)
     plt.show()
 
 
 if __name__ == '__main__':
     # plot_variable_qfd()
-    plot_variable_of()
+    example_plot_interflam()

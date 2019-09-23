@@ -113,8 +113,7 @@ def fire(t, A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, temperature_initi
     return T_g
 
 
-if __name__ == '__main__':
-
+def exmaple_plot_interflam():
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -122,6 +121,8 @@ if __name__ == '__main__':
     sns.set_context(context='paper')
 
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    ax.set_xlabel('Time [minute]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
 
     # define geometry
     w = 16
@@ -149,25 +150,27 @@ if __name__ == '__main__':
         y = fire(
             t=x,
             A_v=h_v * w_v,
-            A_t=2*(w*h+h*l+l*w),
-            A_f=w*l,
+            A_t=2 * (w * h + h * l + l * w),
+            A_f=w * l,
             h_eq=h_v,
             q_fd=600e6,
             lambda_=1,
             rho=1,
-            c=720**2,
+            c=720 ** 2,
             t_lim=20 * 60,
             temperature_initial=293.15
         )
-        ax.plot(x / 60, y-273.15, label="Opening Factor {:.2f}".format((h_v * w_v) * h_v**0.5 / (2*(w*h+h*l+l*w))))
+        ax.plot(x / 60, y - 273.15,
+                label="Opening Factor {:.2f}".format((h_v * w_v) * h_v ** 0.5 / (2 * (w * h + h * l + l * w))))
 
-    ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
-
-    ax.legend(loc=4).set_visible(False)
-
-    # ax.grid(color='k', linestyle='--')
+    ax.legend().set_visible(True)
+    ax.grid(color='k', linestyle='--')
+    ax.set_ylim((0, 1400))
+    ax.set_xlim((0, 300))
     plt.tight_layout()
+
+    plt.savefig(fname='fire-ec.png', dpi=300)
     plt.show()
 
-    fig.add_subplot()
+if __name__ == '__main__':
+    exmaple_plot_interflam()

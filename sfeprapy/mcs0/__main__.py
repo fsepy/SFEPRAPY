@@ -19,7 +19,7 @@ def save_figure(mcs_out, fp: str):
     # fig_size = np.array([3.5, 3.5]) * 1  # in inch
     fig_x_limit = (0, 180)
     fig_y_limit = (0, 1)
-    bin_width = 0.1
+    bin_width = 0.5
 
     # Process time equivalence value, obtain `probability_weight` and `n_simulations`
     list_case_name = list(set(mcs_out['case_name'].values))
@@ -30,7 +30,7 @@ def save_figure(mcs_out, fp: str):
         teq = np.asarray(mcs_out[mcs_out['case_name'] == case_name]['solver_time_equivalence_solved'].values, float)
         teq[teq == np.inf] = np.max(teq[teq != np.inf])
         teq[teq == -np.inf] = np.min(teq[teq != -np.inf])
-        teq = teq[teq != np.nan]
+        teq = teq[~np.isnan(teq)]
         teq[teq > 18000.] = 18000.  # limit maximum time equivalence plot value to 5 hours
         list_t_eq.append(teq / 60.)
         list_weight.append(np.average(mcs_out[mcs_out['case_name'] == case_name]['probability_weight'].values))
