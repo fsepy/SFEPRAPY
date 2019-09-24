@@ -530,7 +530,7 @@ def teq_main(
         window_width: float,
         window_open_fraction_permanent: float,
         phi_teq: float = 1.,
-        timber_charring_rate: float = None,
+        timber_charring_rate=None,
         timber_hc: float = None,
         timber_density: float = None,
         timber_exposed_area: float = None,
@@ -602,10 +602,6 @@ def teq_main(
         # timber_solver_ilim=timber_solver_ilim,
     )
 
-    # UNITS CONVERSATION
-    timber_charring_rate *= 1 / 1000  # [mm/min] -> [m/min]
-    timber_charring_rate *= 1 / 60  # [m/min] -> [m/s]
-
     # initial timber exposure time
     if timber_exposed_area > 0:
         timber_exposed_duration = 1200
@@ -615,10 +611,11 @@ def teq_main(
     timber_solver_iter = -1  # initialise solver iteration count for timber fuel contribution
 
     while True:
-
         timber_solver_iter += 1
-
-        timber_charred_depth = timber_charring_rate * timber_exposed_duration
+        timber_charring_rate_ = timber_charring_rate(timber_exposed_duration)
+        timber_charring_rate_ *= 1 / 1000  # [mm/min] -> [m/min]
+        timber_charring_rate_ *= 1 / 60  # [m/min] -> [m/s]
+        timber_charred_depth = timber_charring_rate_ * timber_exposed_duration
         timber_charred_volume = timber_charred_depth * timber_exposed_area
         timber_charred_mass = timber_density * timber_charred_volume
         timber_fire_load = timber_charred_mass * timber_hc
@@ -695,6 +692,7 @@ def teq_main(
             timber_exposed_duration = res_solve_time_equivalence['solver_time_equivalence_solved']
 
     res_timber_solver = dict(
+        timber_charring_rate=timber_charring_rate_,
         timber_exposed_duration=timber_exposed_duration,
         timber_solver_iter=timber_solver_iter,
         timber_fire_load=timber_fire_load,
