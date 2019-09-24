@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from io import StringIO
+
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from scipy.interpolate import interp1d
 
 
 def gumbel_r_(mean: float, sd: float, **_):
@@ -211,6 +214,12 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
                     dict_out[k] = random_variable_generator(v, num_samples)
                 except KeyError:
                     raise('Missing parameters in input variable {}.'.format(k))
+            elif 'ramp' in v:
+                s_ = StringIO(v['ramp'])
+                d_ = pd.read_csv(s_, header=0, dtype=float)
+                t_ = d_.iloc[:, 0]
+                v_ = d_.iloc[:, 1]
+                dict_out[k] = np.full((num_samples,), interp1d(t_, v_, bounds_error=False, fill_value=0))
             else:
                 raise ValueError('Unknown input data type for {}.'.format(k))
         else:
