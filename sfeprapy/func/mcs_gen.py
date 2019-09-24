@@ -216,10 +216,11 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
                     raise('Missing parameters in input variable {}.'.format(k))
             elif 'ramp' in v:
                 s_ = StringIO(v['ramp'])
-                d_ = pd.read_csv(s_, header=0, dtype=float)
+                d_ = pd.read_csv(s_, names=['x', 'y'], dtype=float, skip_blank_lines=True, skipinitialspace=True)
                 t_ = d_.iloc[:, 0]
                 v_ = d_.iloc[:, 1]
-                dict_out[k] = np.full((num_samples,), interp1d(t_, v_, bounds_error=False, fill_value=0))
+                f_interp = interp1d(t_, v_, bounds_error=False, fill_value=0)
+                dict_out[k] = np.full((num_samples,), f_interp)
             else:
                 raise ValueError('Unknown input data type for {}.'.format(k))
         else:
