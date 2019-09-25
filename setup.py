@@ -49,7 +49,7 @@ setuptools.setup(
         'sfeprapy.mcs0',
         'sfeprapy.mcs1',
         'sfeprapy.func',
-        'sfeprapy.func.heat_transfer_1d'
+        'sfeprapy.func.heat_transfer_1d',
         'sfeprapy.dist_fit', 
         ],
 
