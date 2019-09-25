@@ -107,7 +107,7 @@ def save_figure(mcs_out, fp: str):
             traceorder="normal",
             font=dict(
                 family="sans-serif",
-                size=9,
+                # size=9,
                 color="black"
             ),
             bgcolor="White",
