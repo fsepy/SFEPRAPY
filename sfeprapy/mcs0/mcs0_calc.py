@@ -696,6 +696,7 @@ def teq_main(
         timber_exposed_duration=timber_exposed_duration,
         timber_solver_iter=timber_solver_iter,
         timber_fire_load=timber_fire_load,
+        timber_charred_depth=timber_charred_depth,
         timber_charred_mass=timber_charred_mass,
         timber_charred_volume=timber_charred_volume,
     )
