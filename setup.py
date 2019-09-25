@@ -46,13 +46,11 @@ setuptools.setup(
     packages=[
         'sfeprapy', 
         'sfeprapy.dat', 
-        'sfeprapy.mc0', 
         'sfeprapy.mcs0',
         'sfeprapy.mcs1',
-        'sfeprapy.mcs2',
-        'sfeprapy.dist_fit', 
         'sfeprapy.func',
         'sfeprapy.func.heat_transfer_1d'
+        'sfeprapy.dist_fit', 
         ],
 
     install_requires=[
