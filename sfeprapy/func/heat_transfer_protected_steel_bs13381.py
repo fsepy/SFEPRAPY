@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from scipy.interpolate import interp1d
-import warnings
 
 
 def protected_steel_bs13381(
-        time, temperature_ambient,
-        lambda_pt_T, d_p, A_p, V, c_a_T, rho_a_T,
-        time_ubound=10800, time_step_lbound=30.
+        time: np.ndarray,
+        temperature_ambient: np.ndarray,
+        lambda_pt_T,
+        d_p: float,
+        A_p: float,
+        V: float,
+        c_a_T,
+        rho_a_T,
+        time_ubound: float = 10800,
+        time_step_lbound: float = 30.
 ):
     """
+    This function estimates the temperature of given protected steel structural element. The calculation procedure is
+    in accordance with BS EN 13381-8:2013 "Test methods for determining the contribution to the fire resistance of
+    structural members - Part 8: Applied reactive protection to steel members".
     :param time:                {ndarray}   [s]         Time array incorporating temperature_ambient, forming a time-temperature curve
     :param temperature_ambient: {ndarray}   [s]         Temperature array incorporating time, forming a time-temperature curve
     :param lambda_pt_T:         {ky2T}      [W/m/K]     Thermal conductivity of the protective material (temperature dependent)
@@ -19,12 +28,11 @@ def protected_steel_bs13381(
     :param c_a_T:               {ky2T}      [J/kg/K]    Specific heat capacity of steel (temperature dependent)
     :param rho_a_T:             {ky2T}      [kg/m3]     Density of steel (temperature dependent)
     :param time_ubound:         {float}     [s]         The calculation time
-    :param time_step_lbound:    {float}     [s]         The user-defined minimum time step, however, a smaller time step will be used with E.2
+    :param time_step_lbound:    {float}     [s]         The user-defined minimum time step, a smaller time step will be used with Equation E.2
     :return:
     """
 
-    # DEFINE FUNCTIONS: There are several functions defined in BS EN 13381-8:2013, ANNEX E, E.3. They are defined in
-    # advance for simplification.
+    # HELPER FUNCTIONS
     # [BS EN 13381-8:2013, ANNEX E, Equation E.1]
     def _theta_at(lambda_pt, d_p, A_p, V, c_a, rho_a, theta_t, theta_at, dt):
         return (lambda_pt/d_p) * (A_p/V) * (1/c_a/rho_a) * (theta_t-theta_at) * dt
@@ -93,6 +101,5 @@ def protected_steel_bs13381(
     # Convert lists to ndarray
     time_, time_rate = np.asarray(time_), np.asarray(time_rate)
     temperature_steel, temperature_rate_steel = np.asarray(temperature_steel), np.asarray(temperature_rate_steel)
-    data_trivial = {""}
 
     return time_, temperature_steel, time_rate, temperature_rate_steel
