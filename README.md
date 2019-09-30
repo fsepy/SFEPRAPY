@@ -13,8 +13,9 @@ Documentation can be found in the [wiki](https://github.com/fsepy/SfePrapy/wiki)
 pip is a package management system for installing and updating Python packages. pip comes with Python, so you get pip simply by installing Python. On Ubuntu and Fedora Linux, you can simply use your system package manager to install the `python3-pip` package. [The Hitchhiker's Guide to Python](https://docs.python-guide.org/starting/installation/) provides some guidance on how to install Python on your system if it isn't already; you can also install Python directly from [python.org](https://www.python.org/getit/). You might want to [upgrade pip](https://pip.pypa.io/en/stable/installing/) before using it to install other programs.
 
 1. to use `pip` install from PyPI:
-[![Downloads](https://pepy.tech/badge/sfeprapy)](https://pepy.tech/project/sfeprapy)
-[![PyPI version](https://badge.fury.io/py/sfeprapy.svg)](https://badge.fury.io/py/sfeprapy)
+
+    [![Downloads](https://pepy.tech/badge/sfeprapy)](https://pepy.tech/project/sfeprapy)
+    [![PyPI version](https://badge.fury.io/py/sfeprapy.svg)](https://badge.fury.io/py/sfeprapy)
 
     ```sh
     pip install --upgrade sfeprapy
@@ -22,13 +23,13 @@ pip is a package management system for installing and updating Python packages. 
 
 2. to use `pip` install from GitHub (requires [git](https://git-scm.com/downloads)):
 
-[![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)](https://badge.fury.io/gh/fsepy%2Fsfeprapy)
+    [![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)]()
 
     ```sh
     pip install --upgrade "git+https://github.com/fsepy/SfePrapy.git@master"
     ```
 
-![demo_save_example_input_file](./misc/fig/demo_install_sfeprapy.gif)
+    ![demo_save_example_input_file](./misc/fig/demo_install_sfeprapy.gif)
 
 
 ### To produce an example input file
