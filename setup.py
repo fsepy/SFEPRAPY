@@ -7,7 +7,6 @@ import setuptools
 
 import sfeprapy
 
-# Get the long description from the README file
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')) as f:
     long_description = f.read()
 
@@ -17,9 +16,9 @@ setuptools.setup(
 
     version=sfeprapy.__version__,
 
-    description='Structural Fire Engineering - Probabilistic Reliability Assessment',
+    description='Structural Fire Engineering - Probabilistic Reliability Assessment (Equivalent Time Exposure)',
 
-    author='Yan Fu',
+    author='Ian Fu',
 
     author_email='fuyans@gmail.com',
 
@@ -44,13 +43,13 @@ setuptools.setup(
     long_description_content_type="text/markdown",
 
     packages=[
-        'sfeprapy', 
+        'sfeprapy',
         'sfeprapy.dat', 
         'sfeprapy.mcs0',
         'sfeprapy.mcs1',
         'sfeprapy.func',
         'sfeprapy.func.heat_transfer_1d',
-        'sfeprapy.dist_fit', 
+        'sfeprapy.dist_fit',
         ],
 
     install_requires=[
@@ -59,9 +58,9 @@ setuptools.setup(
         'pandas>=0.23.3',
         'scipy>=1.1.0',
         'seaborn>=0.9.0',
-        'tqdm',
-        'xlrd',
-        'plotly',
+        'tqdm>=4.33',
+        'xlrd>=1.2',
+        'plotly>=1.12',
     ],
 
     include_package_data=True,
