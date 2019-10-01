@@ -21,7 +21,8 @@ pip is a package management system for installing and updating Python packages. 
     pip install --upgrade sfeprapy
     ```
 
-2. to use `pip` install from GitHub (requires [git](https://git-scm.com/downloads)):
+2. to use `pip` install from GitHub (requires [git](https://git-scm.com/downloads)):  
+    *Note installing `SfePrapy` via this route will include the lastest commits/changes to the library.*  
 
     [![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)]()
 
