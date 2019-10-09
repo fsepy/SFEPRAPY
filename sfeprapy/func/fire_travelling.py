@@ -211,81 +211,51 @@ def example_plot_interflam():
     plt.savefig(fname='fire-travelling.png', dpi=300)
 
 
-def test():
-    def test_fire_backup():
-        import numpy as np
+def test_fire_backup():
+    import numpy as np
 
-        time = np.arange(0, 22080, 30)
-        list_l = [50, 100, 150]
+    time = np.arange(0, 22080, 30)
+    list_l = [50, 100, 150]
 
-        import matplotlib.pyplot as plt
-        plt.style.use('seaborn-paper')
-        fig, ax = plt.subplots(figsize=(3.94, 2.76))
-        ax.set_xlabel('Time [minute]')
-        ax.set_ylabel('Temperature [$^{\circ}C$]')
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-paper')
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    ax.set_xlabel('Time [minute]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
 
-        for l in list_l:
-            temperature = fire_backup(
-                t=time,
-                T_0=293.15,
-                q_fd=900e6,
-                hrrpua=0.15e6,
-                l=l,
-                w=17.4,
-                s=0.012,
-                e_h=3.5,
-                e_l=l / 2,
-            )
-            ax.plot(time / 60, temperature - 273.15)
+    for l in list_l:
+        temperature = fire_backup(
+            t=time,
+            T_0=293.15,
+            q_fd=900e6,
+            hrrpua=0.15e6,
+            l=l,
+            w=17.4,
+            s=0.012,
+            e_h=3.5,
+            e_l=l / 2,
+        )
+        ax.plot(time / 60, temperature - 273.15)
 
-        ax.legend().set_visible(True)
-        ax.set_xlim((0, 120))
-        ax.grid(color='k', linestyle='--')
-        plt.tight_layout()
-        plt.show()
+    ax.legend().set_visible(True)
+    ax.set_xlim((0, 120))
+    ax.grid(color='k', linestyle='--')
+    plt.tight_layout()
+    plt.show()
 
-    def test_fire():
-        time = np.arange(0, 210 * 60, 30)
-        list_l = [25, 50, 100, 150]
 
-        import matplotlib.pyplot as plt
-        plt.style.use('seaborn-paper')
-        fig, ax = plt.subplots(figsize=(3.94, 2.76))
-        ax.set_xlabel('Time [minute]')
-        ax.set_ylabel('Temperature [$^{\circ}C$]')
+def test_fire():
+    time = np.arange(0, 210 * 60, 30)
+    list_l = [25, 50, 100, 150]
 
-        for length in list_l:
-            temperature = fire(
-                t=time,
-                fire_load_density_MJm2=600,
-                fire_hrr_density_MWm2=0.25,
-                room_length_m=length,
-                room_width_m=16,
-                fire_spread_rate_ms=0.012,
-                beam_location_height_m=3,
-                beam_location_length_m=length / 2,
-                fire_nft_limit_c=1050,
-            )
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-paper')
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    ax.set_xlabel('Time [minute]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
 
-            ax.plot(time / 60, temperature, label="Room length {:4.0f} m".format(length))
-
-        ax.legend(loc=4).set_visible(True)
-        ax.set_xlim((-10, 190))
-        ax.grid(color='k', linestyle='--')
-        plt.tight_layout()
-        plt.show()
-
-    def test_fire_multiple_beam_location():
-        time = np.arange(0, 210 * 60, 30)
-        length = 100
-
-        import matplotlib.pyplot as plt
-        plt.style.use('seaborn-paper')
-        fig, ax = plt.subplots(figsize=(3.94, 2.76))
-        ax.set_xlabel('Time [minute]')
-        ax.set_ylabel('Temperature [$^{\circ}C$]')
-
-        temperature_list = fire(
+    for length in list_l:
+        temperature = fire(
             t=time,
             fire_load_density_MJm2=600,
             fire_hrr_density_MWm2=0.25,
@@ -293,22 +263,52 @@ def test():
             room_width_m=16,
             fire_spread_rate_ms=0.012,
             beam_location_height_m=3,
-            beam_location_length_m=np.linspace(0, length, 12)[1:-1],
+            beam_location_length_m=length / 2,
             fire_nft_limit_c=1050,
         )
 
-        for temperature in temperature_list:
-            ax.plot(time / 60, temperature, label="Room length {:4.0f} m".format(length))
+        ax.plot(time / 60, temperature, label="Room length {:4.0f} m".format(length))
 
-        ax.legend(loc=4).set_visible(True)
-        ax.set_xlim((-10, 190))
-        ax.grid(color='k', linestyle='--')
-        plt.tight_layout()
-        plt.show()
+    ax.legend(loc=4).set_visible(True)
+    ax.set_xlim((-10, 190))
+    ax.grid(color='k', linestyle='--')
+    plt.tight_layout()
+    plt.show()
 
-    test_fire()
-    # test_fire_multiple_beam_location()
+
+def test_fire_multiple_beam_location():
+    time = np.arange(0, 210 * 60, 30)
+    length = 100
+
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-paper')
+    fig, ax = plt.subplots(figsize=(3.94, 2.76))
+    ax.set_xlabel('Time [minute]')
+    ax.set_ylabel('Temperature [$^{\circ}C$]')
+
+    temperature_list = fire(
+        t=time,
+        fire_load_density_MJm2=600,
+        fire_hrr_density_MWm2=0.25,
+        room_length_m=length,
+        room_width_m=16,
+        fire_spread_rate_ms=0.012,
+        beam_location_height_m=3,
+        beam_location_length_m=np.linspace(0, length, 12)[1:-1],
+        fire_nft_limit_c=1050,
+    )
+
+    for temperature in temperature_list:
+        ax.plot(time / 60, temperature, label="Room length {:4.0f} m".format(length))
+
+    ax.legend(loc=4).set_visible(True)
+    ax.set_xlim((-10, 190))
+    ax.grid(color='k', linestyle='--')
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
-    example_plot_interflam()
+    test_fire()
+    test_fire_multiple_beam_location()
+    # example_plot_interflam()
