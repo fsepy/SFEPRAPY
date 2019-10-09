@@ -49,7 +49,7 @@ def save_figure(mcs_out, fp: str):
     fig = go.Figure()
 
     # add combined time equivalence to the plot
-    if len(list_case_name) > 1:
+    if len(list_case_name) > 1 and np.max(cdf_t_eq_y_combined) > 0.9:
         fig.add_trace(go.Scatter(x=x, y=cdf_t_eq_y_combined, mode='lines', name='Combined'))
 
     # add individual time equivalence to the plot
@@ -58,15 +58,6 @@ def save_figure(mcs_out, fp: str):
 
     fig.update_layout(
         autosize=True,
-        # width=fig_size[0] * 96,
-        # height=fig_size[1] * 96,
-        # margin=dict(
-        #     l=20,
-        #     r=20,
-        #     b=20,
-        #     t=20,
-        #     pad=0
-        # ),
         paper_bgcolor='White',
         plot_bgcolor='White',
         xaxis=dict(
@@ -107,7 +98,6 @@ def save_figure(mcs_out, fp: str):
             traceorder="normal",
             font=dict(
                 family="sans-serif",
-                # size=9,
                 color="black"
             ),
             bgcolor="White",
