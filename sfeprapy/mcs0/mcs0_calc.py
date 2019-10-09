@@ -610,6 +610,10 @@ def teq_main(
 
     timber_solver_iter = -1  # initialise solver iteration count for timber fuel contribution
 
+    if isinstance(timber_charring_rate, (int, float)):
+        timber_charring_rate_ = copy.copy(timber_charring_rate)
+        timber_charring_rate = lambda x: timber_charring_rate_
+
     while True:
         timber_solver_iter += 1
         timber_charring_rate_ = timber_charring_rate(timber_exposed_duration)
