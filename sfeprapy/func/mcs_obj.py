@@ -257,37 +257,3 @@ class MCS:
             return path_input_file_csv
         except AttributeError:
             raise FileNotFoundError('File not found.')
-
-
-def test():
-
-    # test gui version
-    def test_gui():
-        from sfeprapy.mcs0.mcs0_calc import teq_main as calc
-        from sfeprapy.mcs0.mcs0_calc import teq_main_wrapper as calc_mp
-        from sfeprapy.func.mcs_gen import main as gen
-        mcs = MCS()
-        mcs.define_problem()
-        mcs.define_stochastic_parameter_generator(gen)
-        mcs.define_calculation_routine(calc, calc_mp)
-        mcs.run_mcs()
-
-    # test non-gui version
-    def test_arg_dict():
-        import sfeprapy.mcs0 as mcs0
-        from sfeprapy.mcs0.mcs0_calc import teq_main as calc
-        from sfeprapy.mcs0.mcs0_calc import teq_main_wrapper as calc_mp
-        from sfeprapy.func.mcs_gen import main as gen
-        mcs = MCS()
-        mcs.define_problem(data=mcs0.EXAMPLE_INPUT_DICT, config=mcs0.EXAMPLE_CONFIG_DICT)
-        mcs.define_stochastic_parameter_generator(gen)
-        mcs.define_calculation_routine(calc, calc_mp)
-        mcs.run_mcs()
-
-    test_gui()
-    test_arg_dict()
-
-
-if __name__ == '__main__':
-    warnings.filterwarnings('ignore')
-    test()
