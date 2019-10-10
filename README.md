@@ -2,7 +2,7 @@
 
 Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) in python (py) - is a probabilistic analysis tool that estimates the appropriate fire resistance rating for structural elements using reliability based methods. All uncertainty is related to the thermal exposure, i.e. impacted by stochastic parameters dictating the design fire condition.
 
-A publication summarising the capabilities can be found ![here](https://www.researchgate.net/publication/333202825_APPLICATION_OF_PYTHON_PROGRAMMING_LANGUAGE_IN_STRUCTURAL_FIRE_ENGINEERING_-_MONTE_CARLO_SIMULATION)
+A publication summarising the capabilities can be found [here](https://www.researchgate.net/publication/333202825_APPLICATION_OF_PYTHON_PROGRAMMING_LANGUAGE_IN_STRUCTURAL_FIRE_ENGINEERING_-_MONTE_CARLO_SIMULATION)
 
 ## Getting Started
 
