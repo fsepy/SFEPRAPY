@@ -10,10 +10,11 @@ Checklist before release of new versions:
 
 ## VERSIONS
 
-### XX/XX/2019 VERSION: 0.6.7
+### 10/10/2019 VERSION: 0.6.7
 
 - New: `sfeprapy.mcs0` added exposure time dependent timber charring rate.
 - New: `sfeprapy.func.mcs_gen` added `ramp` input variable type for time dependent variables. the fill value should be csv formatted string without headers, consists of two columns, 1st column is the time and 2nd column is the value at the specific time.
+- New: `sfeprapy.mcs0` added plotting feature, to activate `python -m sfeprapy.mcs0 {fp} mp2 fig`
 - Depreciated `sfeprapy.mc0`. This module is imported/combined into `sfeprapy.mcs0` at version 0.6.
 - Depreciated `sfeprapy.mcs2`. This module is imported/combined into `sfeprapy.mcs0` at version 0.6.5.
 
