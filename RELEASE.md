@@ -1,22 +1,31 @@
-# RELEASE NOTES
+# Release
 
 Checklist before release of new versions:
 
+- Run tests in `sfeprapy.test`.
 - Version is up to date in `sfeprapy.__init__:__version__`.
 
-## KNOWN ISSUES AND TASKS LIST
+## Known issues
 
-- Log normal distribution in `sfeprapy.func.mcs_gen` need to be tested.
+- Log normal distribution in `sfeprapy.func.mcs_gen` needs to be validated.
 
-## VERSIONS
+## Version history
+
+### XX/XX/2019 VERSION: 0.6.8
+
+- (WIP) New: `sfeprapy.mcs2`, similar to `sfeprapy.mcs0` but does not solve structural protection thickness for a predefined failure temperature, i.e. structural protection thickness is predefined.
+- New: use `sfeprapy` to trigger recently refreshed CLI.  Previously this is  `python -m sfeprapy.mcs0`.
+- Improved: CLI, added figure and save template input file features. Use `sfeprapy -h` to find more information.
+- Depreciated: `sfeprapy.mcs0` module can no longer be triggered directly as `python -m sfeprapy.mcs0` (i.e. codes are removed after `if __name__ == '__main__'` .
+- Depreciated: `sfeprapy.mcs0` GUI to select input file, use CLI instead.
 
 ### 10/10/2019 VERSION: 0.6.7
 
 - New: `sfeprapy.mcs0` added exposure time dependent timber charring rate.
 - New: `sfeprapy.func.mcs_gen` added `ramp` input variable type for time dependent variables. the fill value should be csv formatted string without headers, consists of two columns, 1st column is the time and 2nd column is the value at the specific time.
 - New: `sfeprapy.mcs0` added plotting feature, to activate `python -m sfeprapy.mcs0 {fp} mp2 fig`
-- Depreciated `sfeprapy.mc0`. This module is imported/combined into `sfeprapy.mcs0` at version 0.6.
-- Depreciated `sfeprapy.mcs2`. This module is imported/combined into `sfeprapy.mcs0` at version 0.6.5.
+- Depreciated: `sfeprapy.mc0`. This module is imported/combined into `sfeprapy.mcs0` at version 0.6.
+- Depreciated: `sfeprapy.mcs2`. This module is imported/combined into `sfeprapy.mcs0` at version 0.6.5.
 
 ### 12/09/2019 VERSION: 0.6.6
 
