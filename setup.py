@@ -61,7 +61,14 @@ setuptools.setup(
         'tqdm>=4.33',
         'xlrd>=1.2',
         'plotly>=1.12',
+        'docopt>=0.6.2',
     ],
 
     include_package_data=True,
+
+    entry_points={
+        'console_scripts': [
+            'sfeprapy=sfeprapy.cli:main'
+        ],
+    },
 )
