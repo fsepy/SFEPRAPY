@@ -1,8 +1,10 @@
 # SfePrapy
 
-Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) in python (py) - is a probabilistic analysis tool that estimates the appropriate fire resistance rating for structural elements using reliability based methods. All uncertainty is related to the thermal exposure, i.e. impacted by stochastic parameters dictating the design fire condition.
+Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) Python (py) is a probabilistic analysis tool. It calculates equivalent of time exposure to ISO 834 standard fire and this can be used to assess the appropriate fire resistance rating for structural elements using reliability based methods.
 
-A publication summarising the capabilities can be found [here](https://www.researchgate.net/publication/333202825_APPLICATION_OF_PYTHON_PROGRAMMING_LANGUAGE_IN_STRUCTURAL_FIRE_ENGINEERING_-_MONTE_CARLO_SIMULATION)
+`sfeprapy` is evolving and actively used in research and real engineering design problems.
+
+A publication summarising the capabilities can be found [here](https://www.researchgate.net/publication/333202825_APPLICATION_OF_PYTHON_PROGRAMMING_LANGUAGE_IN_STRUCTURAL_FIRE_ENGINEERING_-_MONTE_CARLO_SIMULATION).
 
 ## Getting Started
 
@@ -32,37 +34,34 @@ pip is a package management system for installing and updating Python packages. 
     pip install --upgrade "git+https://github.com/fsepy/SfePrapy.git@master"
     ```
 
-    ![demo_save_example_input_file](./misc/fig/demo_install_sfeprapy.gif)
 
+### Command line interface
 
-### To produce an example input file
+`sfeprapy` command line interface (CLI) uses the current working directory to get input files and save files it outputs.
 
-```python
->>> import sfeprapy.mcs0
->>> with open('example_input.csv', 'w') as f:
->>> 	f.write(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
+#### To get help
+
+```sh
+sfeprapy -h
 ```
 
-![demo_save_example_input_file](./misc/fig/demo_save_example_input_file.gif)
+#### To produce an example input file
 
-### To produce an example configuration file
-
-```python
->>> import json
->>> import sfeprapy.mcs0
->>> with open('config.json', 'w') as f:
->>> 	json.dump(sfeprapy.mcs0.EXAMPLE_CONFIG_DICT, f)
+```sh
+sfeprapy mcs0 --template example_input.csv
 ```
 
-![demo_save_example_input_file](./misc/fig/demo_save_example_config_file.gif)
+#### To run `sfeprapy.mcs0` simulation
 
-### To run `sfeprapy.mcs0` simulation
-
-```shell
-python -m sfeprapy.mcs0
+```sh
+sfeprapy mcs0 -p 4 example_input.csv
 ```
 
-![demo_running_sfeprapy.mcs0](misc/fig/demo_running_sfeprapy.mcs0.gif)
+#### To produce a figure (once a `sfeprapy.mcs0` simulation is done)
+
+```sh
+sfeprapy mcs0 -f mcs.out.csv
+```
 
 ## Authors
 
