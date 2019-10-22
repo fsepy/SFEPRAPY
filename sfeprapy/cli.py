@@ -1,16 +1,15 @@
-"""SfePrapy command line interface.
+"""SfePrapy CLI Help.
 Usage:
-    sfeprapy mcs0 <file_name> [-p=<int>] [-f] [--template]
-    sfeprapy (-h | --help)
+    sfeprapy mcs0 [-p=<int>] [-f] [--template] <file_name>
 
 Options:
-    -f                  Produce figure only.
-    -p=<int>            Number of processes.
-    --template          Produce an example input file.
-    -h --help           Help.
+    -f              to produce figure from the output file <file_name>.
+    -p=<int>        to define number of processes for MCS, positive integer only.
+    --template      to save example input file to <file_name>.
+    -h --help       to show this message.
 
 Commands:
-    mcs0        Monte Carlo Simulation to solve time equivalence in ISO 834 fire, method 0
+    mcs0            Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
 """
 
 from docopt import docopt
@@ -22,7 +21,6 @@ def main():
     arguments = docopt(__doc__)
 
     if 'mcs0' in arguments:
-        import json
         import sfeprapy
         from sfeprapy.mcs0.__main__ import main as mcs0
         from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
@@ -37,6 +35,7 @@ def main():
             with open(arguments['<file_name>'], 'w+') as f:
                 f.write(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
             # DO NOT NEED CONFIGURATION FILE FOR CLI
+            # import json
             # with open(os.path.join(os.path.dirname(arguments['<file_name>']), 'config.json'), 'w+') as f:
             #     json.dump(sfeprapy.mcs0.EXAMPLE_CONFIG_DICT, f)
         else:
