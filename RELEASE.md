@@ -11,9 +11,12 @@ Checklist before release of new versions:
 
 ## Version history
 
-### XX/XX/2019 VERSION: 0.6.8
+### XX/XX/2019 VERSION: 0.6.9
 
 - (WIP) New: `sfeprapy.mcs2`, similar to `sfeprapy.mcs0` but does not solve structural protection thickness for a predefined failure temperature, i.e. structural protection thickness is predefined.
+
+### 23/10/2019 VERSION: 0.6.8
+
 - New: use `sfeprapy` to trigger recently refreshed CLI.  Previously this is  `python -m sfeprapy.mcs0`.
 - Improved: CLI, added figure and save template input file features. Use `sfeprapy -h` to find more information.
 - Depreciated: `sfeprapy.mcs0` module can no longer be triggered directly as `python -m sfeprapy.mcs0` (i.e. codes are removed after `if __name__ == '__main__'` .
