@@ -2,10 +2,14 @@
 # -*- coding: utf-8 -*-
 
 
-def save_figure(mcs_out, fp: str):
+def save_figure(fp_mcs0_out: str):
+    import os
     import numpy as np
-    import plotly.graph_objects as go
+    import pandas as pd
     import plotly.io
+    import plotly.graph_objects as go
+
+    mcs_out = pd.read_csv(fp_mcs0_out)
 
     # A helper function to produce (x, y) line plot based upon samples
     def cdf_xy(v, xlim, bin_width=0.1, weights=None):
@@ -114,12 +118,17 @@ def save_figure(mcs_out, fp: str):
         'displaylogo': False
     }
 
-    plotly.io.write_html(fig, file=fp, auto_open=True, config=config)
+    plotly.io.write_html(
+        fig,
+        file=os.path.join(os.path.dirname(fp_mcs0_out), 'mcs.out.html'),
+        auto_open=True,
+        config=config
+    )
 
 
-if __name__ == '__main__':
+def main(fp_mcs_in: str, n_threads: int = None):
+
     import os
-    import sys
     import warnings
     from sfeprapy.func.mcs_obj import MCS
     from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
@@ -127,38 +136,21 @@ if __name__ == '__main__':
 
     warnings.filterwarnings('ignore')
 
-    mcs_problem_definition = None
-    n_threads = None
-    fig = False
-    fig_only = False
-    if len(sys.argv) > 1:
-        mcs_problem_definition = os.path.realpath(sys.argv[1])
-    if len(sys.argv) > 2:
-        for arg in sys.argv[2:]:
-            if 'mp' in arg:
-                n_threads = int(str(arg).replace('mp', ''))
-            if 'fig' in arg:
-                fig = True
-            if 'figonly' in arg:
-                fig_only = True
+    fp_mcs_in = os.path.realpath(fp_mcs_in)
 
-    if fig_only:
-        import pandas as pd
-        mcs_out = pd.read_csv(mcs_problem_definition)
-        save_figure(mcs_out=mcs_out, fp=os.path.join(os.path.dirname(mcs_problem_definition), 'mcs.out.html'))
-    else:
-        mcs = MCS()
-        mcs.define_problem(mcs_problem_definition)
-        mcs.define_stochastic_parameter_generator(gen)
-        mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+    mcs = MCS()
+    mcs.define_problem(fp_mcs_in)
+    mcs.define_stochastic_parameter_generator(gen)
+    mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
 
-        try:
-            if n_threads:
-                mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
-        except KeyError:
-            pass
+    try:
+        if n_threads:
+            mcs.config = dict(n_threads=n_threads) if mcs.config else mcs.config.update(dict(n_threads=n_threads))
+    except KeyError:
+        pass
 
-        mcs.run_mcs()
+    mcs.run_mcs()
 
-        if fig:
-            save_figure(mcs_out=mcs.mcs_out, fp=os.path.join(os.path.dirname(mcs_problem_definition), 'mcs.out.html'))
+
+if __name__ == '__main__':
+    print('use `sfeprapy` CLI, `sfeprapy.mcs0:__main__` is depreciated on 22 Oct 2019.')

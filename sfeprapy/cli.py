@@ -1,29 +1,49 @@
-# -*- coding: utf-8 -*-
-"""Greeter.
-
+"""SfePrapy command line interface.
 Usage:
-    sfeprapy mcs0 <name> [--caps] [--greeting=<str>]
+    sfeprapy mcs0 <file_name> [-p=<int>] [-f] [--template]
     sfeprapy (-h | --help)
 
 Options:
-    -h --help         Show this screen.
-    --caps            Uppercase the output.
-    --greeting=<str>  Greeting to use [default: Hello].
+    -f                  Produce figure only.
+    -p=<int>            Number of processes.
+    --template          Produce an example input file.
+    -h --help           Help.
 
 Commands:
-    mcs0        Time equivalence Monte Carlo Simulation method 0
-    mcs1        Time equivalence Monte Carlo Simulation method 1
+    mcs0        Monte Carlo Simulation to solve time equivalence in ISO 834 fire, method 0
 """
+
+from docopt import docopt
 
 
 def main():
-    from docopt import docopt
-    arguments = docopt(__doc__, options_first=True)
-    if arguments['<command>']:
-        print('test successful, msc0 is selected.')
-    elif arguments['msc1']:
-        print('test successful, msc1 is selected.')
+    import os
 
+    arguments = docopt(__doc__)
 
-if __name__ == '__main__':
-    main()
+    if 'mcs0' in arguments:
+        import json
+        import sfeprapy
+        from sfeprapy.mcs0.__main__ import main as mcs0
+        from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
+
+        arguments['<file_name>'] = os.path.realpath(arguments['<file_name>'])
+
+        if arguments['-f']:
+            mcs0_figure(
+                fp_mcs0_out=arguments['<file_name>']
+            )
+        elif arguments['--template']:
+            with open(arguments['<file_name>'], 'w+') as f:
+                f.write(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
+            # DO NOT NEED CONFIGURATION FILE FOR CLI
+            # with open(os.path.join(os.path.dirname(arguments['<file_name>']), 'config.json'), 'w+') as f:
+            #     json.dump(sfeprapy.mcs0.EXAMPLE_CONFIG_DICT, f)
+        else:
+            arguments['-p'] = arguments['-p'] or 2
+            mcs0(
+                fp_mcs_in=os.path.realpath(arguments['<file_name>']),
+                n_threads=int(arguments['-p'])
+            )
+    else:
+        print('instruction unclear.')
