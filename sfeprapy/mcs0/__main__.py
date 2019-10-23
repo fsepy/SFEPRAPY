@@ -26,7 +26,7 @@ def save_figure(fp_mcs0_out: str):
     bin_width = 0.5
 
     # Process time equivalence value, obtain `probability_weight` and `n_simulations`
-    list_case_name = list(set(mcs_out['case_name'].values))
+    list_case_name = sorted(list(set(mcs_out['case_name'].values)))
     list_t_eq = list()
     list_weight = list()
     list_n_simulation = list()
@@ -153,4 +153,4 @@ def main(fp_mcs_in: str, n_threads: int = None):
 
 
 if __name__ == '__main__':
-    print('use `sfeprapy` CLI, `sfeprapy.mcs0:__main__` is depreciated on 22 Oct 2019.')
+    print('Use `sfeprapy` CLI, `sfeprapy.mcs0:__main__` is depreciated on 22 Oct 2019.')
