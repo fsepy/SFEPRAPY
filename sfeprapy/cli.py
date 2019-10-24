@@ -17,11 +17,12 @@ from docopt import docopt
 
 def main():
     import os
+    import sfeprapy
+    sfeprapy.check_pip_upgrade()
 
     arguments = docopt(__doc__)
 
     if 'mcs0' in arguments:
-        import sfeprapy
         from sfeprapy.mcs0.__main__ import main as mcs0
         from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
 
