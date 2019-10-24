@@ -37,7 +37,7 @@ pip is a package management system for installing and updating Python packages. 
 
 ### Command line interface
 
-`sfeprapy` command line interface (CLI) uses the current working directory to get input files and save files it outputs.
+`sfeprapy` command line interface (CLI) uses the current working directory to get input files and save files it outputs. It is currently only the `sfeprapy.mcs0` module is implemented in the CLI. Other modules in `sfeprapy` (e.g. `sfeprapy.mcs1`) will need to executed within `Python`.
 
 #### To get help
 
@@ -45,7 +45,7 @@ pip is a package management system for installing and updating Python packages. 
 sfeprapy -h
 ```
 
-#### To produce an example input file
+#### To produce a `sfeprapy.mcs0` example input file
 
 ```sh
 sfeprapy mcs0 --template example_input.csv
@@ -57,7 +57,7 @@ sfeprapy mcs0 --template example_input.csv
 sfeprapy mcs0 -p 4 example_input.csv
 ```
 
-#### To produce a figure (once a `sfeprapy.mcs0` simulation is done)
+#### To produce a figure (once a `sfeprapy.mcs0` simulation is complete)
 
 ```sh
 sfeprapy mcs0 -f mcs.out.csv
