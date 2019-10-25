@@ -39,7 +39,7 @@ Documentation can be found in the [wiki](https://github.com/fsepy/SfePrapy/wiki)
 
 ### Command line interface
 
-`sfeprapy` command line interface (CLI) uses the current working directory to get input files and save files it outputs. It is currently only the `sfeprapy.mcs0` module is implemented in the CLI. Other modules in `sfeprapy` (e.g. `sfeprapy.mcs1`) will need to executed within `Python`.
+`sfeprapy` command line interface (CLI) uses the current working directory to obtain and/or save files.
 
 #### To get help
 
