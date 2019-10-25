@@ -49,8 +49,8 @@ def check_pip_upgrade():
 
     # extract the version number string
     import re
-    v = re.findall('sfeprapy[\s]*\([\d.]+\)', str(output))[0]
-    v = re.findall('[\d.]+', str(v))[0]
+    v = re.findall(r'sfeprapy[\s]*\([\d.]+\)', str(output))[0]
+    v = re.findall(r'[\d.]+', str(v))[0]
 
     # check if upgrade required
     from packaging import version
