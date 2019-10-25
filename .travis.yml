@@ -4,7 +4,8 @@ python:
 install:
   - pip install .
   - pip install codecov
-script: 
-  - pytest
+  - pip install pytest-cov
+script:
+  - pytest --cov
 after_success:
   - codecov
