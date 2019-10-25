@@ -234,7 +234,7 @@ def example_plot_interflam():
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel('Temperature [$^{℃}C$]')
 
     # define geometry
     w = 16
@@ -287,7 +287,7 @@ def plot_variable_qfd():
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel('Temperature [$^{℃}C$]')
 
     # define geometry
 

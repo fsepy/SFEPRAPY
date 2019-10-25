@@ -186,7 +186,7 @@ def example_plot_interflam():
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel('Temperature [$℃$]')
 
     for length in list_l:
         temperature = fire(
@@ -221,7 +221,7 @@ def test_fire_backup():
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel('Temperature [$℃$]')
 
     for l in list_l:
         temperature = fire_backup(
@@ -241,7 +241,7 @@ def test_fire_backup():
     ax.set_xlim((0, 120))
     ax.grid(color='k', linestyle='--')
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
 
 def test_fire():
@@ -252,7 +252,7 @@ def test_fire():
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel(u'Temperature [$℃$]')
 
     for length in list_l:
         temperature = fire(
@@ -273,7 +273,7 @@ def test_fire():
     ax.set_xlim((-10, 190))
     ax.grid(color='k', linestyle='--')
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
 
 def test_fire_multiple_beam_location():
@@ -284,7 +284,7 @@ def test_fire_multiple_beam_location():
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel('Temperature [$℃$]')
 
     temperature_list = fire(
         t=time,
@@ -305,7 +305,7 @@ def test_fire_multiple_beam_location():
     ax.set_xlim((-10, 190))
     ax.grid(color='k', linestyle='--')
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':

@@ -255,7 +255,7 @@ if __name__ == '__main__':
     plt.style.use('seaborn-paper')
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
     ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$^{\circ}C$]')
+    ax.set_ylabel('Temperature [$^{℃}C$]')
     ax.legend().set_visible(True)
     ax.grid(color='k', linestyle='--')
 
