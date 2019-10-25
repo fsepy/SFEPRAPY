@@ -6,6 +6,6 @@ install:
   - pip install codecov
   - pip install pytest-cov
 script:
-  - pytest --cov=sfeprapy
+  - pytest --cov-report term --cov=test/
 after_success:
   - codecov
