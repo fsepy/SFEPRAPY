@@ -22,16 +22,14 @@ Documentation can be found in the [wiki](https://github.com/fsepy/SfePrapy/wiki)
 1. to use `pip` install from PyPI:
 
     [![Downloads](https://pepy.tech/badge/sfeprapy)](https://pepy.tech/project/sfeprapy)
-    [![PyPI version](https://badge.fury.io/py/sfeprapy.svg)](https://badge.fury.io/py/sfeprapy)
 
     ```sh
     pip install --upgrade sfeprapy
     ```
 
 2. to use `pip` install from GitHub (requires [git](https://git-scm.com/downloads)):  
-    *Note installing `SfePrapy` via this route will include the lastest commits/changes to the library.*  
 
-    [![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)]()
+    *Note installing `SfePrapy` via this route will include the lastest commits/changes to the library.*  
 
     ```sh
     pip install --upgrade "git+https://github.com/fsepy/SfePrapy.git@master"
