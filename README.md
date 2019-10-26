@@ -1,5 +1,5 @@
 # SfePrapy
-
+[![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)](https://github.com/fsepy/SfePrapy)
 [![Build](https://travis-ci.org/fsepy/SfePrapy.svg?branch=master)](https://travis-ci.org/fsepy/SfePrapy.svg?branch=master)
 [![codecov](https://codecov.io/gh/fsepy/SfePrapy/branch/master/graph/badge.svg)](https://codecov.io/gh/fsepy/SfePrapy)
 
