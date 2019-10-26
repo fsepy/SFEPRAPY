@@ -903,7 +903,8 @@ def _test_standard_case():
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     for k in list(mcs_input.keys()):
         mcs_input[k]["phi_teq"] = 1
-        mcs_input[k]["n_simulations"] = 500
+        mcs_input[k]["n_simulations"] = 333
+        mcs_input[k]["probability_weight"] = 1 / 3.0
         mcs_input[k]["fire_time_duration"] = 10000
         mcs_input[k]["timber_exposed_area"] = 0
         mcs_input[k].pop("beam_position_horizontal")
