@@ -10,6 +10,9 @@ import sfeprapy
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.md")) as f:
     long_description = f.read()
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setuptools.setup(
     name="sfeprapy",
     version=sfeprapy.__version__,
@@ -39,17 +42,7 @@ setuptools.setup(
         "sfeprapy.func.heat_transfer_1d",
         "sfeprapy.dist_fit",
     ],
-    install_requires=[
-        "matplotlib>=2.2.2",
-        "numpy>=1.15.0",
-        "pandas>=0.23.3",
-        "scipy>=1.1.0",
-        "seaborn>=0.9.0",
-        "tqdm>=4.33",
-        "xlrd>=1.2",
-        "plotly>=4.2.1",
-        "docopt>=0.6.2",
-    ],
+    install_requires=requirements,
     include_package_data=True,
     entry_points={"console_scripts": ["sfeprapy=sfeprapy.cli:main"]},
 )
