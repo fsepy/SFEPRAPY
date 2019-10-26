@@ -31,7 +31,7 @@ def main():
     import os
     import sfeprapy
 
-    sfeprapy.check_pip_upgrade()
+    # sfeprapy.check_pip_upgrade()
 
     def _test(outcome: bool = True):
         if TEST_MODE:
