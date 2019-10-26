@@ -6,18 +6,18 @@ import numpy as np
 
 
 def fire(
-        t: np.array,
-        fire_load_density_MJm2: float,
-        fire_hrr_density_MWm2: float,
-        room_length_m: float,
-        room_width_m: float,
-        fire_spread_rate_ms: float,
-        beam_location_height_m: float,
-        beam_location_length_m: Union[float, list, np.ndarray],
-        fire_nft_limit_c: float,
-        opening_fraction: float = 0,
-        opening_width_m: float = 0,
-        opening_height_m: float = 0,
+    t: np.array,
+    fire_load_density_MJm2: float,
+    fire_hrr_density_MWm2: float,
+    room_length_m: float,
+    room_width_m: float,
+    fire_spread_rate_ms: float,
+    beam_location_height_m: float,
+    beam_location_length_m: Union[float, list, np.ndarray],
+    fire_nft_limit_c: float,
+    opening_fraction: float = 0,
+    opening_width_m: float = 0,
+    opening_height_m: float = 0,
 ):
     """
     This function calculates and returns a temperature array representing travelling fire. This function is NOT in SI.
@@ -55,7 +55,7 @@ def fire(
     # Qv = 1.75 * a_v * np.sqrt(opening_height_m)
 
     # workout burning time etc.
-    t_burn = max([q_fd / HRRPUA, 900.])
+    t_burn = max([q_fd / HRRPUA, 900.0])
     t_decay = max([t_burn, l / s])
     t_lim = min([t_burn, l / s])
 
@@ -63,29 +63,36 @@ def fire(
     time_interval_s = t[1] - t[0]
     t_decay_ = round(t_decay / time_interval_s, 0) * time_interval_s
     t_lim_ = round(t_lim / time_interval_s, 0) * time_interval_s
-    if t_decay_ == t_lim_: t_lim_ -= time_interval_s
+    if t_decay_ == t_lim_:
+        t_lim_ -= time_interval_s
 
     # workout the heat release rate ARRAY (corrected with time)
     Q_growth = (HRRPUA * w * s * t) * (t < t_lim_)
-    Q_peak = min([HRRPUA * w * s * t_burn, HRRPUA * w * l]) * (t >= t_lim_) * (t <= t_decay_)
+    Q_peak = (
+        min([HRRPUA * w * s * t_burn, HRRPUA * w * l]) * (t >= t_lim_) * (t <= t_decay_)
+    )
     Q_decay = (max(Q_peak) - (t - t_decay_) * w * s * HRRPUA) * (t > t_decay_)
     Q_decay[Q_decay < 0] = 0
-    Q = (Q_growth + Q_peak + Q_decay) * 1000.
+    Q = (Q_growth + Q_peak + Q_decay) * 1000.0
 
     # workout the distance between fire median to the structural element r
     l_fire_front = s * t
     l_fire_front[l_fire_front < 0] = 0
     l_fire_front[l_fire_front > l] = l
     l_fire_end = s * (t - t_lim)
-    l_fire_end[l_fire_end < 0] = 0.
+    l_fire_end[l_fire_end < 0] = 0.0
     l_fire_end[l_fire_end > l] = l
-    l_fire_median = (l_fire_front + l_fire_end) / 2.
+    l_fire_median = (l_fire_front + l_fire_end) / 2.0
 
     # workout the far field temperature of gas T_g
     if isinstance(l_s, float) or isinstance(l_s, int):
         r = np.absolute(l_s - l_fire_median)
-        T_g = np.where((r / h_s) > 0.8, (5.38 * np.power(Q / r, 2 / 3) / h_s) + 20., 0)
-        T_g = np.where((r / h_s) <= 0.8, (16.9 * np.power(Q, 2 / 3) / np.power(h_s, 5 / 3)) + 20., T_g)
+        T_g = np.where((r / h_s) > 0.8, (5.38 * np.power(Q / r, 2 / 3) / h_s) + 20.0, 0)
+        T_g = np.where(
+            (r / h_s) <= 0.8,
+            (16.9 * np.power(Q, 2 / 3) / np.power(h_s, 5 / 3)) + 20.0,
+            T_g,
+        )
         T_g[T_g >= fire_nft_limit_c] = fire_nft_limit_c
         return T_g
     elif isinstance(l_s, np.ndarray) or isinstance(l_s, list):
@@ -93,8 +100,14 @@ def fire(
         T_g_list = list()
         for l_s in l_s_list:
             r = np.absolute(l_s - l_fire_median)
-            T_g = np.where((r / h_s) > 0.8, (5.38 * np.power(Q / r, 2 / 3) / h_s) + 20., 0)
-            T_g = np.where((r / h_s) <= 0.8, (16.9 * np.power(Q, 2 / 3) / np.power(h_s, 5 / 3)) + 20., T_g)
+            T_g = np.where(
+                (r / h_s) > 0.8, (5.38 * np.power(Q / r, 2 / 3) / h_s) + 20.0, 0
+            )
+            T_g = np.where(
+                (r / h_s) <= 0.8,
+                (16.9 * np.power(Q, 2 / 3) / np.power(h_s, 5 / 3)) + 20.0,
+                T_g,
+            )
             T_g[T_g >= fire_nft_limit_c] = fire_nft_limit_c
             T_g_list.append(T_g)
         return T_g_list
@@ -103,16 +116,16 @@ def fire(
 
 
 def fire_backup(
-        t: np.ndarray,
-        T_0: float,
-        q_fd: float,
-        hrrpua: float,
-        l: float,
-        w: float,
-        s: float,
-        e_h: float,
-        e_l: float,
-        T_max: float = 1323.15,
+    t: np.ndarray,
+    T_0: float,
+    q_fd: float,
+    hrrpua: float,
+    l: float,
+    w: float,
+    s: float,
+    e_h: float,
+    e_l: float,
+    T_max: float = 1323.15,
 ):
     """
     :param t: ndarray, [s] An array representing time incorporating 'temperature'.
@@ -137,30 +150,33 @@ def fire_backup(
     time_step = t[1] - t[0]
 
     # workout burning time etc.
-    t_burn = max([q_fd / hrrpua, 900.])
+    t_burn = max([q_fd / hrrpua, 900.0])
     t_decay = max([t_burn, l / s])
     t_lim = min([t_burn, l / s])
 
     # reduce resolution to fit time step for t_burn, t_decay, t_lim
     t_decay_ = round(t_decay / time_step, 0) * time_step
     t_lim_ = round(t_lim / time_step, 0) * time_step
-    if t_decay_ == t_lim_: t_lim_ -= time_step
+    if t_decay_ == t_lim_:
+        t_lim_ -= time_step
 
     # workout the heat release rate ARRAY (corrected with time)
     Q_growth = (hrrpua * w * s * t) * (t < t_lim_)
-    Q_peak = min([hrrpua * w * s * t_burn, hrrpua * w * l]) * (t >= t_lim_) * (t <= t_decay_)
+    Q_peak = (
+        min([hrrpua * w * s * t_burn, hrrpua * w * l]) * (t >= t_lim_) * (t <= t_decay_)
+    )
     Q_decay = (max(Q_peak) - (t - t_decay_) * w * s * hrrpua) * (t > t_decay_)
     Q_decay[Q_decay < 0] = 0
-    Q = (Q_growth + Q_peak + Q_decay) * 1000.
+    Q = (Q_growth + Q_peak + Q_decay) * 1000.0
 
     # workout the distance between fire_curve median to the structural element r
     l_fire_front = s * t
-    l_fire_front[l_fire_front < 0] = 0.
+    l_fire_front[l_fire_front < 0] = 0.0
     l_fire_front[l_fire_front > l] = l
     l_fire_end = s * (t - t_lim)
-    l_fire_end[l_fire_end < 0] = 0.
+    l_fire_end[l_fire_end < 0] = 0.0
     l_fire_end[l_fire_end > l] = l
-    l_fire_median = (l_fire_front + l_fire_end) / 2.
+    l_fire_median = (l_fire_front + l_fire_end) / 2.0
     r = np.absolute(e_l - l_fire_median)
     r[r == 0] = 0.001  # will cause crash if r = 0
 
@@ -183,10 +199,11 @@ def example_plot_interflam():
     list_l = [25, 50, 100, 150]
 
     import matplotlib.pyplot as plt
-    plt.style.use('seaborn-paper')
+
+    plt.style.use("seaborn-paper")
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
-    ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$℃$]')
+    ax.set_xlabel("Time [minute]")
+    ax.set_ylabel("Temperature [$℃$]")
 
     for length in list_l:
         temperature = fire(
@@ -206,9 +223,9 @@ def example_plot_interflam():
     ax.legend(loc=4).set_visible(True)
     ax.set_xlim((0, 180))
     ax.set_ylim((0, 1400))
-    ax.grid(color='k', linestyle='--')
+    ax.grid(color="k", linestyle="--")
     plt.tight_layout()
-    plt.savefig(fname='fire-travelling.png', dpi=300)
+    plt.savefig(fname="fire-travelling.png", dpi=300)
 
 
 def test_fire_backup():
@@ -218,10 +235,11 @@ def test_fire_backup():
     list_l = [50, 100, 150]
 
     import matplotlib.pyplot as plt
-    plt.style.use('seaborn-paper')
+
+    plt.style.use("seaborn-paper")
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
-    ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$℃$]')
+    ax.set_xlabel("Time [minute]")
+    ax.set_ylabel("Temperature [$℃$]")
 
     for l in list_l:
         temperature = fire_backup(
@@ -239,7 +257,7 @@ def test_fire_backup():
 
     ax.legend().set_visible(True)
     ax.set_xlim((0, 120))
-    ax.grid(color='k', linestyle='--')
+    ax.grid(color="k", linestyle="--")
     plt.tight_layout()
     # plt.show()
 
@@ -249,10 +267,11 @@ def test_fire():
     list_l = [25, 50, 100, 150]
 
     import matplotlib.pyplot as plt
-    plt.style.use('seaborn-paper')
+
+    plt.style.use("seaborn-paper")
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
-    ax.set_xlabel('Time [minute]')
-    ax.set_ylabel(u'Temperature [$℃$]')
+    ax.set_xlabel("Time [minute]")
+    ax.set_ylabel(u"Temperature [$℃$]")
 
     for length in list_l:
         temperature = fire(
@@ -271,7 +290,7 @@ def test_fire():
 
     ax.legend(loc=4).set_visible(True)
     ax.set_xlim((-10, 190))
-    ax.grid(color='k', linestyle='--')
+    ax.grid(color="k", linestyle="--")
     plt.tight_layout()
     # plt.show()
 
@@ -281,10 +300,11 @@ def test_fire_multiple_beam_location():
     length = 100
 
     import matplotlib.pyplot as plt
-    plt.style.use('seaborn-paper')
+
+    plt.style.use("seaborn-paper")
     fig, ax = plt.subplots(figsize=(3.94, 2.76))
-    ax.set_xlabel('Time [minute]')
-    ax.set_ylabel('Temperature [$℃$]')
+    ax.set_xlabel("Time [minute]")
+    ax.set_ylabel("Temperature [$℃$]")
 
     temperature_list = fire(
         t=time,
@@ -303,12 +323,12 @@ def test_fire_multiple_beam_location():
 
     ax.legend(loc=4).set_visible(True)
     ax.set_xlim((-10, 190))
-    ax.grid(color='k', linestyle='--')
+    ax.grid(color="k", linestyle="--")
     plt.tight_layout()
     # plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_fire()
     test_fire_multiple_beam_location()
     # example_plot_interflam()

@@ -15,11 +15,10 @@ class SteelSection(object):
     DESCRIPTION: SteelSection aims to transform the data stored in .csv files (i.e. section_UB.csv and section_UC.csv)
     into a pythonic format, i.e. an object with properties.
     """
+
     def __init__(self, section_type, section_desination):
         # Load data file, i.e. a .csv file, and make it in DataFrame format
-        dict_type_to_directory = {
-            'ub': 'sections_UB.csv',
-            'uc': 'sections_UC.csv',}
+        dict_type_to_directory = {"ub": "sections_UB.csv", "uc": "sections_UC.csv"}
 
         file_name_enquired_property = dict_type_to_directory[section_type]
 
@@ -31,16 +30,20 @@ class SteelSection(object):
         if not os.path.isfile(dir_file):
             raise FileNotFoundError("File does not exist: ".format(dir_file))
 
-        self.__data_all = pd.read_csv(filepath_or_buffer=dir_file, header=2, index_col=0, dtype={'id': np.str})
-        self.__data_selected = self.__data_all[self.__data_all.index == section_desination]
+        self.__data_all = pd.read_csv(
+            filepath_or_buffer=dir_file, header=2, index_col=0, dtype={"id": np.str}
+        )
+        self.__data_selected = self.__data_all[
+            self.__data_all.index == section_desination
+        ]
 
-        '''
+        """
         depth of section,width of section,web thickness,flange thickness,root radius,depth between fillets,ratios for local buckling (web),
         ratios for local buckling (flange),
         
         dimensions for detailing (end clearance),dimensions for detailing (notch),dimensions for detailing (notch),
         
-        '''
+        """
 
     def __extract_col_data(self, parameter):
         result = self.__data_selected[parameter].values
@@ -75,8 +78,9 @@ class SteelSection(object):
     def ratios_local_buckling_flange(self):
         pass
 
-    '''
-    surface area per metre,second moment of area (y-y),second moment of area (z-z),radius of gyration (y-y),radius of gyration (z-z),elastic modulus (y-y),'''
+    """
+    surface area per metre,second moment of area (y-y),second moment of area (z-z),radius of gyration (y-y),radius of gyration (z-z),elastic modulus (y-y),"""
+
     def surface_area_per_metre(self):
         pass
 
@@ -92,9 +96,9 @@ class SteelSection(object):
     def elastic_modulus_yy(self):
         pass
 
-    '''
+    """
     elastic modulus (z-z),plastic modulus (y-y),plastic modulus (z-z),buckling parameter,torsional index,warping constant,torsional constant,area of section
-    '''
+    """
 
     def elastic_modulus_zz(self):
         pass
@@ -115,12 +119,14 @@ class SteelSection(object):
         pass
 
     @property
-    def SECTION_TYPE_UB(self): return 'ub'
+    def SECTION_TYPE_UB(self):
+        return "ub"
 
     @property
-    def SECTION_TYPE_UC(self): return 'uc'
+    def SECTION_TYPE_UC(self):
+        return "uc"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ss = SteelSection
-    my_section = ss('ub', 'h')
+    my_section = ss("ub", "h")

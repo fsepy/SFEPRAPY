@@ -4,16 +4,16 @@ from scipy.interpolate import interp1d
 
 
 def protected_steel_bs13381(
-        time: np.ndarray,
-        temperature_ambient: np.ndarray,
-        lambda_pt_T,
-        d_p: float,
-        A_p: float,
-        V: float,
-        c_a_T,
-        rho_a_T,
-        time_ubound: float = 10800,
-        time_step_lbound: float = 30.
+    time: np.ndarray,
+    temperature_ambient: np.ndarray,
+    lambda_pt_T,
+    d_p: float,
+    A_p: float,
+    V: float,
+    c_a_T,
+    rho_a_T,
+    time_ubound: float = 10800,
+    time_step_lbound: float = 30.0,
 ):
     """
     This function estimates the temperature of given protected steel structural element. The calculation procedure is
@@ -35,7 +35,13 @@ def protected_steel_bs13381(
     # HELPER FUNCTIONS
     # [BS EN 13381-8:2013, ANNEX E, Equation E.1]
     def _theta_at(lambda_pt, d_p, A_p, V, c_a, rho_a, theta_t, theta_at, dt):
-        return (lambda_pt/d_p) * (A_p/V) * (1/c_a/rho_a) * (theta_t-theta_at) * dt
+        return (
+            (lambda_pt / d_p)
+            * (A_p / V)
+            * (1 / c_a / rho_a)
+            * (theta_t - theta_at)
+            * dt
+        )
 
     # [BS EN 13381-8:2013, ANNEX E, Equation E.2]
     def _dt(c_a, rho_a, lambda_pt, d_p, A_p, V):
@@ -43,15 +49,28 @@ def protected_steel_bs13381(
 
     # [BS EN 13381-8:2013, ANNEX E, Equation E.3]
     def _lambda_pt(d_p, V, A_p, c_a, rho_a, theta_t, theta_at, dt, d_theta_at):
-        return d_p * (V / A_p) * c_a * rho_a * (1 / ((theta_t-theta_at)*dt)) * d_theta_at
+        return (
+            d_p
+            * (V / A_p)
+            * c_a
+            * rho_a
+            * (1 / ((theta_t - theta_at) * dt))
+            * d_theta_at
+        )
 
     # [BS EN 13381-8:2013, ANNEX E, Equation E.4]
     def _theta_pt(theta_t, theta_t_, theta_at, theta_at_):
-        return ((theta_t_+theta_t)/2. + (theta_at_+theta_at)/2.) / 2.
+        return ((theta_t_ + theta_t) / 2.0 + (theta_at_ + theta_at) / 2.0) / 2.0
 
     # [BS EN 13381-8:2013, ANNEX E, Equation E.5]
     def _d_theta_at(c_a, rho_a, lambda_ave, d_p, A_p, V, theta_t, theta_at, dt):
-        return (1/(c_a+rho_a)) * (lambda_ave/d_p) * (A_p / V) * (theta_t - theta_at) * dt
+        return (
+            (1 / (c_a + rho_a))
+            * (lambda_ave / d_p)
+            * (A_p / V)
+            * (theta_t - theta_at)
+            * dt
+        )
 
     # [BS EN 13381-8:2013, ANNEX E, Equation E.6]
     def _lambda_char(lambda_ave, K, sigma):
@@ -90,16 +109,21 @@ def protected_steel_bs13381(
         time_rate.append(dt)
 
         # Determine current time
-        time_.append(time_[i-1] + dt)
+        time_.append(time_[i - 1] + dt)
         t = time_[i]
 
         # Determine temperature change rate of the steel
-        lambda_ave, theta_t, theta_at = lambda_pt, T_g, temperature_steel[i-1]
-        temperature_rate_steel.append(_d_theta_at(c_a, rho_a, lambda_ave, d_p, A_p, V, theta_t, theta_at, dt))
-        temperature_steel.append(temperature_steel[i-1] + temperature_rate_steel[i])
+        lambda_ave, theta_t, theta_at = lambda_pt, T_g, temperature_steel[i - 1]
+        temperature_rate_steel.append(
+            _d_theta_at(c_a, rho_a, lambda_ave, d_p, A_p, V, theta_t, theta_at, dt)
+        )
+        temperature_steel.append(temperature_steel[i - 1] + temperature_rate_steel[i])
 
     # Convert lists to ndarray
     time_, time_rate = np.asarray(time_), np.asarray(time_rate)
-    temperature_steel, temperature_rate_steel = np.asarray(temperature_steel), np.asarray(temperature_rate_steel)
+    temperature_steel, temperature_rate_steel = (
+        np.asarray(temperature_steel),
+        np.asarray(temperature_rate_steel),
+    )
 
     return time_, temperature_steel, time_rate, temperature_rate_steel

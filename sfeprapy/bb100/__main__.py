@@ -13,10 +13,13 @@ class Dialog(QtWidgets.QDialog):
         self.createFormGroupBox()
 
         bigEditor = QtWidgets.QTextEdit()
-        bigEditor.setPlainText("This widget takes up all the remaining space "
-                               "in the top-level layout.")
+        bigEditor.setPlainText(
+            "This widget takes up all the remaining space " "in the top-level layout."
+        )
 
-        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
 
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
@@ -32,7 +35,6 @@ class Dialog(QtWidgets.QDialog):
 
         self.setWindowTitle("Basic Layouts")
 
-
     def createMenu(self):
         self.menuBar = QtWidgets.QMenuBar()
 
@@ -41,7 +43,6 @@ class Dialog(QtWidgets.QDialog):
         self.menuBar.addMenu(self.fileMenu)
 
         self.exitAction.triggered.connect(self.accept)
-
 
     def createGridGroupBox(self):
         self.gridGroupBox = QtWidgets.QGroupBox("Grid layout")
@@ -58,7 +59,8 @@ class Dialog(QtWidgets.QDialog):
         r2_label = QtWidgets.QLabel("Preferences")
         r2_edit = QtWidgets.QLineEdit()
 
-        def r2_act_button_1(): r2_edit.setText(self.get_file_path(filter="YAML (*.yaml, *.txt)"))
+        def r2_act_button_1():
+            r2_edit.setText(self.get_file_path(filter="YAML (*.yaml, *.txt)"))
 
         r2_button_1 = QtWidgets.QPushButton("File")
         r2_button_1.setFixedWidth(45)
@@ -73,7 +75,8 @@ class Dialog(QtWidgets.QDialog):
         r3_label = QtWidgets.QLabel("Inputs")
         r3_edit = QtWidgets.QLineEdit()
 
-        def r3_act_button_1(): r3_edit.setText(self.get_file_path(filter="YAML (*.yaml, *.txt)"))
+        def r3_act_button_1():
+            r3_edit.setText(self.get_file_path(filter="YAML (*.yaml, *.txt)"))
 
         r3_button_1 = QtWidgets.QPushButton("File")
         r3_button_1.setFixedWidth(45)
@@ -89,8 +92,9 @@ class Dialog(QtWidgets.QDialog):
         line_edit_2 = QtWidgets.QLineEdit()
 
         self.smallEditor = QtWidgets.QTextEdit()
-        self.smallEditor.setPlainText("This widget takes up about two thirds "
-                                      "of the grid layout.")
+        self.smallEditor.setPlainText(
+            "This widget takes up about two thirds " "of the grid layout."
+        )
 
         layout.setColumnStretch(1, 10)
         layout.setColumnStretch(2, 20)
@@ -98,13 +102,20 @@ class Dialog(QtWidgets.QDialog):
 
     def get_file_path(self, caption=None, dir=None, filter=None):
         my_dialog = QtWidgets.QFileDialog(self)
-        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(my_dialog, caption=caption, dir=dir, filter=filter)
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            my_dialog, caption=caption, dir=dir, filter=filter
+        )
         return file_name
 
     def create_action(self):
-        self.openAct = QtWidgets.QAction(QtGui.QIcon(':/images/open.png'),
-                                         "&Open...", self, shortcut=QtGui.QKeySequence.Open,
-                                         statusTip="Open an existing file", triggered=self.open)
+        self.openAct = QtWidgets.QAction(
+            QtGui.QIcon(":/images/open.png"),
+            "&Open...",
+            self,
+            shortcut=QtGui.QKeySequence.Open,
+            statusTip="Open an existing file",
+            triggered=self.open,
+        )
 
     def createFormGroupBox(self):
         self.formGroupBox = QtWidgets.QGroupBox("Form layout")
@@ -115,7 +126,7 @@ class Dialog(QtWidgets.QDialog):
         self.formGroupBox.setLayout(layout)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)

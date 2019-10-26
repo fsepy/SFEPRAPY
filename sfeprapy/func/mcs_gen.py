@@ -70,62 +70,75 @@ def random_variable_generator(dict_in: dict, num_samples: int):
     """
 
     # assign distribution type
-    dist_0 = dict_in['dist']
-    dist = dict_in['dist']
+    dist_0 = dict_in["dist"]
+    dist = dict_in["dist"]
 
     # assign distribution boundary (for samples)
-    ubound = dict_in['ubound']
-    lbound = dict_in['lbound']
+    ubound = dict_in["ubound"]
+    lbound = dict_in["lbound"]
 
     # sample CDF points (y-axis value)
     def generate_cfd_q(dist_, dist_kw_, lbound_, ubound_):
         cfd_q_ = np.linspace(
             getattr(stats, dist_).cdf(x=lbound_, **dist_kw_),
             getattr(stats, dist_).cdf(x=ubound_, **dist_kw_),
-            num_samples)
+            num_samples,
+        )
         samples_ = getattr(stats, dist_).ppf(q=cfd_q_, **dist_kw_)
         return samples_
 
     # convert human distribution parameters to scipy distribution parameters
-    if dist_0 == 'gumbel_r_':
+    if dist_0 == "gumbel_r_":
         dist_kw = gumbel_r_(**dict_in)
-        dist = 'gumbel_r'
-        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
-    elif dist_0 == 'uniform_':
+        dist = "gumbel_r"
+        samples = generate_cfd_q(
+            dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound
+        )
+    elif dist_0 == "uniform_":
         dist_kw = uniform_(**dict_in)
-        dist = 'uniform'
-        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+        dist = "uniform"
+        samples = generate_cfd_q(
+            dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound
+        )
 
-    elif dist_0 == 'norm_':
+    elif dist_0 == "norm_":
         dist_kw = norm_(**dict_in)
-        dist = 'norm'
-        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+        dist = "norm"
+        samples = generate_cfd_q(
+            dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound
+        )
 
-    elif dist_0 == 'lognorm_':
+    elif dist_0 == "lognorm_":
         dist_kw = lognorm_(**dict_in)
-        dist = 'lognorm'
-        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+        dist = "lognorm"
+        samples = generate_cfd_q(
+            dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound
+        )
 
-    elif dist_0 == 'lognorm_mod_':
+    elif dist_0 == "lognorm_mod_":
         dist_kw = lognorm_(**dict_in)
-        dist = 'lognorm'
-        samples = generate_cfd_q(dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound)
+        dist = "lognorm"
+        samples = generate_cfd_q(
+            dist_=dist, dist_kw_=dist_kw, lbound_=lbound, ubound_=ubound
+        )
         samples = 1 - samples
 
     else:
         try:
-            dict_in.pop('dist')
-            dict_in.pop('ubound')
-            dict_in.pop('lbound')
-            samples = generate_cfd_q(dist_=dist, dist_kw_=dict_in, lbound_=lbound, ubound_=ubound)
+            dict_in.pop("dist")
+            dict_in.pop("ubound")
+            dict_in.pop("lbound")
+            samples = generate_cfd_q(
+                dist_=dist, dist_kw_=dict_in, lbound_=lbound, ubound_=ubound
+            )
         except AttributeError:
-            raise ValueError('Unknown distribution type {}.'.format(dist))
+            raise ValueError("Unknown distribution type {}.".format(dist))
 
     samples[samples == np.inf] = ubound
     samples[samples == -np.inf] = lbound
 
-    if 'permanent' in dict_in:
-        samples += dict_in['permanent']
+    if "permanent" in dict_in:
+        samples += dict_in["permanent"]
 
     np.random.shuffle(samples)
 
@@ -137,13 +150,13 @@ def dict_unflatten(dict_in: dict) -> dict:
     dict_out = dict()
 
     for k in list(dict_in.keys()):
-        if ':' in k:
-            k1, k2 = k.split(':')
+        if ":" in k:
+            k1, k2 = k.split(":")
 
             if k1 in dict_out:
                 dict_out[k1][k2] = dict_in[k]
             else:
-                dict_out[k1] = dict(k2 = dict_in[k])
+                dict_out[k1] = dict(k2=dict_in[k])
 
     return dict_out
 
@@ -159,30 +172,16 @@ def dict_flatten(dict_in: dict) -> dict:
     for k in list(dict_in.keys()):
         if isinstance(dict_in[k], dict):
             for kk, vv in dict_in[k].items():
-                dict_out[f'{k}:{kk}'] = vv
+                dict_out[f"{k}:{kk}"] = vv
         else:
             dict_out[k] = dict_in[k]
-            
+
     return dict_out
 
 
 def test_dict_flatten():
-    x = dict(
-        A=dict(
-            a=0,
-            b=1,
-        ),
-        B=dict(
-            c=2,
-            d=3
-        )
-    )
-    y_expected = {
-        'A:a': 0,
-        'A:b': 1,
-        'B:c': 2,
-        'B:d': 3,
-    }
+    x = dict(A=dict(a=0, b=1), B=dict(c=2, d=3))
+    y_expected = {"A:a": 0, "A:b": 1, "B:c": 2, "B:d": 3}
     y = dict_flatten(x)
     assert y == y_expected
 
@@ -203,100 +202,80 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
             dict_out[k] = np.full((num_samples,), v, dtype=float)
 
         elif isinstance(v, str):
-            dict_out[k] = np.full((num_samples,), v, dtype=np.dtype('U{:d}'.format(len(v))))
-        
+            dict_out[k] = np.full(
+                (num_samples,), v, dtype=np.dtype("U{:d}".format(len(v)))
+            )
+
         elif isinstance(v, np.ndarray) or isinstance(v, list):
             dict_out[k] = list(np.full((num_samples, len(v)), v, dtype=float))
 
         elif isinstance(v, dict):
-            if 'dist' in v:
+            if "dist" in v:
                 try:
                     dict_out[k] = random_variable_generator(v, num_samples)
                 except KeyError:
-                    raise('Missing parameters in input variable {}.'.format(k))
-            elif 'ramp' in v:
-                s_ = StringIO(v['ramp'])
-                d_ = pd.read_csv(s_, names=['x', 'y'], dtype=float, skip_blank_lines=True, skipinitialspace=True)
+                    raise ("Missing parameters in input variable {}.".format(k))
+            elif "ramp" in v:
+                s_ = StringIO(v["ramp"])
+                d_ = pd.read_csv(
+                    s_,
+                    names=["x", "y"],
+                    dtype=float,
+                    skip_blank_lines=True,
+                    skipinitialspace=True,
+                )
                 t_ = d_.iloc[:, 0]
                 v_ = d_.iloc[:, 1]
                 f_interp = interp1d(t_, v_, bounds_error=False, fill_value=0)
                 dict_out[k] = np.full((num_samples,), f_interp)
             else:
-                raise ValueError('Unknown input data type for {}.'.format(k))
+                raise ValueError("Unknown input data type for {}.".format(k))
         else:
-            raise TypeError('Unknown input data type for {}.'.format(k))
+            raise TypeError("Unknown input data type for {}.".format(k))
 
-    dict_out['index'] = np.arange(0, num_samples, 1)
+    dict_out["index"] = np.arange(0, num_samples, 1)
 
-    df_out = pd.DataFrame.from_dict(dict_out, orient='columns')
+    df_out = pd.DataFrame.from_dict(dict_out, orient="columns")
 
     return df_out
 
 
 def test_random_variable_generator():
-    x = dict(
-        v=np.pi,
-    )
+    x = dict(v=np.pi)
     y = main(x, 1000)
-    assert len(y['v'].values) == 1000
-    assert all([v == np.pi for v in y['v'].values])
+    assert len(y["v"].values) == 1000
+    assert all([v == np.pi for v in y["v"].values])
 
-    x = dict(
-        v='hello world.',
-    )
+    x = dict(v="hello world.")
     y = main(x, 1000)
-    assert len(y['v'].values) == 1000
-    assert all([v == 'hello world.' for v in y['v'].values])
+    assert len(y["v"].values) == 1000
+    assert all([v == "hello world." for v in y["v"].values])
 
-    x = dict(
-        v=[0., 1., 2.],
-    )
+    x = dict(v=[0.0, 1.0, 2.0])
     y = main(x, 1000)
-    assert len(y['v'].values) == 1000
-    assert all([all(v == np.array([0., 1., 2.])) for v in y['v'].values])
+    assert len(y["v"].values) == 1000
+    assert all([all(v == np.array([0.0, 1.0, 2.0])) for v in y["v"].values])
 
-    x = dict(
-        v=dict(
-            dist='uniform_',
-            ubound=10,
-            lbound=-1
-        ),
-    )
+    x = dict(v=dict(dist="uniform_", ubound=10, lbound=-1))
     y = main(x, 1000)
-    assert len(y['v'].values) == 1000
-    assert np.max(y['v'].values) == 10
-    assert np.min(y['v'].values) == -1
-    assert np.mean(y['v'].values) == (10 - 1) / 2
+    assert len(y["v"].values) == 1000
+    assert np.max(y["v"].values) == 10
+    assert np.min(y["v"].values) == -1
+    assert np.mean(y["v"].values) == (10 - 1) / 2
 
-    x = dict(
-        v=dict(
-            dist='norm_',
-            ubound=5+1,
-            lbound=5-1,
-            mean=5,
-            sd=1
-        ),
-    )
+    x = dict(v=dict(dist="norm_", ubound=5 + 1, lbound=5 - 1, mean=5, sd=1))
     y = main(x, 1000)
-    assert len(y['v'].values) == 1000
-    assert np.max(y['v'].values) == 6
-    assert np.min(y['v'].values) == 4
-    assert np.mean(y['v'].values) == 5
+    assert len(y["v"].values) == 1000
+    assert np.max(y["v"].values) == 6
+    assert np.min(y["v"].values) == 4
+    assert np.mean(y["v"].values) == 5
 
-    x = dict(
-        v=dict(
-            dist='gumbel_r_',
-            ubound=2000,
-            lbound=50,
-            mean=420,
-            sd=126
-        ),
-    )
+    x = dict(v=dict(dist="gumbel_r_", ubound=2000, lbound=50, mean=420, sd=126))
     y = main(x, 1000)
-    assert len(y['v'].values) == 1000
-    assert abs(np.max(y['v'].values) - 2000) <= 1
-    assert abs(np.min(y['v'].values) - 50) <= 1
-    assert abs(np.mean(y['v'].values) - 420) <= 1
+    assert len(y["v"].values) == 1000
+    assert abs(np.max(y["v"].values) - 2000) <= 1
+    assert abs(np.min(y["v"].values) - 50) <= 1
+    assert abs(np.mean(y["v"].values) - 420) <= 1
 
     # todo: lognormal distribution need to be verified.
     # x = dict(
@@ -314,6 +293,6 @@ def test_random_variable_generator():
     # assert abs(np.mean(y['v'].values) - 0.5) <= 0.001
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_random_variable_generator()
     test_dict_flatten()

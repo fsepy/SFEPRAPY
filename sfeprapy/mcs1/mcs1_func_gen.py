@@ -74,7 +74,7 @@ def lognorm_trunc_ppf(a, b, n_rv, sigma, loc, scale, cdf_y=None):
     sampled_cfd = np.linspace(
         stats.lognorm.cdf(x=a, s=sigma, loc=loc, scale=scale),
         stats.lognorm.cdf(x=b, s=sigma, loc=loc, scale=scale),
-        n_rv
+        n_rv,
     )
 
     # Sample log normal distribution
@@ -160,7 +160,7 @@ def gumbel_r_trunc_ppf(a, b, n_rv, loc, scale, cdf_y=None):
     sampled_cfd = np.linspace(
         stats.gumbel_r.cdf(x=a, loc=loc, scale=scale),
         stats.gumbel_r.cdf(x=b, loc=loc, scale=scale),
-        n_rv
+        n_rv,
     )
 
     # Following three lines are used to check the validity of the distribution
@@ -188,7 +188,9 @@ def gumbel_r_trunc_ppf(a, b, n_rv, loc, scale, cdf_y=None):
         return f(cdf_y)
 
 
-def latin_hypercube_sampling(num_samples, num_arguments=1, sample_lbound=0, sample_ubound=1):
+def latin_hypercube_sampling(
+    num_samples, num_arguments=1, sample_lbound=0, sample_ubound=1
+):
     """
     NAME: latin_hypercube_sampling
     AUTHOR: Yan Fu
@@ -230,7 +232,9 @@ def latin_hypercube_sampling(num_samples, num_arguments=1, sample_lbound=0, samp
         sample_ubound = sample_ubound - sample_lbound
 
     # Generate sorted integers with correct shape
-    mat_random_num = np.linspace(sample_lbound, sample_ubound, num_samples + 1, dtype=float)
+    mat_random_num = np.linspace(
+        sample_lbound, sample_ubound, num_samples + 1, dtype=float
+    )
     mat_random_num += (mat_random_num[1] - mat_random_num[0]) * 0.5
     mat_random_num = mat_random_num[0:-1]
     mat_random_num = np.reshape(mat_random_num, (len(mat_random_num), 1))
@@ -255,29 +259,29 @@ def mc_inputs_generator_worker(arg):
 
 
 def mc_inputs_generator(
-        n_simulations,
-        room_depth,
-        room_opening_fraction_lbound,
-        room_opening_fraction_ubound,
-        room_opening_fraction_std,
-        room_opening_fraction_mean,
-        room_opening_permanent_fraction,
-        fire_qfd_std,
-        fire_qfd_mean,
-        fire_qfd_ubound,
-        fire_qfd_lbound,
-        fire_hrr_density_std,
-        fire_hrr_density_mean,
-        fire_hrr_density_ubound,
-        fire_hrr_density_lbound,
-        fire_com_eff_lbound,
-        fire_com_eff_ubound,
-        fire_spread_lbound,
-        fire_spread_ubound,
-        fire_nft_mean,
-        beam_loc_ratio_lbound,
-        beam_loc_ratio_ubound,
-        **_
+    n_simulations,
+    room_depth,
+    room_opening_fraction_lbound,
+    room_opening_fraction_ubound,
+    room_opening_fraction_std,
+    room_opening_fraction_mean,
+    room_opening_permanent_fraction,
+    fire_qfd_std,
+    fire_qfd_mean,
+    fire_qfd_ubound,
+    fire_qfd_lbound,
+    fire_hrr_density_std,
+    fire_hrr_density_mean,
+    fire_hrr_density_ubound,
+    fire_hrr_density_lbound,
+    fire_com_eff_lbound,
+    fire_com_eff_ubound,
+    fire_spread_lbound,
+    fire_spread_ubound,
+    fire_nft_mean,
+    beam_loc_ratio_lbound,
+    beam_loc_ratio_ubound,
+    **_
 ):
 
     # ==================================================================================================================
@@ -302,25 +306,34 @@ def mc_inputs_generator(
                 beam_position=room_depth * 0.75,
                 fire_nft_ubound=fire_nft_mean,
                 fire_hrr_density=fire_hrr_density_mean,
-                index=0
+                index=0,
             )
         )
         df_input_samples.set_index("index", inplace=True)
 
     elif n_simulations == 2:
 
-        raise ValueError('Number of simulations need to be greater than 2.')
+        raise ValueError("Number of simulations need to be greater than 2.")
 
     elif n_simulations > 2:
 
-        def generate_samples(dist_type:str, dist_scale:float, dist_loc:float, lbound:float, ubound:float, n:int):
+        def generate_samples(
+            dist_type: str,
+            dist_scale: float,
+            dist_loc: float,
+            lbound: float,
+            ubound: float,
+            n: int,
+        ):
 
             cfd_q = np.linspace(
                 getattr(stats, dist_type).cdf(x=lbound, loc=dist_loc, scale=dist_scale),
                 getattr(stats, dist_type).cdf(x=ubound, loc=dist_loc, scale=dist_scale),
-                n
+                n,
             )
-            samples = getattr(stats, dist_type).ppf(q=cfd_q, loc=dist_loc, scale=dist_scale)
+            samples = getattr(stats, dist_type).ppf(
+                q=cfd_q, loc=dist_loc, scale=dist_scale
+            )
             samples[samples == np.inf] = ubound
             samples[samples == -np.inf] = lbound
             np.random.shuffle(samples)
@@ -329,44 +342,83 @@ def mc_inputs_generator(
 
         # Fuel load density
         # -----------------
-        fire_combustion_efficiency = np.linspace(fire_com_eff_lbound, fire_com_eff_ubound, n_simulations)
+        fire_combustion_efficiency = np.linspace(
+            fire_com_eff_lbound, fire_com_eff_ubound, n_simulations
+        )
         qfd_loc, qfd_scale = gumbel_parameter_converter(fire_qfd_mean, fire_qfd_std)
-        fire_load_density_samples = generate_samples('gumbel_r', qfd_scale, qfd_loc, fire_qfd_ubound, fire_qfd_lbound, n_simulations) * fire_combustion_efficiency
+        fire_load_density_samples = (
+            generate_samples(
+                "gumbel_r",
+                qfd_scale,
+                qfd_loc,
+                fire_qfd_ubound,
+                fire_qfd_lbound,
+                n_simulations,
+            )
+            * fire_combustion_efficiency
+        )
 
         # Fire HRR density (travelling fire)
         # --------------------------------------------------------------------------------------------------------------
-        fire_hrr_density_samples = generate_samples('norm', fire_hrr_density_std, fire_hrr_density_mean, fire_hrr_density_ubound, fire_hrr_density_lbound, n_simulations)
+        fire_hrr_density_samples = generate_samples(
+            "norm",
+            fire_hrr_density_std,
+            fire_hrr_density_mean,
+            fire_hrr_density_ubound,
+            fire_hrr_density_lbound,
+            n_simulations,
+        )
 
         # Opening fraction factor (glazing fall-out fraction)
         # --------------------------------------------------------------------------------------------------------------
         opening_fraction_mean_conv, opening_fraction_std_conv = lognorm_parameters_true_to_inv(
-            room_opening_fraction_mean,
-            room_opening_fraction_std
+            room_opening_fraction_mean, room_opening_fraction_std
         )
         opening_sigma = opening_fraction_std_conv
         opening_loc = 0
         openg_scale = np.exp(opening_fraction_mean_conv)
-        window_open_fraction_samples = 1 - lognorm_trunc_ppf(room_opening_fraction_lbound, room_opening_fraction_ubound, n_simulations, opening_sigma, opening_loc, openg_scale)
-        window_open_fraction_samples[window_open_fraction_samples == np.inf] = room_opening_fraction_ubound
-        window_open_fraction_samples[window_open_fraction_samples == -np.inf] = room_opening_fraction_lbound
-        window_open_fraction_samples = window_open_fraction_samples * (1 - room_opening_permanent_fraction) + room_opening_permanent_fraction
+        window_open_fraction_samples = 1 - lognorm_trunc_ppf(
+            room_opening_fraction_lbound,
+            room_opening_fraction_ubound,
+            n_simulations,
+            opening_sigma,
+            opening_loc,
+            openg_scale,
+        )
+        window_open_fraction_samples[
+            window_open_fraction_samples == np.inf
+        ] = room_opening_fraction_ubound
+        window_open_fraction_samples[
+            window_open_fraction_samples == -np.inf
+        ] = room_opening_fraction_lbound
+        window_open_fraction_samples = (
+            window_open_fraction_samples * (1 - room_opening_permanent_fraction)
+            + room_opening_permanent_fraction
+        )
         np.random.shuffle(window_open_fraction_samples)
 
         # Beam location
         # --------------------------------------------------------------------------------------------------------------
-        beam_position_samples = np.linspace(beam_loc_ratio_lbound, beam_loc_ratio_ubound, n_simulations) * room_depth
+        beam_position_samples = (
+            np.linspace(beam_loc_ratio_lbound, beam_loc_ratio_ubound, n_simulations)
+            * room_depth
+        )
         np.random.shuffle(beam_position_samples)
 
         # Fire spread speed (travelling fire)
         # --------------------------------------------------------------------------------------------------------------
-        fire_spread_speed_samples = np.linspace(fire_spread_lbound, fire_spread_ubound, n_simulations)
+        fire_spread_speed_samples = np.linspace(
+            fire_spread_lbound, fire_spread_ubound, n_simulations
+        )
         np.random.shuffle(fire_spread_speed_samples)
 
         # Near field temperature (travelling fire)
         # --------------------------------------------------------------------------------------------------------------
         # todo: check lower and upper limit values
         fire_nft_std = (1.939 - (np.log(fire_nft_mean) * 0.266)) * fire_nft_mean
-        fire_nft_ubound_samples = generate_samples('norm', fire_nft_std, fire_nft_mean, 500, 1500, n_simulations)
+        fire_nft_ubound_samples = generate_samples(
+            "norm", fire_nft_std, fire_nft_mean, 500, 1500, n_simulations
+        )
 
         # Summary
         # --------------------------------------------------------------------------------------------------------------
@@ -379,7 +431,7 @@ def mc_inputs_generator(
                 fire_combustion_effeciency=fire_combustion_efficiency,
                 beam_position=beam_position_samples,
                 window_open_fraction=window_open_fraction_samples,
-                index=np.arange(0, n_simulations, 1)
+                index=np.arange(0, n_simulations, 1),
             )
         )
         df_input_samples.set_index("index", inplace=True)
@@ -387,7 +439,7 @@ def mc_inputs_generator(
     return df_input_samples
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     pass

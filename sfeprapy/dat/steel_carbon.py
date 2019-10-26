@@ -1835,7 +1835,7 @@ class Thermal(object):
             "c": c_1_T_steelc_ec,  # BS EN 1993-1-2:2005, 3.4.1.2
             "kE": kE_1_T_steelc_ec,  # BS EN 1993-1-2:2005, Table 3.1, (reduction factor, linear elastic)
             "kp": kp_1_T_steelc_ec,  # BS EN 1993-1-2:2005, Table 3.1, (reduction factor, proportional limit)
-            "ky": ky_1_T_steelc_ec  # BS EN 1993-1-2:2005, Table 3.1, (reduction factor, eff. yield str.)
+            "ky": ky_1_T_steelc_ec,  # BS EN 1993-1-2:2005, Table 3.1, (reduction factor, eff. yield str.)
         }
 
         dict_file = dict_files[property_name]
@@ -1845,29 +1845,41 @@ class Thermal(object):
         c1, c2 = data_raw.values[:, 0], data_raw.values[:, 1]
         return interp1d(c1, c2)
 
-    def rho(self): return self.__make_property("rho")
+    def rho(self):
+        return self.__make_property("rho")
 
-    def k(self): return self.__make_property("k")
+    def k(self):
+        return self.__make_property("k")
 
-    def c(self): return self.__make_property("c")
+    def c(self):
+        return self.__make_property("c")
 
-    def kE(self): return self.__make_property("kE")
+    def kE(self):
+        return self.__make_property("kE")
 
-    def kp(self): return self.__make_property("kp")
+    def kp(self):
+        return self.__make_property("kp")
 
-    def ky(self): return self.__make_property("ky")
+    def ky(self):
+        return self.__make_property("ky")
 
-    def property_density(self): return self.rho()
+    def property_density(self):
+        return self.rho()
 
-    def property_thermal_conductivity(self): return self.k()
+    def property_thermal_conductivity(self):
+        return self.k()
 
-    def property_thermal_specific_heat(self): return self.c()
+    def property_thermal_specific_heat(self):
+        return self.c()
 
-    def property_reduction_factor_kE(self): return self.kE()
+    def property_reduction_factor_kE(self):
+        return self.kE()
 
-    def property_reduction_factor_kp(self): return self.kp()
+    def property_reduction_factor_kp(self):
+        return self.kp()
 
-    def property_reduction_factor_ky(self): return self.ky()
+    def property_reduction_factor_ky(self):
+        return self.ky()
 
 
 def steel_specific_heat_carbon_steel(temperature):
@@ -1877,7 +1889,12 @@ def steel_specific_heat_carbon_steel(temperature):
     """
     temperature -= 273.15
     if 20 <= temperature < 600:
-        return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
+        return (
+            425
+            + 0.773 * temperature
+            - 1.69e-3 * np.power(temperature, 2)
+            + 2.22e-6 * np.power(temperature, 3)
+        )
     elif 600 <= temperature < 735:
         return 666 + 13002 / (738 - temperature)
     elif 735 <= temperature < 900:

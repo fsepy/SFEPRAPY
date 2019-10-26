@@ -6,16 +6,16 @@ import copy
 
 
 def heat_transfer_general_1d_finite_difference(
-        dt: float,
-        k: np.ndarray,
-        rho: np.ndarray,
-        c: np.ndarray,
-        T: np.ndarray,
-        dx: np.ndarray,
-        h0: float,
-        T0: float,
-        h1: float,
-        T1: float
+    dt: float,
+    k: np.ndarray,
+    rho: np.ndarray,
+    c: np.ndarray,
+    T: np.ndarray,
+    dx: np.ndarray,
+    h0: float,
+    T0: float,
+    h1: float,
+    T1: float,
 ):
     """
     Calculates the current temperature for layers based on given thermal properties (i.e. k, rho, c, T and dx).
@@ -57,10 +57,10 @@ def heat_transfer_general_1d_finite_difference(
 
     j = 0
     left = h0 / rho[j] / c[j] / dx[j] * (T0 - T[j])
-    right = k_[j] / rho_[j] / c_[j] / x_[j] * (T[j] - T[j+1])
+    right = k_[j] / rho_[j] / c_[j] / x_[j] * (T[j] - T[j + 1])
     dT[j] = (left - right) * dt
     j = -1
-    left = k_[j] / rho_[j] / c_[j] / x_[j] * (T[j] - T[j+1])
+    left = k_[j] / rho_[j] / c_[j] / x_[j] * (T[j] - T[j + 1])
     right = h1 / rho[j] / c[j] / dx[j] * (T[j] - T1)
     dT[j] = (left - right) * dt
 
@@ -85,10 +85,15 @@ def c_steel_T(temperature):
     temperature -= 273.15
 
     if temperature < 20:
-        warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is below 20 °C".format(temperature))
         return 425 + 0.773 * 20 - 1.69e-3 * np.power(20, 2) + 2.22e-6 * np.power(20, 3)
     if 20 <= temperature < 600:
-        return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
+        return (
+            425
+            + 0.773 * temperature
+            - 1.69e-3 * np.power(temperature, 2)
+            + 2.22e-6 * np.power(temperature, 3)
+        )
     elif 600 <= temperature < 735:
         return 666 + 13002 / (738 - temperature)
     elif 735 <= temperature < 900:
@@ -96,11 +101,14 @@ def c_steel_T(temperature):
     elif 900 <= temperature <= 1200:
         return 650
     elif temperature > 1200:
-        warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+        warnings.warn(
+            "Temperature ({:.1f} °C) is greater than 1200 °C".format(temperature)
+        )
         return 650
     else:
-        warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is outside bound.".format(temperature))
         return 0
+
 
 from typing import Union
 
@@ -110,7 +118,11 @@ def steel_c_T_vectorised(T: np.ndarray):
     T = T - 273.15  # unit conversion: K -> deg.C
 
     c = np.where(T < 20, 425, 0)
-    c = np.where((20 <= T) & (T <= 600), 425 + 0.773 * T - 1.69e-3 * np.power(T, 2) + 2.22e-6 * np.power(T, 3), c)
+    c = np.where(
+        (20 <= T) & (T <= 600),
+        425 + 0.773 * T - 1.69e-3 * np.power(T, 2) + 2.22e-6 * np.power(T, 3),
+        c,
+    )
     c = np.where((600 < T) & (T <= 735), 666 + 13002 / (738 - T), c)
     c = np.where((735 < T) & (T <= 900), 545 + 17820 / (T - 731), c)
     c = np.where((900 < T) & (T <= 1200), 650, c)
@@ -122,17 +134,19 @@ def steel_c_T_vectorised(T: np.ndarray):
 def k_steel_T(temperature):
     temperature -= 273.15
     if temperature < 20:
-        warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is below 20 °C".format(temperature))
         return 54 - 3.33e-2 * 20
     if temperature < 800:
         return 54 - 3.33e-2 * temperature
     elif temperature <= 1200:
         return 27.3
     elif temperature > 1200:
-        warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+        warnings.warn(
+            "Temperature ({:.1f} °C) is greater than 1200 °C".format(temperature)
+        )
         return 27.3
     else:
-        warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is outside bound.".format(temperature))
         return 0
 
 
@@ -148,7 +162,7 @@ def steel_k_T_vectorised(T: np.ndarray):
     return k
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -171,13 +185,13 @@ if __name__ == '__main__':
     t1 = 600
 
     # construct vectors
-    thickness += (thickness / m * 2)
+    thickness += thickness / m * 2
 
     m += 2
 
-    x = np.linspace(0, thickness, 2*m+1)[1::2]  # location of nodes
+    x = np.linspace(0, thickness, 2 * m + 1)[1::2]  # location of nodes
 
-    dx = np.full((m,), thickness/m)  # thickness of nodes
+    dx = np.full((m,), thickness / m)  # thickness of nodes
     dx[[0, -1]] = 1  # gas nodes have unity thickness
 
     U = np.ones_like(dx) * (20 + 273.15)  # temperature of nodes
@@ -205,7 +219,7 @@ if __name__ == '__main__':
         print(int(t))
 
         if int(t) == 300:
-            print('d')
+            print("d")
 
         c = steel_c_T_vectorised(U)
         # k = np.fromiter(map(k_steel_T, U), dtype=float) / dx
@@ -222,8 +236,8 @@ if __name__ == '__main__':
         # =================================================================================
         u0 = U[0] - U[1]
         u1 = U[1] - U[2]
-        u0_4 = U[0]**4 - U[1]**4
-        u1_4 = U[1]**4 - U[2]**4
+        u0_4 = U[0] ** 4 - U[1] ** 4
+        u1_4 = U[1] ** 4 - U[2] ** 4
         e0 = u0 * h[0] - u1 * h[1]  # convection
         e1 = u0 * k[0] - u1 * k[1]  # conduction
         e2 = u0_4 * e[0] - u1_4 * e[1]  # radiation
@@ -234,9 +248,9 @@ if __name__ == '__main__':
         # Temperatures at intermediate nodes
         # ==================================
 
-        for m in range(2, len(dx)-2, 1):
-            du0 = U[m-1] - U[m]
-            du1 = U[m] - U[m+1]
+        for m in range(2, len(dx) - 2, 1):
+            du0 = U[m - 1] - U[m]
+            du1 = U[m] - U[m + 1]
             e1 = du0 * k[m] - du1 * k[m]
             en = rho[m] * c[m] * dx[m]
             du_dt = e1 / en
@@ -255,8 +269,8 @@ if __name__ == '__main__':
 
         u0 = U[-3] - U[-2]
         u1 = U[-2] - U[-1]
-        u0_4 = U[-3]**4 - U[-2]**4
-        u1_4 = U[-2]**4 - U[-1]**4
+        u0_4 = U[-3] ** 4 - U[-2] ** 4
+        u1_4 = U[-2] ** 4 - U[-1] ** 4
         e0 = u0 * h[-2] - u1 * h[-1]  # convection
         e1 = u0 * k[-2] - u1 * k[-1]  # conduction
         e2 = u0_4 * e[-2] - u1_4 * e[-1]  # radiation
@@ -276,9 +290,9 @@ if __name__ == '__main__':
     # dU_dt_ = np.stack(dU_dt_, axis=0)
     # U_stacked = np.stack(U_, axis=0)
     # sns.heatmap(U_stacked[0::100, 1:-1], ax=ax1, xticklabels=np.round(x[1:-1], 2), yticklabels=[])
-    for u in U_[::int(len(U_)/10)]:
-        sns.lineplot(x[1:-1], u[1:-1]-273.15, ax=ax1)
-    sns.lineplot(x[1:-1], U[1:-1]-273.15, ax=ax1, label=int(t))
+    for u in U_[:: int(len(U_) / 10)]:
+        sns.lineplot(x[1:-1], u[1:-1] - 273.15, ax=ax1)
+    sns.lineplot(x[1:-1], U[1:-1] - 273.15, ax=ax1, label=int(t))
 
     plt.tight_layout()
     plt.show()

@@ -29,14 +29,30 @@ def ky2T(T):
 def ky2T_vectorised(T: np.ndarray):
 
     ky = np.where(T <= 673.15, 1, 0)
-    ky = np.where((673.15 < T) & (T <= 773.15), 1.00 + (0.78 - 1.00) / 100 * (T - 673.15), ky)
-    ky = np.where((773.15 < T) & (T <= 873.15), 0.78 + (0.47 - 0.78) / 100 * (T - 773.15), ky)
-    ky = np.where((873.15 < T) & (T <= 973.15), 0.47 + (0.23 - 0.47) / 100 * (T - 873.15), ky)
-    ky = np.where((973.15 < T) & (T <= 1073.15), 0.23 + (0.11 - 0.23) / 100 * (T - 973.15), ky)
-    ky = np.where((1073.15 < T) & (T <= 1173.15), 0.11 + (0.06 - 0.11) / 100 * (T - 1073.15), ky)
-    ky = np.where((1173.15 < T) & (T <= 1273.15), 0.06 + (0.04 - 0.06) / 100 * (T - 1173.15), ky)
-    ky = np.where((1273.15 < T) & (T <= 1373.15), 0.04 + (0.02 - 0.04) / 100 * (T - 1273.15), ky)
-    ky = np.where((1373.15 < T) & (T <= 1473.15), 0.02 + (0.00 - 0.02) / 100 * (T - 1373.15), ky)
+    ky = np.where(
+        (673.15 < T) & (T <= 773.15), 1.00 + (0.78 - 1.00) / 100 * (T - 673.15), ky
+    )
+    ky = np.where(
+        (773.15 < T) & (T <= 873.15), 0.78 + (0.47 - 0.78) / 100 * (T - 773.15), ky
+    )
+    ky = np.where(
+        (873.15 < T) & (T <= 973.15), 0.47 + (0.23 - 0.47) / 100 * (T - 873.15), ky
+    )
+    ky = np.where(
+        (973.15 < T) & (T <= 1073.15), 0.23 + (0.11 - 0.23) / 100 * (T - 973.15), ky
+    )
+    ky = np.where(
+        (1073.15 < T) & (T <= 1173.15), 0.11 + (0.06 - 0.11) / 100 * (T - 1073.15), ky
+    )
+    ky = np.where(
+        (1173.15 < T) & (T <= 1273.15), 0.06 + (0.04 - 0.06) / 100 * (T - 1173.15), ky
+    )
+    ky = np.where(
+        (1273.15 < T) & (T <= 1373.15), 0.04 + (0.02 - 0.04) / 100 * (T - 1273.15), ky
+    )
+    ky = np.where(
+        (1373.15 < T) & (T <= 1473.15), 0.02 + (0.00 - 0.02) / 100 * (T - 1373.15), ky
+    )
     ky = np.where(1473.15 < T, 0, ky)
 
     return ky
@@ -57,8 +73,8 @@ def ky2T_probabilistic_vectorised(T: np.ndarray, epsilon_q: np.ndarray):
 
     b1 = np.log(k_y_2_T_star / (1 - k_y_2_T_star))
     b2 = 0.412
-    b3 = - 0.81e-3 * T
-    b4 = 0.58e-6 * (T**1.9)
+    b3 = -0.81e-3 * T
+    b4 = 0.58e-6 * (T ** 1.9)
     b5 = 0.43 * epsilon
     b6 = np.exp(b1 + b2 + b3 + b4 + b5)
 
@@ -96,7 +112,7 @@ def func_prob_vector_test():
     return T, ky
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from timeit import default_timer as timer
     import matplotlib.pyplot as plt
 
@@ -107,18 +123,23 @@ if __name__ == '__main__':
     t3 = timer()
     x3, y3 = func_prob_vector_test()
 
-    print(t2-t1)
-    print(t3-t2)
+    print(t2 - t1)
+    print(t3 - t2)
 
-    fig, ax3 = plt.subplots(figsize=(3.94*1.2, 2.76*1.2))
+    fig, ax3 = plt.subplots(figsize=(3.94 * 1.2, 2.76 * 1.2))
 
-    ax3.scatter(x3 - 273.15, y3, c='grey', s=1, label='Random Sampled Points')
-    ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.5), '--k', label='$\epsilon$ Percentile 0.05, 0.5, 0.95')
-    ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.05), '--k')
-    ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.95), '--k')
-    ax3.plot(x3 - 273.15, ky2T_vectorised(x3), 'k', label='Eurocode $k_{y,\Theta}$')
-    ax3.set_xlabel('Temperature [$^\circ C$]')
-    ax3.set_ylabel('$k_{y,ach}$')
+    ax3.scatter(x3 - 273.15, y3, c="grey", s=1, label="Random Sampled Points")
+    ax3.plot(
+        x3 - 273.15,
+        ky2T_probabilistic_vectorised(x3, 0.5),
+        "--k",
+        label="$\epsilon$ Percentile 0.05, 0.5, 0.95",
+    )
+    ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.05), "--k")
+    ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.95), "--k")
+    ax3.plot(x3 - 273.15, ky2T_vectorised(x3), "k", label="Eurocode $k_{y,\Theta}$")
+    ax3.set_xlabel("Temperature [$^\circ C$]")
+    ax3.set_ylabel("$k_{y,ach}$")
 
     plt.legend(loc=0, fontsize=9)
     plt.tight_layout()

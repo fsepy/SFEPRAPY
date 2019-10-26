@@ -12,12 +12,12 @@ def door_escape_capacity_bb100(width_mm):
     elif width_mm == 1050:
         exit_capacity = 220
     else:
-        exit_capacity = int((width_mm - 1050)/50) * 10 + 220
+        exit_capacity = int((width_mm - 1050) / 50) * 10 + 220
 
     return exit_capacity
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     w = 1730
 

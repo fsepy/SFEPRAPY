@@ -9,12 +9,13 @@ def thermal(property_name):
     dir_package = os.path.dirname(os.path.abspath(__file__))
 
     dir_files = {
-        "thermal conductivity (thomas2002)":
-            "k_1_T_intumescent_thomas2002.csv"
+        "thermal conductivity (thomas2002)": "k_1_T_intumescent_thomas2002.csv"
     }
 
     # read file
-    data = pd.read_csv("/".join([dir_package, dir_files[property_name]]), delimiter=",", dtype=float)
+    data = pd.read_csv(
+        "/".join([dir_package, dir_files[property_name]]), delimiter=",", dtype=float
+    )
     x, y = data.values[:, 0], data.values[:, 1]
 
     return interp1d(x, y)

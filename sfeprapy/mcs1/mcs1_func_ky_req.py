@@ -10,6 +10,7 @@ from scipy.stats import norm
 
 ## inverse CDF function ##
 
+
 def Finv_Normal(r, m, s):
     return norm.ppf(r, m, s)
 
@@ -19,15 +20,18 @@ def Finv_Lognormal(r, m, s):
 
     return lognorm.ppf(r, sln, 0, np.exp(mln))
 
+
 ## parameter calculation ##
 
+
 def p_Lognormal(m, s):
-    cov = s / m;
+    cov = s / m
 
     sln = np.sqrt(np.log(1 + cov ** 2))
     mln = np.log(m) - 1 / 2 * sln ** 2
 
     return sln, mln
+
 
 def p_Gamma(m, s):
     # --------------------------------------------------------------------------------------------------------
@@ -88,7 +92,9 @@ def ky_req_calc(n_samples):
     Gp = norm.ppf(xG, Mper, Sper)  # Calculate permanent load dist
     Kp = Finv_Lognormal(xK, Mk, Sk)  # Calculate model uncertainty factor
     Tp = Kp * (Gp + Qp)  # Total load model
-    Tpscale = (u * Tp) / ((GammaG * NomP) + (GammaQ * NomQ))  # Normalisation relative to ambient ULS
+    Tpscale = (u * Tp) / (
+        (GammaG * NomP) + (GammaQ * NomQ)
+    )  # Normalisation relative to ambient ULS
     # Tpscale = np.sort(Tpscale)  # Sort for CDF
     # weights = np.ones_like(Tpscale) / float(len(Tpscale))  # Calculate weights for histogram
 
@@ -114,6 +120,6 @@ def ky_req_calc(n_samples):
     # np.savetxt('test.csv', mcs_out)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     res = ky_req_calc(5000)
-    np.savetxt('kyr.csv', res)
+    np.savetxt("kyr.csv", res)

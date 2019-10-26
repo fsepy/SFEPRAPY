@@ -17,12 +17,12 @@ from scipy import interpolate
 
 # Create models from data
 def fit(
-        data,
-        bins:int=200,
-        ax=None,
-        distribution_list:Union[list, int]=None,
-        suppress_print:bool=False,
-        fmt_str: str = '{:20.20}{:60.60}'
+    data,
+    bins: int = 200,
+    ax=None,
+    distribution_list: Union[list, int] = None,
+    suppress_print: bool = False,
+    fmt_str: str = "{:20.20}{:60.60}",
 ):
     """
     Model data by finding best fit distribution to data
@@ -50,9 +50,17 @@ def fit(
             print(*args)
 
     if ax:
-        ax.hist(data, bins='auto', density=True, color='black')
-        ax.set_xlim(min(*x) - (max(*x) - min(*x)) * 0.01, max(*x) + (max(*x) - min(*x)) * 0.01, auto=False)
-        ax.set_ylim(min(*y) - (max(*y) - min(*y)) * 0.01, max(*y) + (max(*y) - min(*y)) * 0.01, auto=False)
+        ax.hist(data, bins="auto", density=True, color="black")
+        ax.set_xlim(
+            min(*x) - (max(*x) - min(*x)) * 0.01,
+            max(*x) + (max(*x) - min(*x)) * 0.01,
+            auto=False,
+        )
+        ax.set_ylim(
+            min(*y) - (max(*y) - min(*y)) * 0.01,
+            max(*y) + (max(*y) - min(*y)) * 0.01,
+            auto=False,
+        )
 
     if distribution_list == 0 or distribution_list == None:
         # full list of available distribution functions
@@ -145,7 +153,7 @@ def fit(
             st.wald,
             st.weibull_min,
             st.weibull_max,
-            st.wrapcauchy
+            st.wrapcauchy,
         ]
     elif distribution_list == 1:
         # https://blog.cloudera.com/blog/2015/12/common-probability-distributions-the-data-scientists-crib-sheet/
@@ -177,7 +185,11 @@ def fit(
 
     # Estimate distribution parameters from data
 
-    cprint(fmt_str.format('Distribution', 'Loss (Residual sum of squares) and distribution parameters'))
+    cprint(
+        fmt_str.format(
+            "Distribution", "Loss (Residual sum of squares) and distribution parameters"
+        )
+    )
     list_fitted_distribution = []
     list_fitted_distribution_sse = []
     list_fitted_distribution_params = []
@@ -188,7 +200,7 @@ def fit(
         try:
             # Ignore warnings from data that can't be fit
             with warnings.catch_warnings():
-                warnings.filterwarnings('ignore')
+                warnings.filterwarnings("ignore")
 
                 # fit dist to data
                 params = distribution.fit(data)
@@ -217,7 +229,12 @@ def fit(
 
                 params_ = ["{:10.2f}".format(i) for i in params]
 
-                cprint(fmt_str.format(distribution.name, '{:10.5E} - [{}]'.format(sse, ','.join(params_))))
+                cprint(
+                    fmt_str.format(
+                        distribution.name,
+                        "{:10.5E} - [{}]".format(sse, ",".join(params_)),
+                    )
+                )
 
                 list_fitted_distribution.append(distribution)
                 list_fitted_distribution_sse.append(sse)
@@ -226,13 +243,17 @@ def fit(
         except Exception:
             pass
 
-    return list_fitted_distribution, list_fitted_distribution_params, list_fitted_distribution_sse
+    return (
+        list_fitted_distribution,
+        list_fitted_distribution_params,
+        list_fitted_distribution_sse,
+    )
 
 
 def cdf_to_samples(
-        cdf_x: Union[list, np.ndarray],
-        cdf_y: Union[list, np.ndarray],
-        n_samples: int = 10000
+    cdf_x: Union[list, np.ndarray],
+    cdf_y: Union[list, np.ndarray],
+    n_samples: int = 10000,
 ):
     """Produce a number of samples for a given cumulative density function (CDF) in x and y. The samples will be
     randomly selected.
@@ -243,7 +264,7 @@ def cdf_to_samples(
     :return samples: produced samples
     """
 
-    cdf_func = interpolate.interp1d(cdf_y, cdf_x, kind='linear')
+    cdf_func = interpolate.interp1d(cdf_y, cdf_x, kind="linear")
     cdf_pts = np.random.uniform(high=np.max(cdf_y), low=np.min(cdf_y), size=n_samples)
 
     samples = cdf_func(cdf_pts).flatten()
@@ -252,9 +273,9 @@ def cdf_to_samples(
 
 
 def pdf_to_samples(
-        pdf_x: Union[list, np.ndarray],
-        pdf_y: Union[list, np.ndarray],
-        n_samples: int = 10000
+    pdf_x: Union[list, np.ndarray],
+    pdf_y: Union[list, np.ndarray],
+    n_samples: int = 10000,
 ):
     """Produce a number of samples for a given probability density function (PDF) in x and y. The samples will be
     randomly selected.
@@ -286,7 +307,8 @@ def auto_fit():
     print("This function will be depreciated, use `sfeprapy distfit`.")
 
     data_type = input(
-        "Define Data Type\n0 - single column containing sampled values\n1 - two columns with 1st column containing values and second column probability\n2 - two columns with 1st column containing values and second column cumulative probability\nEnter your value and press Enter: ")
+        "Define Data Type\n0 - single column containing sampled values\n1 - two columns with 1st column containing values and second column probability\n2 - two columns with 1st column containing values and second column cumulative probability\nEnter your value and press Enter: "
+    )
     data_type = int(data_type)
 
     # Distribution type or list
@@ -294,14 +316,17 @@ def auto_fit():
     # 0 - fit to all available distributions
     # 1 - fit to common distribution types
     distribution_list = input(
-        "Distribution Type\n0 - fit to all available distributions\n1 - fit to common distribution types\nEnter your value and press Enter: ")
+        "Distribution Type\n0 - fit to all available distributions\n1 - fit to common distribution types\nEnter your value and press Enter: "
+    )
     distribution_list = int(distribution_list)
 
     # Select data csv file
     root = Tk()
     root.withdraw()
     folder_path = StringVar()
-    path_input_file_csv = filedialog.askopenfile(title='Select data csv file', filetypes=[('csv', ['.csv'])])
+    path_input_file_csv = filedialog.askopenfile(
+        title="Select data csv file", filetypes=[("csv", [".csv"])]
+    )
     folder_path.set(path_input_file_csv)
     root.update()
 
@@ -314,31 +339,48 @@ def auto_fit():
         samples = data_csv.values.flatten()
     elif data_type == 1:
         data_csv = pd.read_csv(path_input_file_csv, header=None, dtype=float)
-        samples = pdf_to_samples(pdf_x=data_csv[0].values.flatten(), pdf_y=data_csv[1].values.flatten(),
-                                 n_samples=10000)
+        samples = pdf_to_samples(
+            pdf_x=data_csv[0].values.flatten(),
+            pdf_y=data_csv[1].values.flatten(),
+            n_samples=10000,
+        )
     elif data_type == 2:
         data_csv = pd.read_csv(path_input_file_csv, header=None, dtype=float)
         #     print(data_csv[1])
-        samples = cdf_to_samples(cdf_x=data_csv[0].values.flatten(), cdf_y=data_csv[1].values.flatten(),
-                                 n_samples=10000)
+        samples = cdf_to_samples(
+            cdf_x=data_csv[0].values.flatten(),
+            cdf_y=data_csv[1].values.flatten(),
+            n_samples=10000,
+        )
     else:
         samples = np.nan
 
     # FITTING DISTRIBUTIONS TO DATA
 
     fig_fitting, ax_fitting = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
-    list_dist, list_params, list_sse = fit(samples, ax=ax_fitting, distribution_list=distribution_list)
+    list_dist, list_params, list_sse = fit(
+        samples, ax=ax_fitting, distribution_list=distribution_list
+    )
 
     # FINDING THE BEST FIT
 
     list_dist = np.asarray(list_dist)[np.argsort(list_sse)]
     list_params = np.asarray(list_params)[np.argsort(list_sse)]
     list_sse = np.asarray(list_sse)[np.argsort(list_sse)]
-    print('{:30.30}{:60.60}'.format('Distribution (sorted)',
-                                    'Loss (Residual sum of squares) and distribution parameters'))
+    print(
+        "{:30.30}{:60.60}".format(
+            "Distribution (sorted)",
+            "Loss (Residual sum of squares) and distribution parameters",
+        )
+    )
     for i, v in enumerate(list_dist):
-        print('{:30.30}{:10.5E} - [{}]'.format(v.name, list_sse[i],
-                                               ", ".join(["{:10.2f}".format(i) for j in list_params[i]])))
+        print(
+            "{:30.30}{:10.5E} - [{}]".format(
+                v.name,
+                list_sse[i],
+                ", ".join(["{:10.2f}".format(i) for j in list_params[i]]),
+            )
+        )
 
     dist_best = list_dist[0]
     params_best = list_params[0]
@@ -358,11 +400,11 @@ def auto_fit():
     cdf_x_fitted = dist_best.ppf(cdf_y_fitted, *params_best)
 
     fig_results, ax_results = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
-    ax_results.hist(samples, bins='auto', density=True, color='black')
-    ax_results.plot(cdf_x_sampled, cdf_y_sampled, label='Sampled', color='black')
-    ax_results.plot(cdf_x_fitted, cdf_y_fitted, label='Fitted', color='red')
-    ax_results.set_xlabel('Sample values')
-    ax_results.set_ylabel('CDF')
+    ax_results.hist(samples, bins="auto", density=True, color="black")
+    ax_results.plot(cdf_x_sampled, cdf_y_sampled, label="Sampled", color="black")
+    ax_results.plot(cdf_x_fitted, cdf_y_fitted, label="Fitted", color="red")
+    ax_results.set_xlabel("Sample values")
+    ax_results.set_ylabel("CDF")
     ax_results.legend().set_visible(True)
     fig_results.savefig(os.path.join(dir_work, "results.png"))
 
@@ -370,9 +412,7 @@ def auto_fit():
 
 
 def auto_fit_2(
-        data_type: int,
-        distribution_list: Union[int, list],
-        data: Union[str, pd.DataFrame]
+    data_type: int, distribution_list: Union[int, list], data: Union[str, pd.DataFrame]
 ):
     """
     :param data_type:
@@ -386,7 +426,6 @@ def auto_fit_2(
                     1   fit to common distribution types
     :return:
     """
-
 
     if isinstance(data, str):
         data = os.path.realpath(data)
@@ -403,13 +442,19 @@ def auto_fit_2(
         samples = data_csv.values.flatten()
     elif data_type == 1:
         data_csv = pd.read_csv(data, header=None, dtype=float)
-        samples = pdf_to_samples(pdf_x=data_csv[0].values.flatten(), pdf_y=data_csv[1].values.flatten(),
-                                 n_samples=10000)
+        samples = pdf_to_samples(
+            pdf_x=data_csv[0].values.flatten(),
+            pdf_y=data_csv[1].values.flatten(),
+            n_samples=10000,
+        )
     elif data_type == 2:
         data_csv = pd.read_csv(data, header=None, dtype=float)
         #     print(data_csv[1])
-        samples = cdf_to_samples(cdf_x=data_csv[0].values.flatten(), cdf_y=data_csv[1].values.flatten(),
-                                 n_samples=10000)
+        samples = cdf_to_samples(
+            cdf_x=data_csv[0].values.flatten(),
+            cdf_y=data_csv[1].values.flatten(),
+            n_samples=10000,
+        )
     else:
         samples = np.nan
 
@@ -417,7 +462,10 @@ def auto_fit_2(
 
     fig_fitting, ax_fitting = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
     list_dist, list_params, list_sse = fit(
-        samples, ax=ax_fitting, distribution_list=distribution_list, fmt_str='{:30.30}{}'
+        samples,
+        ax=ax_fitting,
+        distribution_list=distribution_list,
+        fmt_str="{:30.30}{}",
     )
 
     # FINDING THE BEST FIT
@@ -427,16 +475,16 @@ def auto_fit_2(
     list_sse = np.asarray(list_sse)[np.argsort(list_sse)]
 
     print(
-        '\n{:30.30}{}'.format(
-            'Distribution (sorted)',
-            'Loss (Residual sum of squares) and distribution parameters'
+        "\n{:30.30}{}".format(
+            "Distribution (sorted)",
+            "Loss (Residual sum of squares) and distribution parameters",
         )
     )
     for i, v in enumerate(list_dist):
         dist_name = v.name
         sse = list_sse[i]
         dist_params = ", ".join(["{:10.2f}".format(j) for j in list_params[i]])
-        print(f'{dist_name:30.30}{sse:10.5E} - [{dist_params}]')
+        print(f"{dist_name:30.30}{sse:10.5E} - [{dist_params}]")
 
     dist_best = list_dist[0]
     params_best = list_params[0]
@@ -455,10 +503,10 @@ def auto_fit_2(
 
     fig_results, ax_results = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
 
-    ax_results.hist(samples, bins='auto', density=True, color='black')
-    ax_results.plot(cdf_x_sampled, cdf_y_sampled, label='Sampled', color='black')
-    ax_results.plot(cdf_x_fitted, cdf_y_fitted, label='Fitted', color='red')
-    ax_results.set_xlabel('Sample values')
-    ax_results.set_ylabel('CDF')
+    ax_results.hist(samples, bins="auto", density=True, color="black")
+    ax_results.plot(cdf_x_sampled, cdf_y_sampled, label="Sampled", color="black")
+    ax_results.plot(cdf_x_fitted, cdf_y_fitted, label="Fitted", color="red")
+    ax_results.set_xlabel("Sample values")
+    ax_results.set_ylabel("CDF")
     ax_results.legend().set_visible(True)
     fig_results.savefig(os.path.join(dir_work, "distfit_results.png"))

@@ -1,14 +1,13 @@
 import numpy as np
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     L = 1  # length of the medium
     Nx = 10  # number of nodes (layers) in the medium
     T = 10  # upper time limit
     Nt = 100  # number of nodes in the time limit
     a = 500  # conductivity coefficient
-
 
     x = np.linspace(0, L, Nx + 1)  # mesh points in space
     dx = x[1] - x[0]
@@ -28,7 +27,7 @@ if __name__ == '__main__':
             u[i] = u_1[i] + F * (u_1[i - 1] - 2 * u_1[i] + u_1[i + 1])
 
         # Insert boundary conditions
-        u[0] = 0;
+        u[0] = 0
         u[Nx] = 0
 
         # Update u_1 before next step

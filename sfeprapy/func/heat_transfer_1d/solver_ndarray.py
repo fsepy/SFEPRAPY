@@ -2,14 +2,14 @@ import numpy as np
 
 
 def solver_exposed(
-        dx: np.float64,
-        U_solid: np.float64,
-        U_gas: np.float64,
-        rho: np.float64,
-        c: np.float64,
-        h: np.float64,
-        e: np.float64,
-        dt: np.float64
+    dx: np.float64,
+    U_solid: np.float64,
+    U_gas: np.float64,
+    rho: np.float64,
+    c: np.float64,
+    h: np.float64,
+    e: np.float64,
+    dt: np.float64,
 ):
     u0 = U_gas - U_solid
     u0_4 = U_gas ** 4 - U_solid ** 4
@@ -23,12 +23,12 @@ def solver_exposed(
 
 
 def solver_solid(
-        dx: np.ndarray,
-        U: np.ndarray,
-        k: np.ndarray,
-        rho: np.ndarray,
-        c: np.ndarray,
-        dt: float
+    dx: np.ndarray,
+    U: np.ndarray,
+    k: np.ndarray,
+    rho: np.ndarray,
+    c: np.ndarray,
+    dt: float,
 ):
     """
     Description
@@ -51,7 +51,7 @@ def solver_solid(
     U_new = np.zeros_like(U)
 
     du1 = U[0] - U[1]
-    e1 = - du1 * k[0]
+    e1 = -du1 * k[0]
     en = rho[0] * c[0] * dx[0]
     U_new[0] = U[0] + e1 / en * dt
 
@@ -63,7 +63,9 @@ def solver_solid(
     for m in range(1, len(dx) - 1):
         du0 = U[m - 1] - U[m]
         du1 = U[m] - U[m + 1]
-        e1 = du0 * k[m] - du1 * k[m]  # todo: thermal properties can be averaged between adjacent nodes, not on current
+        e1 = (
+            du0 * k[m] - du1 * k[m]
+        )  # todo: thermal properties can be averaged between adjacent nodes, not on current
         en = rho[m] * c[m] * dx[m]
         du_dt = e1 / en
         U_new[m] = U[m] + du_dt * dt

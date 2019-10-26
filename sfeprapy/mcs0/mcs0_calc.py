@@ -10,16 +10,21 @@ from scipy.interpolate import interp1d
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
 from sfeprapy.func.fire_travelling import fire as fire_travelling
-from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as _steel_temperature
-from sfeprapy.func.heat_transfer_protected_steel_ec import \
-    protected_steel_eurocode_max_temperature as _steel_temperature_max
+from sfeprapy.func.heat_transfer_protected_steel_ec import (
+    protected_steel_eurocode as _steel_temperature,
+)
+from sfeprapy.func.heat_transfer_protected_steel_ec import (
+    protected_steel_eurocode_max_temperature as _steel_temperature_max,
+)
 
 
 def _fire_travelling(**kwargs):
-    if isinstance(kwargs['beam_location_length_m'], list) or isinstance(kwargs['beam_location_length_m'], np.ndarray):
+    if isinstance(kwargs["beam_location_length_m"], list) or isinstance(
+        kwargs["beam_location_length_m"], np.ndarray
+    ):
 
         kwarg_ht_ec = dict(
-            time=kwargs['t'],
+            time=kwargs["t"],
             rho_steel=7850,
             area_steel_section=0.017,
             k_protection=0.2,
@@ -33,30 +38,34 @@ def _fire_travelling(**kwargs):
         temperature_gas_list = fire_travelling(**kwargs)
 
         for temperature in temperature_gas_list:
-            kwarg_ht_ec['temperature_ambient'] = temperature + 273.15
+            kwarg_ht_ec["temperature_ambient"] = temperature + 273.15
             temperature_steel_list.append(_steel_temperature_max(**kwarg_ht_ec))
 
-        return temperature_gas_list[np.argmax(temperature_steel_list)] + 273.15, \
-               kwargs['beam_location_length_m'][[np.argmax(temperature_steel_list)]][0]
+        return (
+            temperature_gas_list[np.argmax(temperature_steel_list)] + 273.15,
+            kwargs["beam_location_length_m"][[np.argmax(temperature_steel_list)]][0],
+        )
 
-    elif isinstance(kwargs['beam_location_length_m'], float) or isinstance(kwargs['beam_location_length_m'], int):
+    elif isinstance(kwargs["beam_location_length_m"], float) or isinstance(
+        kwargs["beam_location_length_m"], int
+    ):
 
-        return fire_travelling(**kwargs) + 273.15, kwargs['beam_location_length_m']
+        return fire_travelling(**kwargs) + 273.15, kwargs["beam_location_length_m"]
 
 
 def decide_fire(
-        window_height: float,
-        window_width: float,
-        window_open_fraction: float,
-        room_breadth: float,
-        room_depth: float,
-        room_height: float,
-        fire_mode: int,
-        fire_load_density: float,
-        fire_combustion_efficiency: float,
-        fire_hrr_density: float,
-        fire_spread_speed: float,
-        **_
+    window_height: float,
+    window_width: float,
+    window_open_fraction: float,
+    room_breadth: float,
+    room_depth: float,
+    room_height: float,
+    fire_mode: int,
+    fire_load_density: float,
+    fire_combustion_efficiency: float,
+    fire_hrr_density: float,
+    fire_spread_speed: float,
+    **_,
 ) -> dict:
     """Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
     opposing to the standard fire curve ISO 834.
@@ -88,63 +97,74 @@ def decide_fire(
     room_floor_area = room_breadth * room_depth
 
     # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
+    room_total_area = (2 * room_floor_area) + (
+        (room_breadth + room_depth) * 2 * room_height
+    )
 
     # Fire load density related to the total surface area A_t
-    fire_load_density_total = fire_load_density_deducted * room_floor_area / room_total_area
+    fire_load_density_total = (
+        fire_load_density_deducted * room_floor_area / room_total_area
+    )
 
     # Opening factor
     opening_factor = window_area * np.sqrt(window_height) / room_total_area
 
     # Spread speed - Does the fire spread to involve the full compartment?
     fire_spread_entire_room_time = room_depth / fire_spread_speed
-    burn_out_time = max([fire_load_density_deducted / fire_hrr_density, 900.])
+    burn_out_time = max([fire_load_density_deducted / fire_hrr_density, 900.0])
 
-    if fire_mode == 0 or fire_mode == 1 or fire_mode == 2:  # enforced to ec parametric fire
+    if (
+        fire_mode == 0 or fire_mode == 1 or fire_mode == 2
+    ):  # enforced to ec parametric fire
 
         fire_type = fire_mode
     elif fire_mode == 3:  # enforced to ec parametric + travelling
-        if fire_spread_entire_room_time < burn_out_time and 0.01 < opening_factor <= 0.2 and 50 <= fire_load_density_total <= 1000:
+        if (
+            fire_spread_entire_room_time < burn_out_time
+            and 0.01 < opening_factor <= 0.2
+            and 50 <= fire_load_density_total <= 1000
+        ):
             fire_type = 0  # parametric fire
         else:  # Otherwise, it is a travelling fire
             fire_type = 1  # travelling fire
     elif fire_mode == 4:  # enforced to german parametric + travelling
         # If fire spreads throughout compartment and ventilation is within EC limits = Parametric fire
-        if fire_spread_entire_room_time < burn_out_time and 0.125 <= (window_area / room_floor_area) <= 0.5:
+        if (
+            fire_spread_entire_room_time < burn_out_time
+            and 0.125 <= (window_area / room_floor_area) <= 0.5
+        ):
             fire_type = 2  # german parametric
         else:  # Otherwise, it is a travelling fire
             fire_type = 1  # travelling fire
     else:
-        raise ValueError('Unknown fire mode {fire_mode}.'.format(fire_mode=fire_mode))
+        raise ValueError("Unknown fire mode {fire_mode}.".format(fire_mode=fire_mode))
 
-    results = dict(
-        fire_type=fire_type
-    )
+    results = dict(fire_type=fire_type)
 
     return results
 
 
 def evaluate_fire_temperature(
-        window_height: float,
-        window_width: float,
-        window_open_fraction: float,
-        room_breadth: float,
-        room_depth: float,
-        room_height: float,
-        room_wall_thermal_inertia: float,
-        fire_tlim: float,
-        fire_type: float,
-        fire_time: Union[list, np.ndarray],
-        fire_nft_limit: float,
-        fire_load_density: float,
-        fire_combustion_efficiency: float,
-        fire_hrr_density: float,
-        fire_spread_speed: float,
-        fire_t_alpha: float,
-        fire_gamma_fi_q: float,
-        beam_position_vertical: float,
-        beam_position_horizontal: Union[np.ndarray, list, float] = -1.,
-        **_
+    window_height: float,
+    window_width: float,
+    window_open_fraction: float,
+    room_breadth: float,
+    room_depth: float,
+    room_height: float,
+    room_wall_thermal_inertia: float,
+    fire_tlim: float,
+    fire_type: float,
+    fire_time: Union[list, np.ndarray],
+    fire_nft_limit: float,
+    fire_load_density: float,
+    fire_combustion_efficiency: float,
+    fire_hrr_density: float,
+    fire_spread_speed: float,
+    fire_t_alpha: float,
+    fire_gamma_fi_q: float,
+    beam_position_vertical: float,
+    beam_position_horizontal: Union[np.ndarray, list, float] = -1.0,
+    **_,
 ) -> dict:
     """Calculate temperature array of pre-defined fire type `fire_type`.
 
@@ -174,7 +194,6 @@ def evaluate_fire_temperature(
 
     fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
 
-
     # Total window opening area
     window_area = window_height * window_width * window_open_fraction
 
@@ -182,7 +201,9 @@ def evaluate_fire_temperature(
     room_floor_area = room_breadth * room_depth
 
     # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
+    room_total_area = (2 * room_floor_area) + (
+        (room_breadth + room_depth) * 2 * room_height
+    )
 
     if fire_type == 0:
         kwargs_fire_0_paramec = dict(
@@ -202,7 +223,9 @@ def evaluate_fire_temperature(
 
     elif fire_type == 1:
         if beam_position_horizontal < 0:
-            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
+            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[
+                1:-1
+            ]
 
         kwargs_fire_1_travel = dict(
             t=fire_time,
@@ -218,7 +241,9 @@ def evaluate_fire_temperature(
             opening_height_m=window_height,
             opening_fraction=window_open_fraction,
         )
-        fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
+        fire_temperature, beam_position_horizontal = _fire_travelling(
+            **kwargs_fire_1_travel
+        )
 
         if beam_position_horizontal <= 0:
             raise ValueError("Beam position less or equal to 0.")
@@ -233,7 +258,7 @@ def evaluate_fire_temperature(
             t_alpha_s=fire_t_alpha,
             b_Jm2s05K=room_wall_thermal_inertia,
             q_x_d_MJm2=fire_load_density_deducted,
-            gamma_fi_Q=fire_gamma_fi_q
+            gamma_fi_Q=fire_gamma_fi_q,
         )
         fire_temperature = _fire_param_ger(**kwargs_fire_2_param_din)
 
@@ -242,30 +267,30 @@ def evaluate_fire_temperature(
 
     results = dict(
         fire_temperature=fire_temperature,
-        beam_position_horizontal=beam_position_horizontal
+        beam_position_horizontal=beam_position_horizontal,
     )
 
     return results
 
 
 def solve_time_equivalence(
-        fire_time: Union[list, np.ndarray],
-        fire_temperature: Union[list, np.ndarray],
-        beam_cross_section_area: float,
-        beam_rho: float,
-        protection_k: float,
-        protection_rho: float,
-        protection_c: float,
-        protection_protected_perimeter: float,
-        fire_time_iso834: Union[list, np.ndarray],
-        fire_temperature_iso834: Union[list, np.ndarray],
-        solver_temperature_goal: float,
-        solver_max_iter: int,
-        solver_thickness_ubound: float,
-        solver_thickness_lbound: float,
-        solver_tol: float,
-        phi_teq: float,
-        **_
+    fire_time: Union[list, np.ndarray],
+    fire_temperature: Union[list, np.ndarray],
+    beam_cross_section_area: float,
+    beam_rho: float,
+    protection_k: float,
+    protection_rho: float,
+    protection_c: float,
+    protection_protected_perimeter: float,
+    fire_time_iso834: Union[list, np.ndarray],
+    fire_temperature_iso834: Union[list, np.ndarray],
+    solver_temperature_goal: float,
+    solver_max_iter: int,
+    solver_thickness_ubound: float,
+    solver_thickness_lbound: float,
+    solver_tol: float,
+    phi_teq: float,
+    **_,
 ) -> dict:
     """Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
     opposing to the standard fire curve ISO 834.
@@ -298,7 +323,9 @@ def solve_time_equivalence(
     # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
 
     solver_iter_count = 0  # count how many iterations for  the seeking process
-    solver_convergence_status = False  # flag used to indicate when the seeking is successful
+    solver_convergence_status = (
+        False
+    )  # flag used to indicate when the seeking is successful
 
     # Default values
     solver_time_equivalence_solved = -1
@@ -334,13 +361,18 @@ def solve_time_equivalence(
 
         def f_(x, terminate_check_wait_time):
             kwarg_ht_ec["thickness_protection"] = x
-            T_ = _steel_temperature_max(**kwarg_ht_ec, terminate_check_wait_time=terminate_check_wait_time)
+            T_ = _steel_temperature_max(
+                **kwarg_ht_ec, terminate_check_wait_time=terminate_check_wait_time
+            )
             return T_
 
         # Check whether there is a solution within predefined protection thickness boundaries
         x1, x2 = solver_thickness_lbound, solver_thickness_ubound
         y1, y2 = f_(x1, time_at_max_temperature), f_(x2, time_at_max_temperature)
-        t1, t2 = solver_temperature_goal - solver_tol, solver_temperature_goal + solver_tol
+        t1, t2 = (
+            solver_temperature_goal - solver_tol,
+            solver_temperature_goal + solver_tol,
+        )
 
         if y2 <= solver_temperature_goal <= y1:
 
@@ -357,7 +389,7 @@ def solve_time_equivalence(
                 y3 = solver_steel_temperature_solved = f_(x3, time_at_max_temperature)
 
                 if x1 < 0 or x2 < 0 or x3 < 0:
-                    print('check')
+                    print("check")
 
                 if y3 < t1:  # steel temperature is too low, decrease thickness
                     x2 = x3
@@ -379,21 +411,39 @@ def solve_time_equivalence(
                     kwarg_ht_ec["thickness_protection"] = x3
                     steel_temperature = _steel_temperature(**kwarg_ht_ec)
 
-                    steel_time = np.concatenate((np.array([0]), fire_time_iso834, np.array([fire_time_iso834[-1]])))
-                    steel_temperature = np.concatenate((np.array([-1]), steel_temperature, np.array([1e12])))
-                    func_teq = interp1d(steel_temperature, steel_time, kind="linear", bounds_error=False, fill_value=-1)
+                    steel_time = np.concatenate(
+                        (
+                            np.array([0]),
+                            fire_time_iso834,
+                            np.array([fire_time_iso834[-1]]),
+                        )
+                    )
+                    steel_temperature = np.concatenate(
+                        (np.array([-1]), steel_temperature, np.array([1e12]))
+                    )
+                    func_teq = interp1d(
+                        steel_temperature,
+                        steel_time,
+                        kind="linear",
+                        bounds_error=False,
+                        fill_value=-1,
+                    )
                     solver_time_equivalence_solved = func_teq(solver_temperature_goal)
 
                     break
 
-                elif solver_iter_count >= solver_max_iter:  # Terminate if maximum solving iteration is reached
+                elif (
+                    solver_iter_count >= solver_max_iter
+                ):  # Terminate if maximum solving iteration is reached
 
                     if solver_temperature_goal > y3:
                         solver_time_equivalence_solved = -np.inf
                     elif solver_temperature_goal < y3:
                         solver_time_equivalence_solved = np.inf
                     else:
-                        solver_time_equivalence_solved = np.nan  # theoretically impossible, for syntax error only
+                        solver_time_equivalence_solved = (
+                            np.nan
+                        )  # theoretically impossible, for syntax error only
                     break
 
         elif solver_temperature_goal - 2 <= y1 <= solver_temperature_goal + 2:
@@ -410,9 +460,19 @@ def solve_time_equivalence(
             kwarg_ht_ec["thickness_protection"] = x1
             steel_temperature = _steel_temperature(**kwarg_ht_ec)
 
-            steel_time = np.concatenate((np.array([0]), fire_time_iso834, np.array([fire_time_iso834[-1]])))
-            steel_temperature = np.concatenate((np.array([-1]), steel_temperature, np.array([1e12])))
-            func_teq = interp1d(steel_temperature, steel_time, kind="linear", bounds_error=False, fill_value=-1)
+            steel_time = np.concatenate(
+                (np.array([0]), fire_time_iso834, np.array([fire_time_iso834[-1]]))
+            )
+            steel_temperature = np.concatenate(
+                (np.array([-1]), steel_temperature, np.array([1e12]))
+            )
+            func_teq = interp1d(
+                steel_temperature,
+                steel_time,
+                kind="linear",
+                bounds_error=False,
+                fill_value=-1,
+            )
             solver_time_equivalence_solved = func_teq(solver_temperature_goal)
 
         elif solver_temperature_goal - 2 <= y2 <= solver_temperature_goal + 2:
@@ -429,9 +489,19 @@ def solve_time_equivalence(
             kwarg_ht_ec["thickness_protection"] = x2
             steel_temperature = _steel_temperature(**kwarg_ht_ec)
 
-            steel_time = np.concatenate((np.array([0]), fire_time_iso834, np.array([fire_time_iso834[-1]])))
-            steel_temperature = np.concatenate((np.array([-1]), steel_temperature, np.array([1e12])))
-            func_teq = interp1d(steel_temperature, steel_time, kind="linear", bounds_error=False, fill_value=-1)
+            steel_time = np.concatenate(
+                (np.array([0]), fire_time_iso834, np.array([fire_time_iso834[-1]]))
+            )
+            steel_temperature = np.concatenate(
+                (np.array([-1]), steel_temperature, np.array([1e12]))
+            )
+            func_teq = interp1d(
+                steel_temperature,
+                steel_time,
+                kind="linear",
+                bounds_error=False,
+                fill_value=-1,
+            )
             solver_time_equivalence_solved = func_teq(solver_temperature_goal)
 
         # No solution, thickness upper bound is not thick enough
@@ -465,20 +535,34 @@ def mcs_out_post(df: pd.DataFrame) -> pd.DataFrame:
     df_res = df_res.dropna(axis=0, how="any")
 
     dict_ = dict()
-    dict_['fire_type'] = str({k: np.sum(df_res['fire_type'].values == k) for k in np.unique(df_res['fire_type'].values)})
+    dict_["fire_type"] = str(
+        {
+            k: np.sum(df_res["fire_type"].values == k)
+            for k in np.unique(df_res["fire_type"].values)
+        }
+    )
 
-    for k in ['beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_load_density',
-              'fire_nft_limit', 'fire_spread_speed', 'window_open_fraction', 'phi_teq', 'timber_fire_load']:
+    for k in [
+        "beam_position_horizontal",
+        "fire_combustion_efficiency",
+        "fire_hrr_density",
+        "fire_load_density",
+        "fire_nft_limit",
+        "fire_spread_speed",
+        "window_open_fraction",
+        "phi_teq",
+        "timber_fire_load",
+    ]:
         try:
             x = df_res[k].values
             x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
-            dict_[k] = f'{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}'
+            dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
         except KeyError:
             pass
 
-    list_ = [f'{k:<24.24}: {v}' for k, v in dict_.items()]
+    list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
 
-    print('\n'.join(list_), '\n')
+    print("\n".join(list_), "\n")
 
     return df
 
@@ -493,50 +577,50 @@ def teq_main_wrapper(args):
 
 
 def teq_main(
-        case_name: str,
-        n_simulations: int,
-        probability_weight: float,
-        index: int,
-        beam_cross_section_area: float,
-        beam_position_vertical: float,
-        beam_position_horizontal: float,
-        beam_rho: float,
-        fire_time_duration: float,
-        fire_time_step: float,
-        fire_combustion_efficiency: float,
-        fire_gamma_fi_q: float,
-        fire_hrr_density: float,
-        fire_load_density: float,
-        fire_mode: int,
-        fire_nft_limit: float,
-        fire_spread_speed: float,
-        fire_t_alpha: float,
-        fire_tlim: float,
-        protection_c: float,
-        protection_k: float,
-        protection_protected_perimeter: float,
-        protection_rho: float,
-        room_breadth: float,
-        room_depth: float,
-        room_height: float,
-        room_wall_thermal_inertia: float,
-        solver_temperature_goal: float,
-        solver_max_iter: int,
-        solver_thickness_lbound: float,
-        solver_thickness_ubound: float,
-        solver_tol: float,
-        window_height: float,
-        window_open_fraction: float,
-        window_width: float,
-        window_open_fraction_permanent: float,
-        phi_teq: float = 1.,
-        timber_charring_rate=None,
-        timber_hc: float = None,
-        timber_density: float = None,
-        timber_exposed_area: float = None,
-        timber_solver_tol: float = None,
-        timber_solver_ilim: float = None,
-        **_
+    case_name: str,
+    n_simulations: int,
+    probability_weight: float,
+    index: int,
+    beam_cross_section_area: float,
+    beam_position_vertical: float,
+    beam_position_horizontal: float,
+    beam_rho: float,
+    fire_time_duration: float,
+    fire_time_step: float,
+    fire_combustion_efficiency: float,
+    fire_gamma_fi_q: float,
+    fire_hrr_density: float,
+    fire_load_density: float,
+    fire_mode: int,
+    fire_nft_limit: float,
+    fire_spread_speed: float,
+    fire_t_alpha: float,
+    fire_tlim: float,
+    protection_c: float,
+    protection_k: float,
+    protection_protected_perimeter: float,
+    protection_rho: float,
+    room_breadth: float,
+    room_depth: float,
+    room_height: float,
+    room_wall_thermal_inertia: float,
+    solver_temperature_goal: float,
+    solver_max_iter: int,
+    solver_thickness_lbound: float,
+    solver_thickness_ubound: float,
+    solver_tol: float,
+    window_height: float,
+    window_open_fraction: float,
+    window_width: float,
+    window_open_fraction_permanent: float,
+    phi_teq: float = 1.0,
+    timber_charring_rate=None,
+    timber_hc: float = None,
+    timber_density: float = None,
+    timber_exposed_area: float = None,
+    timber_solver_tol: float = None,
+    timber_solver_ilim: float = None,
+    **_,
 ) -> dict:
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
     if room_depth < room_breadth:
@@ -544,7 +628,10 @@ def teq_main(
         room_breadth = room_depth - room_breadth
         room_depth -= room_breadth
 
-    window_open_fraction = window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent
+    window_open_fraction = (
+        window_open_fraction * (1 - window_open_fraction_permanent)
+        + window_open_fraction_permanent
+    )
 
     # Calculate fire time, this is used for all fire curves in the calculation
 
@@ -553,7 +640,9 @@ def teq_main(
     # Calculate ISO 834 fire temperature
 
     fire_time_iso834 = fire_time
-    fire_temperature_iso834 = (345. * np.log10((fire_time / 60.) * 8. + 1.) + 20.) + 273.15  # in [K]
+    fire_temperature_iso834 = (
+        345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0
+    ) + 273.15  # in [K]
 
     # Inject results, i.e. these values will be in the output
     res = dict(
@@ -608,7 +697,9 @@ def teq_main(
     else:
         timber_exposed_duration = 0
 
-    timber_solver_iter = -1  # initialise solver iteration count for timber fuel contribution
+    timber_solver_iter = (
+        -1
+    )  # initialise solver iteration count for timber fuel contribution
 
     if isinstance(timber_charring_rate, (int, float)):
         timber_charring_rate_ = copy.copy(timber_charring_rate)
@@ -638,7 +729,8 @@ def teq_main(
             fire_load_density + timber_fire_load_density,
             fire_combustion_efficiency,
             fire_hrr_density,
-            fire_spread_speed)
+            fire_spread_speed,
+        )
 
         # To calculate design fire temperature
 
@@ -651,7 +743,7 @@ def teq_main(
             room_height,
             room_wall_thermal_inertia,
             fire_tlim,
-            res_decide_fire['fire_type'],
+            res_decide_fire["fire_type"],
             fire_time,
             fire_nft_limit,
             fire_load_density + timber_fire_load_density,
@@ -661,13 +753,14 @@ def teq_main(
             fire_t_alpha,
             fire_gamma_fi_q,
             beam_position_vertical,
-            beam_position_horizontal)
+            beam_position_horizontal,
+        )
 
         # To calculate time equivalence
 
         res_solve_time_equivalence = solve_time_equivalence(
             fire_time,
-            res_evaluate_fire_temperature['fire_temperature'],
+            res_evaluate_fire_temperature["fire_temperature"],
             beam_cross_section_area,
             beam_rho,
             protection_k,
@@ -681,19 +774,31 @@ def teq_main(
             solver_thickness_ubound,
             solver_thickness_lbound,
             solver_tol,
-            phi_teq)
+            phi_teq,
+        )
 
         if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
             break
-        elif not res_solve_time_equivalence['solver_convergence_status']:  # no time equivalence solution
+        elif not res_solve_time_equivalence[
+            "solver_convergence_status"
+        ]:  # no time equivalence solution
             break
-        elif timber_solver_iter >= timber_solver_ilim:  # over the solver iteration limit
+        elif (
+            timber_solver_iter >= timber_solver_ilim
+        ):  # over the solver iteration limit
             break
-        elif abs(timber_exposed_duration - res_solve_time_equivalence[
-            'solver_time_equivalence_solved']) <= timber_solver_tol:  # convergence sought successfully
+        elif (
+            abs(
+                timber_exposed_duration
+                - res_solve_time_equivalence["solver_time_equivalence_solved"]
+            )
+            <= timber_solver_tol
+        ):  # convergence sought successfully
             break
         else:
-            timber_exposed_duration = res_solve_time_equivalence['solver_time_equivalence_solved']
+            timber_exposed_duration = res_solve_time_equivalence[
+                "solver_time_equivalence_solved"
+            ]
 
     res_timber_solver = dict(
         timber_charring_rate=timber_charring_rate_,
@@ -707,7 +812,7 @@ def teq_main(
 
     # delete fire array, i.e. to save memory.
     try:
-        del res_evaluate_fire_temperature['fire_temperature']
+        del res_evaluate_fire_temperature["fire_temperature"]
     except:
         pass
 
@@ -720,7 +825,7 @@ def teq_main(
 
 
 def test_teq_phi():
-    warnings.filterwarnings('ignore')
+    warnings.filterwarnings("ignore")
 
     from sfeprapy.func.fire_iso834 import fire as fire_iso834
 
@@ -729,7 +834,7 @@ def test_teq_phi():
 
     input_param = dict(
         index=0,
-        case_name='Standard 1',
+        case_name="Standard 1",
         probability_weight=1,
         fire_time_step=30,
         fire_time_duration=5 * 60 * 60,
@@ -761,7 +866,7 @@ def test_teq_phi():
         solver_max_iter=20,
         solver_thickness_lbound=0.0001,
         solver_thickness_ubound=0.0500,
-        solver_tol=1.,
+        solver_tol=1.0,
         window_height=2,
         window_open_fraction=0.8,
         window_width=72,
@@ -775,11 +880,11 @@ def test_teq_phi():
         timber_solver_tol=1,
     )
 
-    input_param['phi_teq'] = 1.0
-    teq_10 = teq_main(**input_param)['solver_time_equivalence_solved']
+    input_param["phi_teq"] = 1.0
+    teq_10 = teq_main(**input_param)["solver_time_equivalence_solved"]
 
-    input_param['phi_teq'] = 0.1
-    teq_01 = teq_main(**input_param)['solver_time_equivalence_solved']
+    input_param["phi_teq"] = 0.1
+    teq_01 = teq_main(**input_param)["solver_time_equivalence_solved"]
 
     assert abs(teq_10 / teq_01 - 10) < 0.001
 
@@ -792,27 +897,32 @@ def test_standard_case():
     from sfeprapy.func.mcs_gen import main as gen
     from scipy.interpolate import interp1d
     import numpy as np
+
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     for k in list(mcs_input.keys()):
-        mcs_input[k]['phi_teq'] = 1
-        mcs_input[k]['n_simulations'] = 1000
-        mcs_input[k]['timber_exposed_area'] = 0
-        mcs_input[k].pop('beam_position_horizontal')
-        mcs_input[k]['beam_position_horizontal:dist'] = 'uniform_'
-        mcs_input[k]['beam_position_horizontal:ubound'] = mcs_input[k]['room_depth'] * 0.9
-        mcs_input[k]['beam_position_horizontal:lbound'] = mcs_input[k]['room_depth'] * 0.6
+        mcs_input[k]["phi_teq"] = 1
+        mcs_input[k]["n_simulations"] = 1000
+        mcs_input[k]["timber_exposed_area"] = 0
+        mcs_input[k].pop("beam_position_horizontal")
+        mcs_input[k]["beam_position_horizontal:dist"] = "uniform_"
+        mcs_input[k]["beam_position_horizontal:ubound"] = (
+            mcs_input[k]["room_depth"] * 0.9
+        )
+        mcs_input[k]["beam_position_horizontal:lbound"] = (
+            mcs_input[k]["room_depth"] * 0.6
+        )
 
     # increase the number of threads so it runs faster
-    mcs_config['n_threads'] = 4
+    mcs_config["n_threads"] = 4
     mcs = MCS()
     mcs.define_problem(data=mcs_input, config=mcs_config)
     mcs.define_stochastic_parameter_generator(gen)
     mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
     mcs.run_mcs()
     mcs_out = mcs.mcs_out
-    teq = mcs_out['solver_time_equivalence_solved'] / 60.
+    teq = mcs_out["solver_time_equivalence_solved"] / 60.0
     hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     teq_at_80_percentile = interp1d(y, x)(0.8)

@@ -11,10 +11,15 @@ def c_steel_T(temperature):
     temperature -= 273.15
 
     if temperature < 20:
-        warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is below 20 °C".format(temperature))
         return 425 + 0.773 * 20 - 1.69e-3 * np.power(20, 2) + 2.22e-6 * np.power(20, 3)
     if 20 <= temperature < 600:
-        return 425 + 0.773 * temperature - 1.69e-3 * np.power(temperature, 2) + 2.22e-6 * np.power(temperature, 3)
+        return (
+            425
+            + 0.773 * temperature
+            - 1.69e-3 * np.power(temperature, 2)
+            + 2.22e-6 * np.power(temperature, 3)
+        )
     elif 600 <= temperature < 735:
         return 666 + 13002 / (738 - temperature)
     elif 735 <= temperature < 900:
@@ -22,11 +27,14 @@ def c_steel_T(temperature):
     elif 900 <= temperature <= 1200:
         return 650
     elif temperature > 1200:
-        warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+        warnings.warn(
+            "Temperature ({:.1f} °C) is greater than 1200 °C".format(temperature)
+        )
         return 650
     else:
-        warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is outside bound.".format(temperature))
         return 0
+
 
 from typing import Union
 
@@ -36,7 +44,11 @@ def steel_c_T_vectorised(T: np.ndarray):
     T = T - 273.15  # unit conversion: K -> deg.C
 
     c = np.where(T < 20, 425, 0)
-    c = np.where((20 <= T) & (T <= 600), 425 + 0.773 * T - 1.69e-3 * np.power(T, 2) + 2.22e-6 * np.power(T, 3), c)
+    c = np.where(
+        (20 <= T) & (T <= 600),
+        425 + 0.773 * T - 1.69e-3 * np.power(T, 2) + 2.22e-6 * np.power(T, 3),
+        c,
+    )
     c = np.where((600 < T) & (T <= 735), 666 + 13002 / (738 - T), c)
     c = np.where((735 < T) & (T <= 900), 545 + 17820 / (T - 731), c)
     c = np.where((900 < T) & (T <= 1200), 650, c)
@@ -48,17 +60,19 @@ def steel_c_T_vectorised(T: np.ndarray):
 def k_steel_T(temperature):
     temperature -= 273.15
     if temperature < 20:
-        warnings.warn('Temperature ({:.1f} °C) is below 20 °C'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is below 20 °C".format(temperature))
         return 54 - 3.33e-2 * 20
     if temperature < 800:
         return 54 - 3.33e-2 * temperature
     elif temperature <= 1200:
         return 27.3
     elif temperature > 1200:
-        warnings.warn('Temperature ({:.1f} °C) is greater than 1200 °C'.format(temperature))
+        warnings.warn(
+            "Temperature ({:.1f} °C) is greater than 1200 °C".format(temperature)
+        )
         return 27.3
     else:
-        warnings.warn('Temperature ({:.1f} °C) is outside bound.'.format(temperature))
+        warnings.warn("Temperature ({:.1f} °C) is outside bound.".format(temperature))
         return 0
 
 
@@ -74,7 +88,7 @@ def steel_k_T_vectorised(T: np.ndarray):
     return k
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -97,22 +111,21 @@ if __name__ == '__main__':
     t1 = 600
 
     # construct vectors
-    thickness += (thickness / m * 2)
+    thickness += thickness / m * 2
 
     m += 2
 
-    x = np.linspace(0, thickness, 2*m+1)[1::2]  # location of nodes
-    dx = np.full((m,), thickness/m)  # thickness of nodes
+    x = np.linspace(0, thickness, 2 * m + 1)[1::2]  # location of nodes
+    dx = np.full((m,), thickness / m)  # thickness of nodes
     U = np.ones_like(dx) * (20 + 273.15)  # temperature of nodes
     rho = np.full_like(dx, rho)
     h = np.zeros_like(dx)  # convection coefficients
-
 
     e = np.zeros_like(dx)  # radiation heat transfer coefficient
     e[[0, -1]] = 5.67e-8 * emissivity  # radiation at gas nodes
 
     x = np.array([])
-    x -= (x[0] * 2)
+    x -= x[0] * 2
     dx = np.array([])
     dx[[0, -1]] = 1  # gas nodes have unity thickness
     rho
@@ -136,7 +149,7 @@ if __name__ == '__main__':
         print(int(t))
 
         if int(t) == 300:
-            print('d')
+            print("d")
 
         c = steel_c_T_vectorised(U)
         # k = np.fromiter(map(k_steel_T, U), dtype=float) / dx
@@ -207,12 +220,7 @@ if __name__ == '__main__':
         # ==================================
 
         U[1:-1] = solver_solid(
-            dx=dx[1:-1],
-            U=U[1:-1],
-            k=k[1:-1],
-            rho=rho[1:-1],
-            c=c[1:-1],
-            dt=dt,
+            dx=dx[1:-1], U=U[1:-1], k=k[1:-1], rho=rho[1:-1], c=c[1:-1], dt=dt
         )
 
         # for m in range(2, len(dx)-2, 1):
@@ -244,12 +252,12 @@ if __name__ == '__main__':
 
     fig, ax1 = plt.subplots()
 
-    for i in range(0, len(U_), int(len(U_)/10)):
+    for i in range(0, len(U_), int(len(U_) / 10)):
         u = U_[i]
         sns.lineplot(x[1:-1], u[1:-1] - 273.15, ax=ax1, label=round(t_[i], 7))
 
     if t_[i] != t_[-1]:
-        sns.lineplot(x[1:-1], U[1:-1]-273.15, ax=ax1, label=int(t))
+        sns.lineplot(x[1:-1], U[1:-1] - 273.15, ax=ax1, label=int(t))
 
     plt.tight_layout()
     plt.show()
