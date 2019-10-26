@@ -917,7 +917,7 @@ def _test_standard_case():
         )
 
     # increase the number of threads so it runs faster
-    mcs_config["n_threads"] = 4
+    mcs_config["n_threads"] = 1  # coverage does not support
     mcs = MCS()
     mcs.define_problem(data=mcs_input, config=mcs_config)
     mcs.define_stochastic_parameter_generator(gen)
