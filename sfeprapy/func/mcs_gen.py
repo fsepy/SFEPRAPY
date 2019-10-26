@@ -123,6 +123,10 @@ def random_variable_generator(dict_in: dict, num_samples: int):
         )
         samples = 1 - samples
 
+    elif dist_0 == "constant_":
+        # print(num_samples, lbound, ubound, np.average(lbound))
+        samples = np.full((num_samples,), np.average([lbound, ubound]))
+
     else:
         try:
             dict_in.pop("dist")
