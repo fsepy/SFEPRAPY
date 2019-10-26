@@ -162,7 +162,7 @@ def dict_unflatten(dict_in: dict) -> dict:
 
 
 def dict_flatten(dict_in: dict) -> dict:
-    """Converts two levels dict to single level dict. Example input and output see test_dict_flatten.
+    """Converts two levels dict to single level dict. Example input and output see _test_dict_flatten.
     :param dict_in: Any two levels (or less) dict.
     :return dict_out: Single level dict.
     """
@@ -179,7 +179,7 @@ def dict_flatten(dict_in: dict) -> dict:
     return dict_out
 
 
-def test_dict_flatten():
+def _test_dict_flatten():
     x = dict(A=dict(a=0, b=1), B=dict(c=2, d=3))
     y_expected = {"A:a": 0, "A:b": 1, "B:c": 2, "B:d": 3}
     y = dict_flatten(x)
@@ -240,7 +240,7 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
     return df_out
 
 
-def test_random_variable_generator():
+def _test_random_variable_generator():
     x = dict(v=np.pi)
     y = main(x, 1000)
     assert len(y["v"].values) == 1000
@@ -294,5 +294,5 @@ def test_random_variable_generator():
 
 
 if __name__ == "__main__":
-    test_random_variable_generator()
-    test_dict_flatten()
+    _test_random_variable_generator()
+    _test_dict_flatten()

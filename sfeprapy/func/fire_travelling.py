@@ -228,7 +228,7 @@ def example_plot_interflam():
     plt.savefig(fname="fire-travelling.png", dpi=300)
 
 
-def test_fire_backup():
+def _test_fire_backup():
     import numpy as np
 
     time = np.arange(0, 22080, 30)
@@ -262,7 +262,7 @@ def test_fire_backup():
     # plt.show()
 
 
-def test_fire():
+def _test_fire():
     time = np.arange(0, 210 * 60, 30)
     list_l = [25, 50, 100, 150]
 
@@ -295,7 +295,7 @@ def test_fire():
     # plt.show()
 
 
-def test_fire_multiple_beam_location():
+def _test_fire_multiple_beam_location():
     time = np.arange(0, 210 * 60, 30)
     length = 100
 
@@ -329,6 +329,6 @@ def test_fire_multiple_beam_location():
 
 
 if __name__ == "__main__":
-    test_fire()
-    test_fire_multiple_beam_location()
+    _test_fire()
+    _test_fire_multiple_beam_location()
     # example_plot_interflam()
