@@ -22,6 +22,8 @@ Commands:
     mcs0 figure     produce figure from the output file <file_name>.
 """
 
+TEST_MODE = False
+
 from docopt import docopt
 
 
@@ -31,26 +33,41 @@ def main():
 
     sfeprapy.check_pip_upgrade()
 
+    def _test(outcome: bool = True):
+        if TEST_MODE:
+            return outcome
+
     arguments = docopt(__doc__)
 
+    arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
+
     if arguments["mcs0"]:
-        from sfeprapy.mcs0.__main__ import main as mcs0
-        from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
+        _test()
 
-        arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
+        if arguments["figure"]:
+            _test()
+            from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
 
-        if arguments["-f"]:
             mcs0_figure(fp_mcs0_out=arguments["<file_name>"])
-        elif arguments["--template"]:
+
+        if arguments["template"]:
+            _test()
+            from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
+
             with open(arguments["<file_name>"], "w+") as f:
-                f.write(sfeprapy.mcs0.EXAMPLE_INPUT_CSV)
-        else:
-            arguments["-p"] = arguments["-p"] or 2
-            mcs0(
-                fp_mcs_in=os.path.realpath(arguments["<file_name>"]),
-                n_threads=int(arguments["-p"]),
-            )
+                f.write(EXAMPLE_INPUT_CSV)
+
+        if not (arguments["figure"] or arguments["template"]):
+            _test()
+            from sfeprapy.mcs0.__main__ import main as mcs0
+
+            fp_mcs_in = arguments["<file_name>"]
+            n_threads = arguments["-p"] or 2
+            mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
+
     elif arguments["distfit"]:
+        _test()
+
         # Prerequisites
         from sfeprapy.func.stats_dist_fit import auto_fit_2
 
@@ -65,4 +82,14 @@ def main():
             data=arguments["<file_name>"],
         )
     else:
+        _test(False)
         print("instruction unclear.")
+
+
+def _test_main():
+    global TEST_MODE
+    TEST_MODE = True
+    assert docopt(__doc__, ["mcs0", "file_name"])
+    assert docopt(__doc__, ["mcs0", "template", "file_name"])
+    assert docopt(__doc__, ["mcs0", "figure", "file_name"])
+    assert docopt(__doc__, ["distfit", "file_name"])
