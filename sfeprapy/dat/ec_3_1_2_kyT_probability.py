@@ -110,7 +110,13 @@ def func_prob_vector_test():
     return T, ky
 
 
+def _test_probabilistic():
+    assert abs(ky2T_probabilistic_vectorised(0, 0.5) - 1.161499) <= 0.00001
+    assert abs(ky2T_probabilistic_vectorised(673.15, 0.5) - 1.001560) <= 0.0001
+
+
 if __name__ == "__main__":
+    _test_probabilistic()
     from timeit import default_timer as timer
     import matplotlib.pyplot as plt
 
@@ -133,6 +139,9 @@ if __name__ == "__main__":
         "--k",
         label="$\epsilon$ Percentile 0.05, 0.5, 0.95",
     )
+
+    print(ky2T_probabilistic_vectorised(673.15, 0.5))
+
     ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.05), "--k")
     ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.95), "--k")
     ax3.plot(x3 - 273.15, ky2T_vectorised(x3), "k", label="Eurocode $k_{y,\Theta}$")
