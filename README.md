@@ -51,7 +51,7 @@ sfeprapy -h
 #### To produce a `sfeprapy.mcs0` example input file
 
 ```sh
-sfeprapy mcs0 --template example_input.csv
+sfeprapy mcs0 template example_input.csv
 ```
 
 #### To run `sfeprapy.mcs0` simulation
@@ -60,10 +60,12 @@ sfeprapy mcs0 --template example_input.csv
 sfeprapy mcs0 -p 4 example_input.csv
 ```
 
+`sfeprapy.mcs0` uses the [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html#module-multiprocessing) library to utilise full potential performance of multi-core CPUs. The `-p 4` defines 4 threads will be used in running the simulation.
+
 #### To produce a figure (once a `sfeprapy.mcs0` simulation is complete)
 
 ```sh
-sfeprapy mcs0 -f mcs.out.csv
+sfeprapy mcs0 figure mcs.out.csv
 ```
 
 ## Authors
