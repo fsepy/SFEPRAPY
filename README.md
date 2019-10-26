@@ -1,6 +1,7 @@
 # SfePrapy
 
 [![Build](https://travis-ci.org/fsepy/SfePrapy.svg?branch=master)](https://travis-ci.org/fsepy/SfePrapy.svg?branch=master)
+[![codecov](https://codecov.io/gh/fsepy/SfePrapy/branch/master/graph/badge.svg)](https://codecov.io/gh/fsepy/SfePrapy)
 
 Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) Python (py) is a probabilistic analysis tool. It calculates equivalent of time exposure to ISO 834 standard fire and this can be used to assess the appropriate fire resistance rating for structural elements using reliability based methods.
 
