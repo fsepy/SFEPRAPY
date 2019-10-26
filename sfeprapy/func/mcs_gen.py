@@ -265,14 +265,14 @@ def _test_random_variable_generator():
     assert len(y["v"].values) == 1000
     assert np.max(y["v"].values) == 10
     assert np.min(y["v"].values) == -1
-    assert np.mean(y["v"].values) == (10 - 1) / 2
+    assert abs(np.mean(y["v"].values) - (10 - 1) / 2) <= 0.00001
 
     x = dict(v=dict(dist="norm_", ubound=5 + 1, lbound=5 - 1, mean=5, sd=1))
     y = main(x, 1000)
     assert len(y["v"].values) == 1000
     assert np.max(y["v"].values) == 6
     assert np.min(y["v"].values) == 4
-    assert np.mean(y["v"].values) == 5
+    assert abs(np.mean(y["v"].values) - 5) <= 0.00001
 
     x = dict(v=dict(dist="gumbel_r_", ubound=2000, lbound=50, mean=420, sd=126))
     y = main(x, 1000)
