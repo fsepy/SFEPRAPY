@@ -10,12 +10,12 @@ pin: True
 
 # set the default branch
 # default: empty, the default branch on GitHub
-branch: dev
+branch: empty
 
 # update schedule
 # default: empty
 # allowed: "every day", "every week", ..
-schedule: "every week on friday"
+schedule: "every day"
 
 # search for requirement files
 # default: True
