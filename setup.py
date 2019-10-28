@@ -10,7 +10,7 @@ import sfeprapy
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.md")) as f:
     long_description = f.read()
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
 setuptools.setup(
@@ -39,7 +39,6 @@ setuptools.setup(
         "sfeprapy.mcs0",
         "sfeprapy.mcs1",
         "sfeprapy.func",
-        "sfeprapy.func.heat_transfer_1d",
         "sfeprapy.dist_fit",
     ],
     install_requires=requirements,

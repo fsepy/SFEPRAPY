@@ -189,7 +189,7 @@ def example_plot_interflam():
     plt.show()
 
 
-def test_fire():
+def _test_fire():
     """This is a test function to `fire` within this module `fire_parametric_ec`, it compares the function against
     Figure 7 in Holicky, M. et al [1].
     yan fu, 1 oct 2018
@@ -268,4 +268,4 @@ def test_fire():
 
 if __name__ == "__main__":
     # exmaple_plot_interflam()
-    test_fire()
+    _test_fire()

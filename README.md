@@ -1,7 +1,9 @@
 # SfePrapy
 [![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)](https://github.com/fsepy/SfePrapy)
-[![Build](https://travis-ci.org/fsepy/SfePrapy.svg?branch=master)](https://travis-ci.org/fsepy/SfePrapy.svg?branch=master)
-[![codecov](https://codecov.io/gh/fsepy/SfePrapy/branch/master/graph/badge.svg)](https://codecov.io/gh/fsepy/SfePrapy)
+[![Updates](https://pyup.io/repos/github/fsepy/SfePrapy/shield.svg)](https://pyup.io/repos/github/fsepy/SfePrapy/)
+[![Build Status](https://img.shields.io/travis/fsepy/SfePrapy.svg?branch=master&label=build%20(master)&style=flat)](https://travis-ci.org/fsepy/SfePrapy)
+[![Build Status](https://img.shields.io/travis/fsepy/SfePrapy.svg?branch=dev&label=build%20(dev)&style=flat)](https://travis-ci.org/fsepy/SfePrapy)
+[![codecov](https://codecov.io/gh/fsepy/SfePrapy/branch/dev/graph/badge.svg)](https://codecov.io/gh/fsepy/SfePrapy)
 
 Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) Python (py) is a probabilistic analysis tool. It calculates equivalent of time exposure to ISO 834 standard fire and this can be used to assess the appropriate fire resistance rating for structural elements using reliability based methods.
 
@@ -49,7 +51,7 @@ sfeprapy -h
 #### To produce a `sfeprapy.mcs0` example input file
 
 ```sh
-sfeprapy mcs0 --template example_input.csv
+sfeprapy mcs0 template example_input.csv
 ```
 
 #### To run `sfeprapy.mcs0` simulation
@@ -58,10 +60,12 @@ sfeprapy mcs0 --template example_input.csv
 sfeprapy mcs0 -p 4 example_input.csv
 ```
 
+`sfeprapy.mcs0` uses the [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html#module-multiprocessing) library to utilise full potential performance of multi-core CPUs. The `-p 4` defines 4 threads will be used in running the simulation.
+
 #### To produce a figure (once a `sfeprapy.mcs0` simulation is complete)
 
 ```sh
-sfeprapy mcs0 -f mcs.out.csv
+sfeprapy mcs0 figure mcs.out.csv
 ```
 
 ## Authors

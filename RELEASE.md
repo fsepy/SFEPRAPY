@@ -8,12 +8,17 @@ Checklist before release of new versions:
 ## Known issues
 
 - Log normal distribution in `sfeprapy.func.mcs_gen` needs to be validated.
+- `sfeprapy.mcs0` currently does capture column element.
+- (WIP) `sfeprapy.mcs2`, similar to `sfeprapy.mcs0` but does not solve structural protection thickness for a predefined failure temperature, i.e. structural protection thickness is predefined.
 
 ## Version history
 
-### XX/XX/2019 VERSION: 0.6.9
+### 28/10/2019 VERSION: 0.6.9
 
-- (WIP) New: `sfeprapy.mcs2`, similar to `sfeprapy.mcs0` but does not solve structural protection thickness for a predefined failure temperature, i.e. structural protection thickness is predefined.
+- New: repository feature, codecov integration.
+- New: repository feature, travis integration.
+- Improved: CLI commands simplified and updated.
+- Improved: updated and some new test functions in \test directory.
 
 ### 23/10/2019 VERSION: 0.6.8
 
