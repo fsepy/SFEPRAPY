@@ -11,8 +11,8 @@ Options:
                     1   PDF, two columns data containing x, y, without heading.
                     2   CDF, two columns data containing x, y, without heading.
     --dist_g=<int>  an integer indicating what distribution group to be used for fitting the data:
-                    0   fit to all available distributions
-                    1   (default) fit to common distribution types
+                    0   fit to all available distributions.
+                    1   (default) fit to common distribution types.
     -p=<int>        to define number of processes for MCS, positive integer only.
     -h --help       to show this message.
 
