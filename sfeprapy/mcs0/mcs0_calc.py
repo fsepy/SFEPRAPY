@@ -345,7 +345,7 @@ def solve_time_equivalence(
             rho_protection=protection_rho,
             c_protection=protection_c,
             perimeter_protected=protection_protected_perimeter,
-            terminate_max_temperature=solver_temperature_goal + 5 * solver_tol,
+            terminate_max_temperature=solver_temperature_goal + 2 * solver_tol,
         )
 
         # SOLVER START FROM HERE
@@ -557,7 +557,7 @@ def mcs_out_post(df: pd.DataFrame) -> pd.DataFrame:
             x = df_res[k].values
             x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
             dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
-        except KeyError:
+        except (KeyError, ValueError):
             pass
 
     list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
@@ -810,12 +810,6 @@ def teq_main(
         timber_charred_volume=timber_charred_volume,
     )
 
-    # delete fire array, i.e. to save memory.
-    try:
-        del res_evaluate_fire_temperature["fire_temperature"]
-    except:
-        pass
-
     res.update(res_timber_solver)
     res.update(res_decide_fire)
     res.update(res_evaluate_fire_temperature)
@@ -893,7 +887,7 @@ def _test_standard_case():
     import copy
     from sfeprapy.func.mcs_obj import MCS
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
+    # from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
     from sfeprapy.func.mcs_gen import main as gen
     from scipy.interpolate import interp1d
     import numpy as np
