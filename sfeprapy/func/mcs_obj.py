@@ -2,7 +2,6 @@ import copy
 import json
 import os
 import time
-import warnings
 from tkinter import filedialog, Tk, StringVar
 from typing import Union, Callable
 
