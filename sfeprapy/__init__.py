@@ -34,7 +34,7 @@ Public version identifiers are separated into up to five segments:
 
 """
 
-__version__ = "0.6.9"
+__version__ = "0.7"
 
 
 def check_pip_upgrade():
@@ -80,5 +80,3 @@ if __name__ == "__main__":
         )
 
     assert is_canonical(__version__)
-
-    check_pip_upgrade()
