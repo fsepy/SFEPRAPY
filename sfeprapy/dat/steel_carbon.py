@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import pandas as pd
-from scipy.interpolate import interp1d
-from io import StringIO
-import warnings
 
 
-def steel_specific_heat_carbon_steel(temperature):
+def steel_specific_heat_carbon_steel(temperature: float) -> float:
+    """Returns steel specific heat in accordance with EN 1993-1-2. SI units.
+
+    :param temperature: [K]
+    :return: [J/kg/K]
     """
-    :param temperature: {float} [K]
-    :return: {float} [J/kg/K]
-    """
-    temperature -= 273.15
+
+    temperature -= 273.15  # unit conversion, K -> deg. C
+
     if 20 <= temperature < 600:
         return (
             425
@@ -39,4 +38,3 @@ if __name__ == "__main__":
         steel_specific_heat_carbon_steel(np.random.rand() * 1180 + 20 + 273.15)
 
     print(timeit.timeit(aa, number=test_number))
-    print(timeit.timeit(bb, number=test_number))

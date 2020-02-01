@@ -2,7 +2,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from sfeprapy.dat.steel_carbon import Thermal
+from sfeprapy.dat.steel_carbon import steel_specific_heat_carbon_steel
 from sfeprapy.func.fire_iso834 import fire as _fire_iso
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_travelling import fire as _fire_travelling
@@ -71,20 +71,20 @@ def heat_transfer_param(ax, label=None):
         }
     y_ = _fire_param(**inputs_parametric_fire)
 
-    steel_prop = Thermal()
+    # steel_prop = Thermal()
 
     _, y, _ = _steel_heat_transfer(
         time=x,
         temperature_ambient=y_,
         rho_steel=7850,
-        c_steel_T=steel_prop.c(),
+        # c_steel_T=steel_specific_heat_carbon_steel,
         area_steel_section=0.017,
         k_protection=0.2,
         rho_protection=800,
         c_protection=1700,
         thickness_protection=0.00938,
         perimeter_protected=2.14,
-        is_terminate_peak=False
+        # is_terminate_peak=False
     )
 
     ax.plot(x/60., y-273.15, label=label)
@@ -107,20 +107,20 @@ def heat_transfer_travel(ax, label=None):
     }
     y_ = _fire_travelling(**inputs)
 
-    steel_prop = Thermal()
+    # steel_prop = Thermal()
 
     _, y, _ = _steel_heat_transfer(
         time=x,
         temperature_ambient=y_,
         rho_steel=7850,
-        c_steel_T=steel_prop.c(),
+        # c_steel_T=steel_prop.c(),
         area_steel_section=0.017,
         k_protection=0.2,
         rho_protection=800,
         c_protection=1700,
         thickness_protection=0.00938,
         perimeter_protected=2.14,
-        is_terminate_peak=False
+        # is_terminate_peak=False
     )
 
     ax.plot(x/60., y-273.15, label=label)
