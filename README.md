@@ -72,7 +72,7 @@ sfeprapy mcs0 figure mcs.out.csv
 
 ## Authors
 
-**Ian Fu** - *fuyans@gmail.com*  
+**Ian Fu** - *ian.fu@ofrconsultants.com*  
 **Danny Hopkin** - *danny.hopkin@ofrconsultants.com*  
 **Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
 

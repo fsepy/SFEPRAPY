@@ -13,6 +13,11 @@ Checklist before release of new versions:
 
 ## Version history
 
+### 01/02/2020 VERSION: 0.7.0
+
+- New: GUI added to `sfeprapy.mcs0`, can be summoned in CLI by `sfeprapy mcs0 gui`.
+- Improved: various improvements see repository commits.
+
 ### 28/10/2019 VERSION: 0.6.9
 
 - New: repository feature, codecov integration.

@@ -259,19 +259,18 @@ def protected_steel_eurocode_max_temperature(
                     flag_heating_started = True
 
         # Terminate early if maximum temperature is reached
-        if flag_heating_started and T > terminate_max_temperature:
-            break
-        elif flag_heating_started and dT < 0:
-            T -= dT * d
-            break
-
+        elif flag_heating_started:
+            if T > terminate_max_temperature:
+                break
+            if dT < 0:
+                T -= dT * d
+                break
+    # print(T)
     return T
 
 
 if __name__ == "__main__":
-
     from sfeprapy.func.fire_iso834 import fire
-    from sfeprapy.dat.steel_carbon import Thermal
     import numpy as np
 
     import matplotlib.pyplot as plt
@@ -283,14 +282,12 @@ if __name__ == "__main__":
     ax.legend().set_visible(True)
     ax.grid(color="k", linestyle="--")
 
-    steel_prop = Thermal()
-    c = steel_prop.c()
     rho = 7850
-    t = np.arange(0, 181 * 60, 1)
+    t = np.arange(0, 700, 0.1)
     T = fire(t, 20 + 273.15)
     ax.plot(t / 60, T - 273.15, "k", label="ISO 834 fire")
 
-    list_dp = np.arange(0.002, 0.01 + 0.002, 0.002)
+    list_dp = np.arange(0.0001, 0.01 + 0.002, 0.002)
 
     for d_p in list_dp:
         T_s = protected_steel_eurocode(
