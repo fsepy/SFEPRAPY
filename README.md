@@ -17,6 +17,8 @@ Documentation can be found in the [wiki](https://github.com/fsepy/SfePrapy/wiki)
 
 ### Installation
 
+Chose one of the following installation path.
+
 [Python](https://www.python.org/downloads/) 3.7 or later is required. [Anaconda Distribution](https://www.anaconda.com/distribution/#download-section) is recommended for new starters, it includes Python and few useful packages including a package management tool pip (see below).
 
 [pip](https://pypi.org/) is a package management system for installing and updating Python packages. pip comes with Python, so you get pip simply by installing Python. On Ubuntu and Fedora Linux, you can simply use your system package manager to install the `python3-pip` package. [The Hitchhiker's Guide to Python](https://docs.python-guide.org/starting/installation/) provides some guidance on how to install Python on your system if it isn't already; you can also install Python directly from [python.org](https://www.python.org/getit/). You might want to [upgrade pip](https://pip.pypa.io/en/stable/installing/) before using it to install other programs.
@@ -60,7 +62,7 @@ sfeprapy mcs0 template example_input.csv
 sfeprapy mcs0 -p 4 example_input.csv
 ```
 
-`sfeprapy.mcs0` uses the [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html#module-multiprocessing) library to utilise full potential performance of multi-core CPUs. The `-p 4` defines 4 threads will be used in running the simulation.
+`sfeprapy.mcs0` uses the [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html#module-multiprocessing) library to utilise full potential performance of multi-core CPUs. The `-p 4` defines 4 threads will be used in running the simulation, 1 is the default value.
 
 #### To produce a figure (once a `sfeprapy.mcs0` simulation is complete)
 
