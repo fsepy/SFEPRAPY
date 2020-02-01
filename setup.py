@@ -40,6 +40,8 @@ setuptools.setup(
         "sfeprapy.mcs1",
         "sfeprapy.func",
         "sfeprapy.dist_fit",
+        "sfeprapy.guilayout",
+        "sfeprapy.guilogic",
     ],
     install_requires=requirements,
     include_package_data=True,

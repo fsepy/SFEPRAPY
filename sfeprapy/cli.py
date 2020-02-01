@@ -32,9 +32,6 @@ def main():
 
     arguments = docopt(__doc__)
 
-    print(arguments)
-    print('\n'*5)
-
     if arguments["<file_name>"]:
         arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
 
