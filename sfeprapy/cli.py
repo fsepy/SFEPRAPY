@@ -1,8 +1,9 @@
 """SfePrapy CLI Help.
 Usage:
-    sfeprapy mcs0 [-p=<int>] <file_name>
-    sfeprapy mcs0 template <file_name>
+    sfeprapy mcs0 gui
+    sfeprapy mcs0 run [-p=<int>] <file_name>
     sfeprapy mcs0 figure <file_name>
+    sfeprapy mcs0 template <file_name>
     sfeprapy distfit [--data_t=<int>] [--dist_g=<int>] <file_name>
 
 Options:
@@ -17,21 +18,19 @@ Options:
     -h --help       to show this message.
 
 Commands:
-    mcs0            Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
-    mcs0 template   save example input file to <file_name>.
+    mcs0 gui        A GUI version of sfeprapy.
+    mcs0 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
     mcs0 figure     produce figure from the output file <file_name>.
+    mcs0 template   save example input file to <file_name>.
 """
 
-TEST_MODE = False
-
 from docopt import docopt
+
+TEST_MODE = False
 
 
 def main():
     import os
-    import sfeprapy
-
-    # sfeprapy.check_pip_upgrade()
 
     def _test(outcome: bool = True):
         if TEST_MODE:
@@ -39,25 +38,34 @@ def main():
 
     arguments = docopt(__doc__)
 
-    arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
+    print(arguments)
+    print('\n'*5)
+
+    if arguments["<file_name>"]:
+        arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
 
     if arguments["mcs0"]:
         _test()
 
-        if arguments["figure"]:
+        if arguments["gui"]:
+            from sfeprapy.guilogic.main import main as main_
+            main_()
+            return 0
+
+        elif arguments["figure"]:
             _test()
             from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
 
             mcs0_figure(fp_mcs0_out=arguments["<file_name>"])
 
-        if arguments["template"]:
+        elif arguments["template"]:
             _test()
             from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
 
             with open(arguments["<file_name>"], "w+") as f:
                 f.write(EXAMPLE_INPUT_CSV)
 
-        if not (arguments["figure"] or arguments["template"]):
+        else:
             _test()
             from sfeprapy.mcs0.__main__ import main as mcs0
 
@@ -81,6 +89,7 @@ def main():
             distribution_list=int(distribution_list),
             data=arguments["<file_name>"],
         )
+
     else:
         _test(False)
         print("instruction unclear.")
