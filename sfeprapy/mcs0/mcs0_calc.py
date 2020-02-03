@@ -980,5 +980,5 @@ def _test_standard_oversized_case():
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     teq_at_80_percentile = interp1d(y, x)(0.8)
 
-    assert len(mcs_out['window_height']) == sum(mcs_out['window_height'].values == 3.2)
+    assert len(mcs_out['window_height']) == sum(mcs_out['window_height'].values == 3.3)
     assert len(mcs_out['window_width']) == sum(mcs_out['window_width'].values == 94.5)
