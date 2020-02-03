@@ -633,6 +633,16 @@ def teq_main(
         + window_open_fraction_permanent
     )
 
+    # Fix ventilation opening size so it doesn't exceed wall area
+
+    if window_height > room_height:
+        window_height = room_height
+
+    room_perimeter = 2 * (room_breadth + room_depth)
+
+    if window_width > room_perimeter:
+        window_width = room_perimeter
+
     # Calculate fire time, this is used for all fire curves in the calculation
 
     fire_time = np.arange(0, fire_time_duration + fire_time_step, fire_time_step)
