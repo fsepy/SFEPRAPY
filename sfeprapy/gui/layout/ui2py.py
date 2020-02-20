@@ -8,7 +8,7 @@ def ui2py():
         'main.ui',
     ]
 
-    cwd = os.path.dirname(os.path.realpath(__file__))
+    cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ui')
     destination_dir = os.path.dirname(os.path.realpath(__file__))
 
     for ui_file_name in list_ui_file_names:

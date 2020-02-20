@@ -34,7 +34,7 @@ Public version identifiers are separated into up to five segments:
 
 """
 
-__version__ = "0.7.2"
+__version__ = "0.7.1.post6"
 
 
 def check_pip_upgrade():

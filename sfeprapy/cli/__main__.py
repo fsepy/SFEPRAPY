@@ -1,5 +1,6 @@
 """SfePrapy CLI Help.
 Usage:
+    sfeprapy
     sfeprapy mcs0 gui
     sfeprapy mcs0 run [-p=<int>] <file_name>
     sfeprapy mcs0 figure <file_name>
@@ -18,13 +19,20 @@ Options:
     -h --help       to show this message.
 
 Commands:
-    mcs0 gui        A GUI version of sfeprapy.
+                    Will run `mcs0 gui` if no command is supplied.
+    mcs0 gui        Experimental GUI version of sfeprapy.
     mcs0 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
     mcs0 figure     produce figure from the output file <file_name>.
     mcs0 template   save example input file to <file_name>.
 """
 
 from docopt import docopt
+
+from sfeprapy.func.stats_dist_fit import auto_fit_2
+from sfeprapy.gui.__main__ import main as main_gui
+from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
+from sfeprapy.mcs0.__main__ import main as mcs0
+from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
 
 
 def main():
@@ -38,32 +46,25 @@ def main():
     if arguments["mcs0"]:
 
         if arguments["gui"]:
-            from sfeprapy.guilogic.main import main as main_
-            main_()
+            main_gui()
             return 0
 
         elif arguments["figure"]:
-            from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
 
             mcs0_figure(fp_mcs0_out=arguments["<file_name>"])
 
         elif arguments["template"]:
-            from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
 
             with open(arguments["<file_name>"], "w+") as f:
                 f.write(EXAMPLE_INPUT_CSV)
 
         else:
-            from sfeprapy.mcs0.__main__ import main as mcs0
 
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 2
             mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments["distfit"]:
-
-        # Prerequisites
-        from sfeprapy.func.stats_dist_fit import auto_fit_2
 
         # Default values
         data_type = arguments["--data_t"] or 2
@@ -77,4 +78,4 @@ def main():
         )
 
     else:
-        print("instruction unclear.")
+        main_gui()

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>426</width>
-    <height>178</height>
+    <width>446</width>
+    <height>186</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,11 +29,16 @@
    <widget class="QPushButton" name="pushButton_run">
     <property name="geometry">
      <rect>
-      <x>305</x>
-      <y>95</y>
-      <width>112</width>
-      <height>32</height>
+      <x>335</x>
+      <y>130</y>
+      <width>96</width>
+      <height>26</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
     </property>
     <property name="statusTip">
      <string>Run simulation</string>
@@ -45,11 +50,16 @@
    <widget class="QPushButton" name="pushButton_test">
     <property name="geometry">
      <rect>
-      <x>5</x>
-      <y>95</y>
-      <width>112</width>
-      <height>32</height>
+      <x>230</x>
+      <y>130</y>
+      <width>96</width>
+      <height>26</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
     </property>
     <property name="statusTip">
      <string>Make and save a template input file</string>
@@ -61,22 +71,27 @@
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>5</x>
-      <y>5</y>
+      <x>15</x>
+      <y>15</y>
       <width>416</width>
-      <height>81</height>
+      <height>101</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
     <property name="title">
-     <string>GroupBox</string>
+     <string>Inputs</string>
     </property>
     <widget class="QPushButton" name="pushButton_input_file">
      <property name="geometry">
       <rect>
        <x>300</x>
-       <y>20</y>
-       <width>112</width>
-       <height>32</height>
+       <y>25</y>
+       <width>96</width>
+       <height>26</height>
       </rect>
      </property>
      <property name="text">
@@ -88,8 +103,8 @@
       <rect>
        <x>10</x>
        <y>25</y>
-       <width>58</width>
-       <height>16</height>
+       <width>101</width>
+       <height>26</height>
       </rect>
      </property>
      <property name="text">
@@ -102,7 +117,7 @@
        <x>132</x>
        <y>25</y>
        <width>156</width>
-       <height>21</height>
+       <height>26</height>
       </rect>
      </property>
     </widget>
@@ -110,9 +125,9 @@
      <property name="geometry">
       <rect>
        <x>132</x>
-       <y>50</y>
+       <y>55</y>
        <width>156</width>
-       <height>21</height>
+       <height>26</height>
       </rect>
      </property>
     </widget>
@@ -120,9 +135,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>50</y>
-       <width>116</width>
-       <height>16</height>
+       <y>55</y>
+       <width>101</width>
+       <height>26</height>
       </rect>
      </property>
      <property name="text">
@@ -130,26 +145,13 @@
      </property>
     </widget>
    </widget>
-   <widget class="Line" name="line">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>85</y>
-      <width>426</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>426</width>
+     <width>446</width>
      <height>22</height>
     </rect>
    </property>

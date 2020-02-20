@@ -163,6 +163,7 @@ def protected_steel_eurocode_max_temperature(
     SI UNITS!
     This function calculate the temperature curve of protected steel section based on BS EN 1993-1-2:2005, Section 4
     . Ambient (fire) time-temperature data must be given, as well as the parameters specified below.
+
     :param time:                    {ndarray} [s]
     :param temperature_ambient:     {ndarray} [K]
     :param rho_steel:               {float} [kg/m3]
