@@ -787,23 +787,15 @@ def teq_main(
             phi_teq,
         )
 
+        # additional fuel contribution from timber
+
         if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
             break
-        elif not res_solve_time_equivalence[
-            "solver_convergence_status"
-        ]:  # no time equivalence solution
+        elif not res_solve_time_equivalence["solver_convergence_status"]:  # no time equivalence solution
             break
-        elif (
-            timber_solver_iter >= timber_solver_ilim
-        ):  # over the solver iteration limit
+        elif (timber_solver_iter >= timber_solver_ilim):  # over the solver iteration limit
             break
-        elif (
-            abs(
-                timber_exposed_duration
-                - res_solve_time_equivalence["solver_time_equivalence_solved"]
-            )
-            <= timber_solver_tol
-        ):  # convergence sought successfully
+        elif (abs(timber_exposed_duration- res_solve_time_equivalence["solver_time_equivalence_solved"])<= timber_solver_tol):  # convergence sought successfully
             break
         else:
             timber_exposed_duration = res_solve_time_equivalence[
