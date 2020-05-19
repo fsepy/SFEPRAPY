@@ -13,6 +13,12 @@ Checklist before release of new versions:
 
 ## Version history
 
+### xx/xx/2020 VERSION: 0.7.2
+
+- [ ] Added: 1D heat transfer module.
+- [x] Improved: `cli` mcs0 template save as `.xlsx`.
+- [x] Fixed: `cli` mcs0 template blank lines when saved as `.csv`.
+
 ### 01/02/2020 VERSION: 0.7.0
 
 - New: GUI added to `sfeprapy.mcs0`, can be summoned in CLI by `sfeprapy mcs0 gui`.
