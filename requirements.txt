@@ -7,3 +7,4 @@ xlrd>=1.2
 plotly>=4.2
 docopt>=0.6
 pyside2>=5.12
+openpyxl>=3.0.3

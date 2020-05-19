@@ -48,10 +48,13 @@ def main():
             mcs0_figure(fp_mcs0_out=arguments["<file_name>"])
 
         elif arguments["template"]:
-            from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
+            from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
 
-            with open(arguments["<file_name>"], "w+") as f:
-                f.write(EXAMPLE_INPUT_CSV)
+            if arguments["<file_name>"].endswith('.xlsx'):
+                EXAMPLE_INPUT_DF.to_excel(arguments["<file_name>"])
+            else:
+                with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
+                    f.write(EXAMPLE_INPUT_CSV)
 
         else:
             from sfeprapy.mcs0.__main__ import main as mcs0
