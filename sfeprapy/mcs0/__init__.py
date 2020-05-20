@@ -2,8 +2,7 @@
 
 
 def __example_config_dict():
-    y = dict(n_threads=2)
-    return y
+    return dict(n_threads=2, cwd='')
 
 
 def __example_input_dict():

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 
+from sfeprapy.func.asciiplot import AsciiPlot
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
 from sfeprapy.func.fire_travelling import fire as fire_travelling
@@ -16,6 +17,7 @@ from sfeprapy.func.heat_transfer_protected_steel_ec import (
 from sfeprapy.func.heat_transfer_protected_steel_ec import (
     protected_steel_eurocode_max_temperature as _steel_temperature_max,
 )
+from sfeprapy.func.mcs import MCS
 
 
 def _fire_travelling(**kwargs):
@@ -557,12 +559,23 @@ def mcs_out_post(df: pd.DataFrame) -> pd.DataFrame:
             x = df_res[k].values
             x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
             dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
-        except (KeyError, ValueError):
+        except Exception:
             pass
 
     list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
 
     print("\n".join(list_), "\n")
+
+    try:
+        x = np.array(df_res['solver_time_equivalence_solved'].values / 60, dtype=float)
+        x[x == -np.inf] = 0
+        x[x == np.inf] = np.amax(x[x != np.inf])
+        y = np.linspace(0, 1, len(x), dtype=float)
+        aplot = AsciiPlot(size=(55, 15))
+        aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
+        print(aplot.show())
+    except Exception as e:
+        print(f'Failed to plot time equivalence, {e}')
 
     return df
 
@@ -654,7 +667,7 @@ def teq_main(
         345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0
     ) + 273.15  # in [K]
 
-    # Inject results, i.e. these values will be in the output
+    # Inject results, i.e. these input values will also be in the output file
     res = dict(
         case_name=case_name,
         n_simulations=n_simulations,
@@ -820,6 +833,20 @@ def teq_main(
     return res
 
 
+class MCS0(MCS):
+    def __init__(self):
+        super().__init__()
+
+    def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
+        return teq_main(*args, **kwargs)
+
+    def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
+        return teq_main_wrapper(*args, **kwargs)
+
+    def mcs_post(self, *args, **kwargs):
+        return mcs_out_post(*args, **kwargs)
+
+
 def _test_teq_phi():
     warnings.filterwarnings("ignore")
 
@@ -974,3 +1001,44 @@ def _test_standard_oversized_case():
 
     assert len(mcs_out['window_height']) == sum(mcs_out['window_height'].values == 3.3)
     assert len(mcs_out['window_width']) == sum(mcs_out['window_width'].values == 94.5)
+
+
+def _test_standard_case_new():
+    import copy
+    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    # from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
+    from scipy.interpolate import interp1d
+    import numpy as np
+
+    # increase the number of simulations so it gives sensible results
+    mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
+    mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
+    for k in list(mcs_input.keys()):
+        mcs_input[k]["phi_teq"] = 1
+        mcs_input[k]["n_simulations"] = 333
+        mcs_input[k]["probability_weight"] = 1 / 3.0
+        mcs_input[k]["fire_time_duration"] = 10000
+        mcs_input[k]["timber_exposed_area"] = 0
+        mcs_input[k].pop("beam_position_horizontal")
+        mcs_input[k]["beam_position_horizontal:dist"] = "uniform_"
+        mcs_input[k]["beam_position_horizontal:ubound"] = (
+                mcs_input[k]["room_depth"] * 0.9
+        )
+        mcs_input[k]["beam_position_horizontal:lbound"] = (
+                mcs_input[k]["room_depth"] * 0.6
+        )
+
+    # increase the number of threads so it runs faster
+    mcs_config["n_threads"] = 1  # coverage does not support
+    mcs0 = MCS0()
+    mcs0.mcs_inputs = mcs_input
+    mcs0.mcs_config = EXAMPLE_CONFIG_DICT
+    mcs0.run_mcs()
+    mcs_out = mcs0.mcs_out
+    teq = mcs_out["solver_time_equivalence_solved"] / 60.0
+    hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
+    x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
+    teq_at_80_percentile = interp1d(y, x)(0.8)
+    print(teq_at_80_percentile)
+    target, target_tol = 60, 2
+    assert target - target_tol < teq_at_80_percentile < target + target_tol
