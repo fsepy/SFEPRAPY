@@ -8,7 +8,10 @@ from sfeprapy.func.fire_travelling import (
 from sfeprapy.func.fire_travelling import (
     _test_fire_multiple_beam_location as test_fire_travelling_multiple,
 )
+from sfeprapy.func.fire_travelling_flux import _test_fire as test_fire_travelling_flux
 
 test_fire_travelling()
 test_fire_travelling_backup()
 test_fire_travelling_multiple()
+test_fire_travelling_flux()
+

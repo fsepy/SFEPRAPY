@@ -1,8 +1,8 @@
 import sys
 
-from PySide2 import QtWidgets
+from PySide2 import QtWidgets, QtGui, QtCore
 
-from sfeprapy.guilayout.main import Ui_MainWindow
+from sfeprapy.gui.layout.main import Ui_MainWindow
 from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
 from sfeprapy.mcs0.__main__ import main as mcs0
 
@@ -15,8 +15,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()  # instantiate ui
         self.ui.setupUi(self)  # set up ui
 
+        self.setWindowTitle('SfePrapy TEQ MCS Alpha')
+
         # set ui elements initial status
         self.ui.lineEdit_input_file.setReadOnly(True)
+        self.ui.lineEdit_input_file.setText('Click the Select button.')
+
+        # validators
+        self.ui.lineEdit_n_proc.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(r'^[0-9]+$')))
 
         # set ui elements connections
         self.ui.pushButton_input_file.clicked.connect(self.select_input_file)
@@ -92,6 +98,6 @@ def main(app_window=None):
 
 if __name__ == "__main__":
     """update ui files and run the application. this is used only for testing"""
-    from sfeprapy.guilayout.ui2py import ui2py
+    from sfeprapy.gui.layout.ui2py import ui2py
     ui2py()
     main()
