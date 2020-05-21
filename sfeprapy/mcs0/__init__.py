@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import pandas as pd
+
+from sfeprapy.func.mcs_gen import dict_flatten
 
 
 def __example_config_dict():
@@ -168,19 +171,24 @@ def __example_input_dict():
 
 
 def __example_input_csv(x: dict):
-    from sfeprapy.func.mcs_gen import dict_flatten
-    import pandas as pd
-
     y = {k: dict_flatten(v) for k, v in x.items()}
     y = pd.DataFrame.from_dict(y, orient="columns")
     y.index.name = "PARAMETERS"
-    y = y.to_csv(index=True)
+    y = y.to_csv(index=True, line_terminator='\n')
+    return y
+
+
+def __example_input_df(x: dict) -> pd.DataFrame:
+    y = {k: dict_flatten(v) for k, v in x.items()}
+    y = pd.DataFrame.from_dict(y, orient="columns")
+    y.index.name = "PARAMETERS"
     return y
 
 
 EXAMPLE_CONFIG_DICT = __example_config_dict()
 EXAMPLE_INPUT_DICT = __example_input_dict()
 EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_dict())
+EXAMPLE_INPUT_DF = __example_input_df(__example_input_dict())
 
 if __name__ == "__main__":
     print(EXAMPLE_CONFIG_DICT, "\n")

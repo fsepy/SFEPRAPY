@@ -117,8 +117,7 @@ def decide_fire(
 
     if (
         fire_mode == 0 or fire_mode == 1 or fire_mode == 2
-    ):  # enforced to ec parametric fire
-
+    ):  # enforced to selected fire, i.e. 0 is ec parametric; 1 is travelling; and 2 is din ec parametric
         fire_type = fire_mode
     elif fire_mode == 3:  # enforced to ec parametric + travelling
         if (
