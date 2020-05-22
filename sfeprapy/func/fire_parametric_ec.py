@@ -4,8 +4,11 @@ import numpy as np
 def fire(
     t, A_t, A_f, A_v, h_eq, q_fd, lambda_, rho, c, t_lim, temperature_initial=293.15
 ):
-    """Function Description: (SI UNITS ONLY)
+    """
+    Function Description:
+    
     This function calculates the time-temperature curve according to Eurocode 1 part 1-2, Appendix A.
+    
     :param t: numpy.ndarray, [s], time evolution.
     :param A_t: float, [m2], total surface area (including openings).
     :param A_f: float, [m2], floor area.
@@ -17,6 +20,14 @@ def fire(
     :param c: float, [J/K/kg], lining thermal capacity.
     :param t_lim: float, [s], limiting time for the fire.
     :return T_g: numpy.ndarray, [s], temperature evolution.
+    
+    
+    Table F.2 - Conversion factor k_b depending on the thermal properties of the enclosure
+    | b=√(ρcλ) [J/m²/s0.5/K]                  | k_b [min⋅m²/MJ]   |
+    |:----------------------------------------|:------------------|
+    | b>2500                                  | 0.04              |
+    | 2500>=b>=720                            | 0.055             |
+    | b<720                                   | 0.07              |
     """
     # Reference: Eurocode 1991-1-2; Jean-Marc Franssen, Paulo Vila Real (2010) - Fire Design of Steel Structures
 
