@@ -61,13 +61,13 @@ class MCS:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
         """
-        pass
+        raise NotImplementedError('This method should be overridden by a child class')
 
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
         """
-        pass
+        raise NotImplementedError('This method should be overridden by a child class')
 
     @property
     def mcs_inputs(self) -> dict:
@@ -174,14 +174,13 @@ class MCS:
                 x3_ = mcs_post(x3_)
             x3[k] = copy.copy(x3_)
 
+            # save outputs if work direction is provided per iteration
             if self.__cwd:
                 if not os.path.exists(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME)):
                     os.makedirs(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME))
                 x3_.to_csv(
-                    os.path.join(
-                        os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME),
-                        f"{k}.csv",
-                    )
+                    os.path.join(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME), f"{k}.csv"),
+                    index=False
                 )
 
         # ------------
@@ -196,7 +195,7 @@ class MCS:
             )
 
     def mcs_post(self, *arg, **kwargs):
-        pass
+        raise NotImplementedError('This method should be overridden by a child class')
 
     @property
     def mcs_out(self):
