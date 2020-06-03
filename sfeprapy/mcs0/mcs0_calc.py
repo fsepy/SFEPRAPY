@@ -719,9 +719,8 @@ def teq_main(
     else:
         timber_exposed_duration = 0
 
-    timber_solver_iter = (
-        -1
-    )  # initialise solver iteration count for timber fuel contribution
+    # initialise solver iteration count for timber fuel contribution
+    timber_solver_iter = -1
 
     if isinstance(timber_charring_rate, (int, float)):
         timber_charring_rate_ = copy.copy(timber_charring_rate)
@@ -830,6 +829,7 @@ def teq_main(
     res.update(res_solve_time_equivalence)
 
     # Remove unnecessary parameters from the output
+    res.pop('fire_time')
     res.pop('fire_temperature')
 
     return res
