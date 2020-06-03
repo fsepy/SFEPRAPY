@@ -7,6 +7,12 @@ Usage:
     sfeprapy mcs0 template <file_name>
     sfeprapy distfit [--data_t=<int>] [--dist_g=<int>] <file_name>
 
+Examples:
+    sfeprapy mcs0 template inputs.csv
+    sfeprapy mcs0 template inputs.xlsx
+    sfeprapy mcs0 run -p 2 inputs.csv
+    sfeprapy mcs0 figure mcs.out.csv
+
 Options:
     --data_t=<int>  an integer indicating data type:
                     0   (default) samples only, a single column data.
@@ -19,7 +25,7 @@ Options:
     -h --help       to show this message.
 
 Commands:
-                    Will run `mcs0 gui` if no command is supplied.
+                    Run `mcs0 gui` if no command is supplied.
     mcs0 gui        Experimental GUI version of sfeprapy.
     mcs0 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
     mcs0 figure     produce figure from the output file <file_name>.
@@ -29,10 +35,9 @@ Commands:
 from docopt import docopt
 
 from sfeprapy.func.stats_dist_fit import auto_fit_2
-from sfeprapy.gui.__main__ import main as main_gui
-from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
 from sfeprapy.mcs0.__main__ import main as mcs0
 from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
+from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
 
 
 def main():
@@ -45,16 +50,16 @@ def main():
 
     if arguments["mcs0"]:
 
-        if arguments["gui"]:
-            main_gui()
-            return 0
+        # if arguments["gui"]:
+        #     from sfeprapy.gui.__main__ import main as main_gui
+        #     main_gui()
+        #     return 0
 
-        elif arguments["figure"]:
+        if arguments["figure"]:
 
             mcs0_figure(fp_mcs0_out=arguments["<file_name>"])
 
         elif arguments["template"]:
-            from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
 
             if arguments["<file_name>"].endswith('.xlsx'):
                 EXAMPLE_INPUT_DF.to_excel(arguments["<file_name>"])
@@ -63,7 +68,6 @@ def main():
                     f.write(EXAMPLE_INPUT_CSV)
 
         else:
-
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 2
             mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
@@ -81,5 +85,5 @@ def main():
             data=arguments["<file_name>"],
         )
 
-    else:
-        main_gui()
+    # else:
+    #     main_gui()
