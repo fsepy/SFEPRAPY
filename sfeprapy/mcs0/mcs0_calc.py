@@ -572,7 +572,7 @@ def mcs_out_post(df: pd.DataFrame) -> pd.DataFrame:
         y = np.linspace(0, 1, len(x), dtype=float)
         aplot = AsciiPlot(size=(55, 15))
         aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
-        print(aplot.show())
+        aplot.show()
     except Exception as e:
         print(f'Failed to plot time equivalence, {e}')
 
@@ -672,45 +672,45 @@ def teq_main(
         n_simulations=n_simulations,
         probability_weight=probability_weight,
         index=index,
-        # beam_cross_section_area=beam_cross_section_area,
-        # beam_position_vertical=beam_position_vertical,
+        beam_cross_section_area=beam_cross_section_area,
+        beam_position_vertical=beam_position_vertical,
         beam_position_horizontal=beam_position_horizontal,
-        # beam_rho=beam_rho,
-        # fire_time=fire_time,
+        beam_rho=beam_rho,
+        fire_time=fire_time,
         fire_combustion_efficiency=fire_combustion_efficiency,
-        # fire_gamma_fi_q=fire_gamma_fi_q,
+        fire_gamma_fi_q=fire_gamma_fi_q,
         fire_hrr_density=fire_hrr_density,
         fire_load_density=fire_load_density,
-        # fire_mode=fire_mode,
+        fire_mode=fire_mode,
         fire_nft_limit=fire_nft_limit,
         fire_spread_speed=fire_spread_speed,
-        # fire_t_alpha=fire_t_alpha,
-        # fire_tlim=fire_tlim,
-        # fire_temperature_iso834=fire_temperature_iso834,
-        # fire_time_iso834=fire_time_iso834,
-        # protection_c=protection_c,
-        # protection_k=protection_k,
-        # protection_protected_perimeter=protection_protected_perimeter,
-        # protection_rho=protection_rho,
+        fire_t_alpha=fire_t_alpha,
+        fire_tlim=fire_tlim,
+        fire_temperature_iso834=fire_temperature_iso834,
+        fire_time_iso834=fire_time_iso834,
+        protection_c=protection_c,
+        protection_k=protection_k,
+        protection_protected_perimeter=protection_protected_perimeter,
+        protection_rho=protection_rho,
         room_breadth=room_breadth,
         room_depth=room_depth,
-        # room_height=room_height,
-        # room_wall_thermal_inertia=room_wall_thermal_inertia,
-        # solver_temperature_goal=solver_temperature_goal,
-        # solver_max_iter=solver_max_iter,
-        # solver_thickness_lbound=solver_thickness_lbound,
-        # solver_thickness_ubound=solver_thickness_ubound,
-        # solver_tol=solver_tol,
+        room_height=room_height,
+        room_wall_thermal_inertia=room_wall_thermal_inertia,
+        solver_temperature_goal=solver_temperature_goal,
+        solver_max_iter=solver_max_iter,
+        solver_thickness_lbound=solver_thickness_lbound,
+        solver_thickness_ubound=solver_thickness_ubound,
+        solver_tol=solver_tol,
         window_height=window_height,
         window_open_fraction=window_open_fraction,
         window_width=window_width,
         phi_teq=phi_teq,
-        # timber_charring_rate=timber_charring_rate,
-        # timber_hc=timber_hc,
-        # timber_density=timber_density,
-        # timber_exposed_area=timber_exposed_area,
-        # timber_solver_tol=timber_solver_tol,
-        # timber_solver_ilim=timber_solver_ilim,
+        timber_charring_rate=timber_charring_rate,
+        timber_hc=timber_hc,
+        timber_density=timber_density,
+        timber_exposed_area=timber_exposed_area,
+        timber_solver_tol=timber_solver_tol,
+        timber_solver_ilim=timber_solver_ilim,
     )
 
     # initial timber exposure time
@@ -828,6 +828,9 @@ def teq_main(
     res.update(res_decide_fire)
     res.update(res_evaluate_fire_temperature)
     res.update(res_solve_time_equivalence)
+
+    # Remove unnecessary parameters from the output
+    res.pop('fire_temperature')
 
     return res
 
