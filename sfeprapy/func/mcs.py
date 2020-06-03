@@ -180,19 +180,13 @@ class MCS:
                     os.makedirs(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME))
                 x3_.to_csv(
                     os.path.join(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME), f"{k}.csv"),
-                    index=False
+                    index=False,
                 )
 
         # ------------
         # Pack results
         # ------------
         self.__mcs_out = pd.concat([v for v in x3.values()])
-
-        if self.__cwd:
-            self.mcs_out.to_csv(
-                os.path.join(self.__cwd, self.DEFAULT_MCS_OUTPUT_FILE_NAME),
-                index=False,
-            )
 
     def mcs_post(self, *arg, **kwargs):
         raise NotImplementedError('This method should be overridden by a child class')
