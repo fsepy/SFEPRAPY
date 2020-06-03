@@ -1,16 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
+import warnings
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.io
+
+from sfeprapy.func.mcs_gen import main as gen
+from sfeprapy.func.mcs_obj import MCS
+from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
+
+warnings.filterwarnings("ignore")
 
 
-def save_figure(fp_mcs0_out: str):
-    import os
-    import numpy as np
-    import pandas as pd
-    import plotly.io
-    import plotly.graph_objects as go
+def save_figure(fp_mcs_out: str):
+    # ---------
+    # Read data
+    # ---------
+    fp_mcs_out = os.path.realpath(fp_mcs_out)
+    if os.path.isfile(fp_mcs_out):
+        mcs_out = pd.read_csv(fp_mcs_out)
+    else:
+        list_df_mcs_out = list()
+        for root, dirs, files in os.walk(fp_mcs_out):
+            for f in files:
+                if f.endswith('.csv'):
+                    list_df_mcs_out.append(pd.read_csv(os.path.join(root, f)))
+        mcs_out = pd.concat(list_df_mcs_out)
 
-    mcs_out = pd.read_csv(fp_mcs0_out)
-
+    # ----------------------------
+    # Prepare time equivalence CDF
+    # ----------------------------
     # A helper function to produce (x, y) line plot based upon samples
     def cdf_xy(v, xlim, bin_width=0.1, weights=None):
         edges = np.arange(*xlim, bin_width)
@@ -57,7 +79,7 @@ def save_figure(fp_mcs0_out: str):
 
     # Time equivalence samples -> x, y of cumulative density function
     xlim = (0, np.max([np.max(v) for v in list_t_eq]) + bin_width)
-    x = np.arange(*xlim, bin_width)
+    x = (np.arange(*xlim, bin_width)[1:] + np.arange(*xlim, bin_width)[:-1]) / 2
     list_cdf_t_eq_y = [
         cdf_xy(t_eq, xlim, bin_width, weights=None)[1] for t_eq in list_t_eq
     ]
@@ -68,7 +90,17 @@ def save_figure(fp_mcs0_out: str):
     )
     cdf_t_eq_y_combined = np.sum(cdf_t_eq_y_combined, axis=0)
 
-    # Plot figure
+    # --------------------------------
+    # Save time equivalence CDF to csv
+    # --------------------------------
+    df_cdf = pd.DataFrame.from_dict({list_case_name[i]: list_cdf_t_eq_y[i] for i in range(len(list_case_name))})
+    df_cdf['time'] = x
+    df_cdf.set_index('time', inplace=True)
+    df_cdf.to_csv(os.path.join(os.path.dirname(fp_mcs_out), "mcs.out.cdf.csv"))
+
+    # ------------------------------
+    # Plot and save CDF using plotly
+    # ------------------------------
     fig = go.Figure()
 
     # add combined time equivalence to the plot
@@ -86,7 +118,7 @@ def save_figure(fp_mcs0_out: str):
         paper_bgcolor="White",
         plot_bgcolor="White",
         xaxis=dict(
-            title="Equivalent of time exposure [minute]",
+            title="Equivalent of time exposure [min]",
             dtick=30,
             range=fig_x_limit,
             showline=True,
@@ -130,30 +162,21 @@ def save_figure(fp_mcs0_out: str):
 
     config = {
         "scrollZoom": False,
-        "displayModeBar": True,
-        "editable": True,
+        "displayModeBar": False,
+        "editable": False,
         "showLink": False,
         "displaylogo": False,
     }
 
     plotly.io.write_html(
         fig,
-        file=os.path.join(os.path.dirname(fp_mcs0_out), "mcs.out.html"),
+        file=os.path.join(os.path.dirname(fp_mcs_out), "mcs.out.html"),
         auto_open=True,
         config=config,
     )
 
 
 def main(fp_mcs_in: str, n_threads: int = None):
-
-    import os
-    import warnings
-    from sfeprapy.func.mcs_obj import MCS
-    from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
-    from sfeprapy.func.mcs_gen import main as gen
-
-    warnings.filterwarnings("ignore")
-
     fp_mcs_in = os.path.realpath(fp_mcs_in)
 
     mcs = MCS()
