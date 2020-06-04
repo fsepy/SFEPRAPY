@@ -676,7 +676,7 @@ def teq_main(
         beam_position_vertical=beam_position_vertical,
         beam_position_horizontal=beam_position_horizontal,
         beam_rho=beam_rho,
-        # fire_time=fire_time,
+        fire_time=fire_time,
         fire_combustion_efficiency=fire_combustion_efficiency,
         fire_gamma_fi_q=fire_gamma_fi_q,
         fire_hrr_density=fire_hrr_density,
