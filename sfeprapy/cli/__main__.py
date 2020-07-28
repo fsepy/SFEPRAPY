@@ -20,7 +20,7 @@ Options:
     --dist_g=<int>  an integer indicating what distribution group to be used for fitting the data:
                     0   fit to all available distributions.
                     1   (default) fit to common distribution types.
-    -p=<int>        to define number of processes for MCS, positive integer only.
+    -p=<int>        to define number of processes for MCS, positive integer only. 2 by default.
     -h --help       to show this message.
 
 Commands:
