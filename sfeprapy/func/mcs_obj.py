@@ -94,10 +94,10 @@ class MCS:
         self._df_mcs_out = df_out
 
     def define_problem(
-        self,
-        data: Union[str, pd.DataFrame, dict] = None,
-        config: dict = None,
-        path_wd: str = None,
+            self,
+            data: Union[str, pd.DataFrame, dict] = None,
+            config: dict = None,
+            path_wd: str = None,
     ):
 
         # to get problem definition: try to parse from csv/xls/xlsx
@@ -105,27 +105,29 @@ class MCS:
         if data is None:
             fp = os.path.realpath(self._get_file_path_gui())
             self.path_wd = os.path.dirname(fp)
-            if fp.endswith(".xlsx") or fp.endswith(".xls"):
-                self.input = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
-            elif fp.endswith(".csv"):
-                self.input = pd.read_csv(fp).set_index("PARAMETERS").to_dict()
-            else:
-                raise ValueError("Unknown input file format.")
+            try:
+                self.input = pd.read_excel(fp, index_col=0).to_dict()
+            except Exception:
+                try:
+                    self.input = pd.read_csv(fp, index_col=0).to_dict()
+                except Exception as e:
+                    raise ValueError(f"Unknown input file format, {e}")
         elif isinstance(data, str):
             fp = data
             self.path_wd = os.path.dirname(fp)
-            if fp.endswith(".xlsx") or fp.endswith(".xls"):
-                self.input = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
-            elif fp.endswith(".csv"):
-                self.input = pd.read_csv(fp).set_index("PARAMETERS").to_dict()
-            else:
-                raise ValueError("Unknown input file format.")
+            try:
+                self.input = pd.read_excel(fp, index_col=0).to_dict()
+            except Exception:
+                try:
+                    self.input = pd.read_csv(fp, index_col=0).to_dict()
+                except Exception as e:
+                    raise ValueError(f"Unknown input file format, {e}")
         elif isinstance(data, pd.DataFrame):
             self.input = data.to_dict()
         elif isinstance(data, dict):
             self.input = data
         else:
-            raise TypeError("Unknown input data type.")
+            raise TypeError("Unknown input data type, input can only be: None, a file path, DataFrame or dict")
 
         # to get configuration: try to parse from cwd if there is any, otherwise chose default values
 
@@ -134,7 +136,7 @@ class MCS:
         else:  # otherwise
             try:
                 with open(
-                    os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), "r"
+                        os.path.join(self.path_wd, self.DEFAULT_CONFIG_FILE_NAME), "r"
                 ) as f:
                     self.config = json.load(f)
             except (TypeError, FileNotFoundError):
@@ -144,7 +146,7 @@ class MCS:
         self.func_mcs_gen = func
 
     def define_calculation_routine(
-        self, func_mcs, func_mcs_mp=None, func_mcs_out_post=None
+            self, func_mcs, func_mcs_mp=None, func_mcs_out_post=None
     ):
         self.func_mcs_calc = func_mcs
         self.func_mcs_calc_mp = func_mcs_mp
@@ -210,7 +212,7 @@ class MCS:
 
             if self.path_wd:
                 if not os.path.exists(
-                    os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME)
+                        os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME)
                 ):
                     os.makedirs(
                         os.path.join(self.path_wd, self.DEFAULT_TEMP_FOLDER_NAME)
