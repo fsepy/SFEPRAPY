@@ -215,11 +215,12 @@ class MCS:
 
         self.mcs_out = pd.concat([v for v in x3.values()])
 
-        if self.path_wd:
-            self.mcs_out.to_csv(
-                os.path.join(self.path_wd, self.DEFAULT_MCS_OUTPUT_FILE_NAME),
-                index=False,
-            )
+        # DEPRECIATED ON 28/08/2020
+        # if self.path_wd:
+        #     self.mcs_out.to_csv(
+        #         os.path.join(self.path_wd, self.DEFAULT_MCS_OUTPUT_FILE_NAME),
+        #         index=False,
+        #     )
 
     @staticmethod
     def _mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int) -> pd.DataFrame:
