@@ -1,6 +1,8 @@
 import copy
 import os
+import threading
 import time
+from abc import ABC, abstractmethod
 from typing import Union, Callable
 
 import pandas as pd
@@ -9,7 +11,7 @@ from tqdm import tqdm
 from sfeprapy.func.mcs_gen import main as mcs_gen_main
 
 
-class MCS:
+class MCS(ABC):
     """
     Monte Carlo Simulation (MCS) object defines the framework of a MCS process. MCS is designed to work as parent class
     and certain methods defined in this class are placeholders.
@@ -57,12 +59,14 @@ class MCS:
         # assign default properties
         self.func_mcs_gen = mcs_gen_main
 
+    @abstractmethod
     def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
+    @abstractmethod
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
@@ -109,7 +113,7 @@ class MCS:
         if 'cwd' in config:
             self.__cwd = config['cwd']
 
-    def run_mcs(self):
+    def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None):
         # ----------------------------
         # Prepare mcs parameter inputs
         # ----------------------------
@@ -162,12 +166,15 @@ class MCS:
         #   'case_2': df2
         # }
         for k, v in x2.items():
+            if qt_prog_signal_0:
+                qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)}')
 
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
                 self.mcs_deterministic_calc_mp,
                 x=v,
                 n_threads=self.mcs_config["n_threads"],
+                qt_prog_signal_1=qt_prog_signal_1
             )
             if self.mcs_post:
                 mcs_post = self.mcs_post
@@ -176,18 +183,27 @@ class MCS:
 
             # save outputs if work direction is provided per iteration
             if self.__cwd:
-                if not os.path.exists(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME)):
-                    os.makedirs(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME))
-                x3_.to_csv(
-                    os.path.join(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME), f"{k}.csv"),
-                    index=False,
-                )
+                def _save_(fp: str):
+                    if not os.path.exists(os.path.dirname(fp)):
+                        os.makedirs(os.path.dirname(fp))
+                    x3_.to_csv(
+                        os.path.join(fp),
+                        index=False,
+                    )
+
+                threading.Thread(
+                    target=_save_,
+                    kwargs=dict(
+                        fp=os.path.join(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME), f"{k}.csv")
+                    )
+                ).start()
 
         # ------------
         # Pack results
         # ------------
         self.__mcs_out = pd.concat([v for v in x3.values()])
 
+    @abstractmethod
     def mcs_post(self, *arg, **kwargs):
         raise NotImplementedError('This method should be overridden by a child class')
 
@@ -196,7 +212,7 @@ class MCS:
         return self.__mcs_out
 
     @staticmethod
-    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int) -> pd.DataFrame:
+    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, qt_prog_signal_1=None) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
 
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
@@ -205,26 +221,34 @@ class MCS:
         print("{:<24.24}: {}".format("NO. OF SIMULATIONS", len(x.index)))
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
 
+        n_simulations = len(list_mcs_in)
         if n_threads == 1 or func_mp is None:
             mcs_out = list()
+            j = 0
             for i in tqdm(list_mcs_in, ncols=60):
                 mcs_out.append(func(**i))
+                j += 1
+                if qt_prog_signal_1:
+                    qt_prog_signal_1.emit(int(j / n_simulations * 100))
         else:
             import multiprocessing as mp
 
             m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
             q = m.Queue()
             jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
-            n_simulations = len(list_mcs_in)
             with tqdm(total=n_simulations, ncols=60) as pbar:
                 while True:
                     if jobs.ready():
                         if n_simulations > pbar.n:
                             pbar.update(n_simulations - pbar.n)
+                            if qt_prog_signal_1:
+                                qt_prog_signal_1.emit(100)
                         break
                     else:
                         if q.qsize() - pbar.n > 0:
                             pbar.update(q.qsize() - pbar.n)
+                            if qt_prog_signal_1:
+                                qt_prog_signal_1.emit(int(q.qsize() / n_simulations * 100))
                         time.sleep(1)
                 p.close()
                 p.join()
