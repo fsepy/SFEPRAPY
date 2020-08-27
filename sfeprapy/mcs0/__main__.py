@@ -5,8 +5,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.io
 
 from sfeprapy.func.mcs_gen import main as gen
 from sfeprapy.func.mcs_obj import MCS
@@ -16,6 +14,9 @@ warnings.filterwarnings("ignore")
 
 
 def save_figure(fp_mcs_out: str):
+    import plotly.graph_objects as go
+    import plotly.io
+
     # ---------
     # Read data
     # ---------
