@@ -713,11 +713,16 @@ def teq_main(
         timber_charred_volume=timber_charred_volume,
     )
 
-    # Remove unnecessary parameters from the output
-    for i in ['fire_time', 'fire_temperature', 'fire_temperature_iso834', 'fire_time_iso834']:
-        inputs.pop(i)
+    # Prepare results to be returned, only the items in the list below will be returned
+    # add keys accordingly if more parameters are desired to be returned
+    outputs = {
+        i: inputs[i] for i in
+        ['phi_teq', 'fire_spread_speed', 'fire_nft_limit', 'fire_mode', 'fire_load_density', 'fire_hrr_density', 'fire_combustion_efficiency', 'beam_position_horizontal',
+         'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
+         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count']
+    }
 
-    return inputs
+    return outputs
 
 
 class MCS0(MCS):
@@ -846,7 +851,6 @@ def _test_standard_case():
 def _test_standard_case_new():
     import copy
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    # from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
     from scipy.interpolate import interp1d
     import numpy as np
 
@@ -885,6 +889,6 @@ def _test_standard_case_new():
 
 
 if __name__ == '__main__':
-    # _test_teq_phi()
-    # _test_standard_case()
+    _test_teq_phi()
+    _test_standard_case()
     _test_standard_case_new()
