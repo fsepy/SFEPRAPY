@@ -2,7 +2,6 @@ import copy
 import json
 import os
 import time
-from tkinter import filedialog, Tk, StringVar
 from typing import Union, Callable
 
 import pandas as pd
@@ -95,24 +94,14 @@ class MCS:
 
     def define_problem(
             self,
-            data: Union[str, pd.DataFrame, dict] = None,
+            data: Union[str, pd.DataFrame, dict],
             config: dict = None,
             path_wd: str = None,
     ):
 
         # to get problem definition: try to parse from csv/xls/xlsx
 
-        if data is None:
-            fp = os.path.realpath(self._get_file_path_gui())
-            self.path_wd = os.path.dirname(fp)
-            try:
-                self.input = pd.read_excel(fp, index_col=0).to_dict()
-            except Exception:
-                try:
-                    self.input = pd.read_csv(fp, index_col=0).to_dict()
-                except Exception as e:
-                    raise ValueError(f"Unknown input file format, {e}")
-        elif isinstance(data, str):
+        if isinstance(data, str):
             fp = data
             self.path_wd = os.path.dirname(fp)
             try:
@@ -274,21 +263,3 @@ class MCS:
             "solver_time_equivalence_solved", inplace=True
         )  # sort base on time equivalence
         return df_mcs_out
-
-    @staticmethod
-    def _get_file_path_gui():
-        root = Tk()
-        root.withdraw()
-        folder_path = StringVar()
-
-        path_input_file_csv = filedialog.askopenfile(
-            title="Select Input File", filetypes=[("MCS IN", [".csv", ".xlsx"])]
-        )
-        folder_path.set(path_input_file_csv)
-        root.update()
-
-        try:
-            path_input_file_csv = os.path.realpath(path_input_file_csv.name)
-            return path_input_file_csv
-        except AttributeError:
-            raise FileNotFoundError("File not found.")
