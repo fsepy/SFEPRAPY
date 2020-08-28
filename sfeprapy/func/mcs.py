@@ -1,4 +1,5 @@
 import copy
+import multiprocessing as mp
 import os
 import threading
 import time
@@ -165,6 +166,8 @@ class MCS(ABC):
         #   'case_1': df1,
         #   'case_2': df2
         # }
+
+        m, p = mp.Manager(), mp.Pool(self.mcs_config["n_threads"], maxtasksperchild=1000)
         for k, v in x2.items():
             if qt_prog_signal_0:
                 qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)}')
@@ -174,6 +177,8 @@ class MCS(ABC):
                 self.mcs_deterministic_calc_mp,
                 x=v,
                 n_threads=self.mcs_config["n_threads"],
+                m=m,
+                p=p,
                 qt_prog_signal_1=qt_prog_signal_1
             )
             if self.mcs_post:
@@ -197,7 +202,8 @@ class MCS(ABC):
                         fp=os.path.join(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME), f"{k}.csv")
                     )
                 ).start()
-
+        p.close()
+        p.join()
         # ------------
         # Pack results
         # ------------
@@ -212,7 +218,7 @@ class MCS(ABC):
         return self.__mcs_out
 
     @staticmethod
-    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, qt_prog_signal_1=None) -> pd.DataFrame:
+    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, m, p, qt_prog_signal_1=None) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
 
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
@@ -231,9 +237,7 @@ class MCS(ABC):
                 if qt_prog_signal_1:
                     qt_prog_signal_1.emit(int(j / n_simulations * 100))
         else:
-            import multiprocessing as mp
 
-            m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
             q = m.Queue()
             jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
             with tqdm(total=n_simulations, ncols=60) as pbar:
@@ -250,8 +254,6 @@ class MCS(ABC):
                             if qt_prog_signal_1:
                                 qt_prog_signal_1.emit(int(q.qsize() / n_simulations * 100))
                         time.sleep(1)
-                p.close()
-                p.join()
                 mcs_out = jobs.get()
                 time.sleep(0.5)
 
