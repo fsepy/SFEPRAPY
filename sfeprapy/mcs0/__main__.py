@@ -6,9 +6,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from sfeprapy.func.mcs_gen import main as gen
-from sfeprapy.func.mcs_obj import MCS
-from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
+from sfeprapy.mcs0.mcs0_calc import MCS0
 
 warnings.filterwarnings("ignore")
 
@@ -180,17 +178,23 @@ def save_figure(fp_mcs_out: str):
 def main(fp_mcs_in: str, n_threads: int = None):
     fp_mcs_in = os.path.realpath(fp_mcs_in)
 
-    mcs = MCS()
-    mcs.define_problem(fp_mcs_in)
-    mcs.define_stochastic_parameter_generator(gen)
-    mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+    mcs = MCS0()
+    try:
+        if fp_mcs_in.endswith('.csv'):
+            mcs.mcs_inputs = pd.read_csv(fp_mcs_in, index_col=0)
+        elif fp_mcs_in.endswith('.xlsx'):
+            mcs.mcs_inputs = pd.read_excel(fp_mcs_in, index_col=0)
+        else:
+            raise TypeError('Unknown file format')
+    except Exception as e:
+        raise e
 
     try:
         if n_threads:
-            mcs.config = (
+            mcs.mcs_config = (
                 dict(n_threads=n_threads)
-                if mcs.config
-                else mcs.config.update(dict(n_threads=n_threads))
+                if mcs.mcs_config
+                else mcs.mcs_config.update(dict(n_threads=n_threads))
             )
     except KeyError:
         pass
