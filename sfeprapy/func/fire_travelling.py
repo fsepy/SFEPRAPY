@@ -6,18 +6,17 @@ import numpy as np
 
 
 def fire(
-    t: np.array,
-    fire_load_density_MJm2: float,
-    fire_hrr_density_MWm2: float,
-    room_length_m: float,
-    room_width_m: float,
-    fire_spread_rate_ms: float,
-    beam_location_height_m: float,
-    beam_location_length_m: Union[float, list, np.ndarray],
-    fire_nft_limit_c: float,
-    opening_fraction: float = 0,
-    opening_width_m: float = 0,
-    opening_height_m: float = 0,
+        t: np.array,
+        fire_load_density_MJm2: float,
+        fire_hrr_density_MWm2: float,
+        room_length_m: float,
+        room_width_m: float,
+        fire_spread_rate_ms: float,
+        beam_location_height_m: float,
+        beam_location_length_m: Union[float, list, np.ndarray],
+        fire_nft_limit_c: float,
+        *_,
+        **__,
 ):
     """
     This function calculates and returns a temperature array representing travelling fire. This function is NOT in SI.
@@ -69,7 +68,7 @@ def fire(
     # workout the heat release rate ARRAY (corrected with time)
     Q_growth = (HRRPUA * w * s * t) * (t < t_lim_)
     Q_peak = (
-        min([HRRPUA * w * s * t_burn, HRRPUA * w * l]) * (t >= t_lim_) * (t <= t_decay_)
+            min([HRRPUA * w * s * t_burn, HRRPUA * w * l]) * (t >= t_lim_) * (t <= t_decay_)
     )
     Q_decay = (max(Q_peak) - (t - t_decay_) * w * s * HRRPUA) * (t > t_decay_)
     Q_decay[Q_decay < 0] = 0
@@ -116,16 +115,16 @@ def fire(
 
 
 def fire_backup(
-    t: np.ndarray,
-    T_0: float,
-    q_fd: float,
-    hrrpua: float,
-    l: float,
-    w: float,
-    s: float,
-    e_h: float,
-    e_l: float,
-    T_max: float = 1323.15,
+        t: np.ndarray,
+        T_0: float,
+        q_fd: float,
+        hrrpua: float,
+        l: float,
+        w: float,
+        s: float,
+        e_h: float,
+        e_l: float,
+        T_max: float = 1323.15,
 ):
     """
     :param t: ndarray, [s] An array representing time incorporating 'temperature'.
@@ -163,7 +162,7 @@ def fire_backup(
     # workout the heat release rate ARRAY (corrected with time)
     Q_growth = (hrrpua * w * s * t) * (t < t_lim_)
     Q_peak = (
-        min([hrrpua * w * s * t_burn, hrrpua * w * l]) * (t >= t_lim_) * (t <= t_decay_)
+            min([hrrpua * w * s * t_burn, hrrpua * w * l]) * (t >= t_lim_) * (t <= t_decay_)
     )
     Q_decay = (max(Q_peak) - (t - t_decay_) * w * s * hrrpua) * (t > t_decay_)
     Q_decay[Q_decay < 0] = 0

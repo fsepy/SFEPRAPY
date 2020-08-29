@@ -254,8 +254,8 @@ class MCS(ABC):
                             if qt_prog_signal_1:
                                 qt_prog_signal_1.emit(int(q.qsize() / n_simulations * 100))
                         time.sleep(1)
-                mcs_out = jobs.get()
-                time.sleep(0.5)
+            mcs_out = jobs.get()
+            time.sleep(0.5)
 
         # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)

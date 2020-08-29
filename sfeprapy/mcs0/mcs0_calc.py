@@ -339,14 +339,14 @@ def solve_time_equivalence(
         # Solve heat transfer using EC3 correlations
         # SI UNITS FOR INPUTS!
         kwarg_ht_ec = dict(
-            time=fire_time,
-            temperature_ambient=fire_temperature,
-            rho_steel=beam_rho,
-            area_steel_section=beam_cross_section_area,
-            k_protection=protection_k,
-            rho_protection=protection_rho,
-            c_protection=protection_c,
-            perimeter_protected=protection_protected_perimeter,
+            fire_time=fire_time,
+            fire_temperature=fire_temperature,
+            beam_rho=beam_rho,
+            beam_cross_section_area=beam_cross_section_area,
+            protection_k=protection_k,
+            protection_rho=protection_rho,
+            protection_c=protection_c,
+            protection_protected_perimeter=protection_protected_perimeter,
             terminate_max_temperature=solver_temperature_goal + 2 * solver_tol,
         )
 
@@ -362,7 +362,7 @@ def solve_time_equivalence(
         time_at_max_temperature = fire_time[np.argmax(fire_temperature)]
 
         def f_(x, terminate_check_wait_time):
-            kwarg_ht_ec["thickness_protection"] = x
+            kwarg_ht_ec["protection_thickness"] = x
             T_ = _steel_temperature_max(
                 **kwarg_ht_ec, terminate_check_wait_time=terminate_check_wait_time
             )
@@ -408,9 +408,9 @@ def solve_time_equivalence(
                     # ================================================
                     # Make steel time-temperature curve when exposed to the given ambient temperature, i.e. ISO 834.
 
-                    kwarg_ht_ec["time"] = fire_time_iso834
-                    kwarg_ht_ec["temperature_ambient"] = fire_temperature_iso834
-                    kwarg_ht_ec["thickness_protection"] = x3
+                    kwarg_ht_ec["fire_time"] = fire_time_iso834
+                    kwarg_ht_ec["fire_temperature"] = fire_temperature_iso834
+                    kwarg_ht_ec["protection_thickness"] = x3
                     steel_temperature = _steel_temperature(**kwarg_ht_ec)
 
                     steel_time = np.concatenate(
@@ -889,6 +889,6 @@ def _test_standard_case_new():
 
 
 if __name__ == '__main__':
-    _test_teq_phi()
-    _test_standard_case()
+    # _test_teq_phi()
+    # _test_standard_case()
     _test_standard_case_new()
