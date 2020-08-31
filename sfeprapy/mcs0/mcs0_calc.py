@@ -5,18 +5,14 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode_max_temperature as _steel_temperature_max
 from scipy.interpolate import interp1d
 
 from sfeprapy.func.asciiplot import AsciiPlot
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
 from sfeprapy.func.fire_travelling import fire as fire_travelling
-from sfeprapy.func.heat_transfer_protected_steel_ec import (
-    protected_steel_eurocode as _steel_temperature,
-)
-from sfeprapy.func.heat_transfer_protected_steel_ec import (
-    protected_steel_eurocode_max_temperature as _steel_temperature_max,
-)
+from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as _steel_temperature
 from sfeprapy.func.mcs import MCS
 
 
@@ -26,21 +22,21 @@ def _fire_travelling(**kwargs):
     ):
 
         kwarg_ht_ec = dict(
-            time=kwargs["t"],
-            rho_steel=7850,
-            area_steel_section=0.017,
-            k_protection=0.2,
-            rho_protection=800,
-            c_protection=1700,
-            thickness_protection=0.005,
-            perimeter_protected=2.14,
+            fire_time=kwargs["t"],
+            beam_rho=7850,
+            beam_cross_section_area=0.017,
+            protection_k=0.2,
+            protection_rho=800,
+            protection_c=1700,
+            protection_thickness=0.005,
+            protection_protected_perimeter=2.14,
         )
 
         temperature_steel_list = list()
         temperature_gas_list = fire_travelling(**kwargs)
 
         for temperature in temperature_gas_list:
-            kwarg_ht_ec["temperature_ambient"] = temperature + 273.15
+            kwarg_ht_ec["fire_temperature"] = temperature + 273.15
             temperature_steel_list.append(_steel_temperature_max(**kwarg_ht_ec))
 
         return (
@@ -364,7 +360,8 @@ def solve_time_equivalence(
         def f_(x, terminate_check_wait_time):
             kwarg_ht_ec["protection_thickness"] = x
             T_ = _steel_temperature_max(
-                **kwarg_ht_ec, terminate_check_wait_time=terminate_check_wait_time
+                **kwarg_ht_ec,
+                terminate_check_wait_time=terminate_check_wait_time
             )
             return T_
 
@@ -457,9 +454,9 @@ def solve_time_equivalence(
             # ================================================
             # Make steel time-temperature curve when exposed to the given ambient temperature, i.e. ISO 834.
 
-            kwarg_ht_ec["time"] = fire_time_iso834
-            kwarg_ht_ec["temperature_ambient"] = fire_temperature_iso834
-            kwarg_ht_ec["thickness_protection"] = x1
+            kwarg_ht_ec["fire_time"] = fire_time_iso834
+            kwarg_ht_ec["fire_temperature"] = fire_temperature_iso834
+            kwarg_ht_ec["protection_thickness"] = x1
             steel_temperature = _steel_temperature(**kwarg_ht_ec)
 
             steel_time = np.concatenate(
@@ -486,9 +483,9 @@ def solve_time_equivalence(
             # ================================================
             # Make steel time-temperature curve when exposed to the given ambient temperature, i.e. ISO 834.
 
-            kwarg_ht_ec["time"] = fire_time_iso834
-            kwarg_ht_ec["temperature_ambient"] = fire_temperature_iso834
-            kwarg_ht_ec["thickness_protection"] = x2
+            kwarg_ht_ec["fire_time"] = fire_time_iso834
+            kwarg_ht_ec["fire_temperature"] = fire_temperature_iso834
+            kwarg_ht_ec["protection_thickness"] = x2
             steel_temperature = _steel_temperature(**kwarg_ht_ec)
 
             steel_time = np.concatenate(
