@@ -5,6 +5,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode as _steel_temperature
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode_max_temperature as _steel_temperature_max
 from scipy.interpolate import interp1d
 
@@ -12,7 +13,6 @@ from sfeprapy.func.asciiplot import AsciiPlot
 from sfeprapy.func.fire_parametric_ec import fire as _fire_param
 from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
 from sfeprapy.func.fire_travelling import fire as fire_travelling
-from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as _steel_temperature
 from sfeprapy.func.mcs import MCS
 
 
@@ -747,14 +747,14 @@ def _test_teq_phi():
     input_param = dict(
         index=0,
         case_name="Standard 1",
-        probability_weight=1,
-        fire_time_step=30,
-        fire_time_duration=5 * 60 * 60,
+        probability_weight=1.,
+        fire_time_step=30.,
+        fire_time_duration=5. * 60 * 60,
         n_simulations=1,
         beam_cross_section_area=0.017,
         beam_position_vertical=2.5,
         beam_position_horizontal=18,
-        beam_rho=7850,
+        beam_rho=7850.,
         fire_combustion_efficiency=0.8,
         fire_gamma_fi_q=1,
         fire_hrr_density=0.25,
@@ -766,10 +766,10 @@ def _test_teq_phi():
         fire_tlim=0.333,
         fire_temperature_iso834=fire_temperature_iso834_,
         fire_time_iso834=fire_time_,
-        protection_c=1700,
+        protection_c=1700.,
         protection_k=0.2,
         protection_protected_perimeter=2.14,
-        protection_rho=7850,
+        protection_rho=7850.,
         room_breadth=16,
         room_depth=31.25,
         room_height=3,
