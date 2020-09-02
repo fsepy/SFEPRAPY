@@ -178,12 +178,7 @@ def main(fp_mcs_in: str, n_threads: int = None):
 
     mcs = MCS0()
     try:
-        if fp_mcs_in.endswith('.csv'):
-            mcs.mcs_inputs = pd.read_csv(fp_mcs_in, index_col=0)
-        elif fp_mcs_in.endswith('.xlsx'):
-            mcs.mcs_inputs = pd.read_excel(fp_mcs_in, index_col=0)
-        else:
-            raise TypeError('Unknown file format')
+        mcs.mcs_inputs = fp_mcs_in
     except Exception as e:
         raise e
 

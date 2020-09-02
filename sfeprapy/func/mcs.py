@@ -86,7 +86,8 @@ class MCS(ABC):
         """
         if isinstance(fp_df_dict, str):
             fp = fp_df_dict
-            self.path_wd = os.path.dirname(fp)
+            if self.__cwd is None:
+                self.__cwd = os.path.dirname(fp)
             if fp.endswith(".xlsx") or fp.endswith(".xls"):
                 self.__mcs_inputs = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
             elif fp.endswith(".csv"):
@@ -187,6 +188,7 @@ class MCS(ABC):
             x3[k] = copy.copy(x3_)
 
             # save outputs if work direction is provided per iteration
+            print(self.__cwd)
             if self.__cwd:
                 def _save_(fp: str):
                     if not os.path.exists(os.path.dirname(fp)):
