@@ -16,7 +16,7 @@ else:
 
 # setup logger
 def get_logger(f_handler_fp: str = None, f_handler_level=logging.WARNING, c_handler_level=logging.INFO):
-    logger_ = logging.getLogger('gui')
+    logger_ = logging.getLogger('sfeprapy')
 
     if f_handler_fp:
         f_handler = logging.FileHandler(os.path.realpath(f_handler_fp))
