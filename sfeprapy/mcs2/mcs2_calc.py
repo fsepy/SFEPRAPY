@@ -125,7 +125,7 @@ def _test_standard_case_new():
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     for k in list(mcs_input.keys()):
         mcs_input[k]["phi_teq"] = 1
-        mcs_input[k]["n_simulations"] = 1000
+        mcs_input[k]["n_simulations"] = 10000
         mcs_input[k]["probability_weight"] = 1 / 3.0
         mcs_input[k]["fire_time_duration"] = 10000
         mcs_input[k]["timber_exposed_area"] = 0
@@ -139,7 +139,7 @@ def _test_standard_case_new():
     mcs_config["n_threads"] = 1  # coverage does not support
     mcs2 = MCS2()
     mcs2.mcs_inputs = mcs_input
-    mcs2.mcs_config = EXAMPLE_CONFIG_DICT
+    mcs2.mcs_config = mcs_config
     mcs2.run_mcs()
     mcs_out = mcs2.mcs_out
     teq = mcs_out["solver_time_equivalence_solved"] / 60.0

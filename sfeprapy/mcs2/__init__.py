@@ -12,7 +12,7 @@ def __example_input_dict():
     y = {
         "Standard Case 1": dict(
             case_name="Standard Case 1",
-            n_simulations=500,
+            n_simulations=5000,
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
@@ -41,7 +41,7 @@ def __example_input_dict():
             # room_breadth=16,
             # room_depth=31.25,
             room_floor_area=500,
-            room_breadth_depth_ratio=dict(dist="uniform_", lbound=0.512 - 0.2, ubound=0.512 + 0.2, ),
+            room_breadth_depth_ratio=dict(dist="uniform_", lbound=0.512 - 0.2, ubound=0.512 + 0.2),
             room_height=3,
             room_wall_thermal_inertia=720,
             solver_temperature_goal=893.15,

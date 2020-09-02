@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode as _steel_temperature
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode_max_temperature as _steel_temperature_max
+# from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer import protected_steel_eurocode as _steel_temperature
+# from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer import protected_steel_eurocode_max_temperature as _steel_temperature_max
 from scipy.interpolate import interp1d
 
 from sfeprapy.func.asciiplot import AsciiPlot

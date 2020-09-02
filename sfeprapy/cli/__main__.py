@@ -2,9 +2,9 @@
 Usage:
     sfeprapy
     sfeprapy mcs0 run [-p=<int>] <file_name>
-    sfeprapy mcs0 figure <file_name>
     sfeprapy mcs0 template <file_name>
-    sfeprapy distfit [--data_t=<int>] [--dist_g=<int>] <file_name>
+    sfeprapy mcs2 run [-p=<int>] <file_name>
+    sfeprapy mcs2 template <file_name>
 
 Examples:
     sfeprapy mcs0 template inputs.csv
@@ -35,6 +35,9 @@ from sfeprapy.func.stats_dist_fit import auto_fit_2
 from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
 from sfeprapy.mcs0.__main__ import main as mcs0
 from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
+from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_mcs2
+from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_mcs2
+from sfeprapy.mcs2.__main__ import main as mcs2
 
 
 def main():
@@ -60,6 +63,18 @@ def main():
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 2
             mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
+
+    elif arguments['mcs2']:
+        if arguments['template']:
+            if arguments["<file_name>"].endswith('.xlsx'):
+                EXAMPLE_INPUT_DF_mcs2.to_excel(arguments["<file_name>"])
+            else:
+                with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
+                    f.write(EXAMPLE_INPUT_CSV_mcs2)
+        else:
+            fp_mcs_in = arguments["<file_name>"]
+            n_threads = arguments["-p"] or 2
+            mcs2(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments["distfit"]:
         # Default values
