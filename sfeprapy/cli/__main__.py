@@ -35,8 +35,8 @@ from sfeprapy.func.stats_dist_fit import auto_fit_2
 from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
 from sfeprapy.mcs0.__main__ import main as mcs0
 from sfeprapy.mcs0.__main__ import save_figure as mcs0_figure
-from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_mcs2
-from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_mcs2
+from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS2
+from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS2
 from sfeprapy.mcs2.__main__ import main as mcs2
 
 
@@ -67,10 +67,10 @@ def main():
     elif arguments['mcs2']:
         if arguments['template']:
             if arguments["<file_name>"].endswith('.xlsx'):
-                EXAMPLE_INPUT_DF_mcs2.to_excel(arguments["<file_name>"])
+                EXAMPLE_INPUT_DF_MCS2.to_excel(arguments["<file_name>"])
             else:
                 with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
-                    f.write(EXAMPLE_INPUT_CSV_mcs2)
+                    f.write(EXAMPLE_INPUT_CSV_MCS2)
         else:
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 2
