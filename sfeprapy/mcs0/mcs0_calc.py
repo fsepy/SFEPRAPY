@@ -5,10 +5,9 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
-from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode as _steel_temperature
-from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protected_steel_eurocode_max_temperature as _steel_temperature_max
-# from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer import protected_steel_eurocode as _steel_temperature
-# from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer import protected_steel_eurocode_max_temperature as _steel_temperature_max
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature_max as _steel_temperature_max
 from scipy.interpolate import interp1d
 
 from sfeprapy.func.asciiplot import AsciiPlot
@@ -323,9 +322,7 @@ def solve_time_equivalence(
     # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
 
     solver_iter_count = 0  # count how many iterations for  the seeking process
-    solver_convergence_status = (
-        False
-    )  # flag used to indicate when the seeking is successful
+    solver_convergence_status = False  # flag used to indicate when the seeking is successful
 
     # Default values
     solver_time_equivalence_solved = -1
@@ -345,7 +342,7 @@ def solve_time_equivalence(
             protection_rho=protection_rho,
             protection_c=protection_c,
             protection_protected_perimeter=protection_protected_perimeter,
-            terminate_max_temperature=solver_temperature_goal + 2 * solver_tol,
+            # terminate_max_temperature=solver_temperature_goal + 2 * solver_tol,
         )
 
         # SOLVER START FROM HERE
@@ -525,6 +522,109 @@ def solve_time_equivalence(
         solver_steel_temperature_solved=solver_steel_temperature_solved,
         solver_protection_thickness=solver_protection_thickness,
         solver_iter_count=solver_iter_count,
+    )
+
+    return results
+
+
+def solve_time_equivalence_wip(
+        fire_time: Union[list, np.ndarray],
+        fire_temperature: Union[list, np.ndarray],
+        beam_cross_section_area: float,
+        beam_rho: float,
+        protection_k: float,
+        protection_rho: float,
+        protection_c: float,
+        protection_protected_perimeter: float,
+        fire_time_iso834: Union[list, np.ndarray],
+        fire_temperature_iso834: Union[list, np.ndarray],
+        solver_temperature_goal: float,
+        solver_max_iter: int,
+        solver_thickness_ubound: float,
+        solver_thickness_lbound: float,
+        solver_tol: float,
+        phi_teq: float,
+        *_,
+        **__,
+) -> dict:
+    """
+    **WIP**
+    Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
+    opposing to the standard fire curve ISO 834.
+
+    PARAMETERS:
+    :param fire_time: [s], time array
+    :param fire_temperature: [K], temperature array
+    :param beam_cross_section_area: [m2], the steel beam element cross section area
+    :param beam_rho: [kg/m3], steel beam element density
+    :param solver_temperature_goal: [K], steel beam element expected failure temperature
+    :param protection_k: steel beam element protection material thermal conductivity
+    :param protection_rho: steel beam element protection material density
+    :param protection_c: steel beam element protection material specific heat
+    :param protection_protected_perimeter: [m], steel beam element protection material perimeter
+    :param fire_time_iso834: [s], the time (array) component of ISO 834 fire curve
+    :param fire_temperature_iso834: [K], the temperature (array) component of ISO 834 fire curve
+    :param solver_max_iter: Maximum allowable iteration counts for seeking solution for time equivalence
+    :param solver_thickness_ubound: [m], protection layer thickness upper bound initial condition for solving time equivalence
+    :param solver_thickness_lbound: [m], protection layer thickness lower bound initial condition for solving time equivalence
+    :param solver_tol: [K], tolerance for solving time equivalence
+    :param phi_teq: [-], model uncertainty factor
+    :return results: dict
+    EXAMPLE:
+    """
+
+    # ============================================
+    # GOAL SEEK TO MATCH STEEL FAILURE TEMPERATURE
+    # ============================================
+
+    # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
+
+    time_at_max_temperature = fire_time[np.argmax(fire_temperature)]
+    solver_protection_thickness, solver_steel_temperature_solved = _protection_thickness(
+        fire_time=fire_time,
+        fire_temperature=fire_temperature,
+        beam_rho=beam_rho,
+        beam_cross_section_area=beam_cross_section_area,
+        protection_k=protection_k,
+        protection_rho=protection_rho,
+        protection_c=protection_c,
+        protection_protected_perimeter=protection_protected_perimeter,
+        solver_temperature_goal=solver_temperature_goal,
+        solver_temperature_goal_tol=solver_tol,
+        terminate_check_wait_time=time_at_max_temperature,
+    )
+
+    if -np.inf < solver_protection_thickness < np.inf:
+        steel_temperature = _steel_temperature(
+            fire_time=fire_time_iso834,
+            fire_temperature=fire_temperature_iso834,
+            beam_rho=beam_rho,
+            beam_cross_section_area=beam_cross_section_area,
+            protection_k=protection_k,
+            protection_rho=protection_rho,
+            protection_c=protection_c,
+            protection_thickness=solver_protection_thickness,
+            protection_protected_perimeter=protection_protected_perimeter,
+        )
+        steel_time = np.concatenate((np.array([0]), fire_time_iso834, np.array([fire_time_iso834[-1]])))
+        steel_temperature = np.concatenate((np.array([-1]), steel_temperature, np.array([1e12])))
+        func_teq = interp1d(steel_temperature, steel_time, kind="linear", bounds_error=False, fill_value=-1)
+        solver_time_equivalence_solved = func_teq(solver_temperature_goal)
+
+    elif solver_protection_thickness == np.inf:
+        solver_time_equivalence_solved = -np.inf
+    # No solution, thickness lower bound is not thin enough
+    elif solver_protection_thickness == -np.inf:
+        solver_time_equivalence_solved = np.inf
+    else:
+        raise ValueError('This error should not occur')
+
+    results = dict(
+        solver_convergence_status=-np.inf < solver_protection_thickness < np.inf,
+        solver_time_equivalence_solved=solver_time_equivalence_solved,
+        solver_steel_temperature_solved=solver_steel_temperature_solved,
+        solver_protection_thickness=solver_protection_thickness,
+        solver_iter_count=-1,
     )
 
     return results
