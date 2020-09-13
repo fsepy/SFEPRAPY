@@ -188,7 +188,6 @@ class MCS(ABC):
             x3[k] = copy.copy(x3_)
 
             # save outputs if work direction is provided per iteration
-            print(self.__cwd)
             if self.__cwd:
                 def _save_(fp: str):
                     if not os.path.exists(os.path.dirname(fp)):
