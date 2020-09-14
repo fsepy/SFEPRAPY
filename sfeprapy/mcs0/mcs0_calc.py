@@ -97,9 +97,7 @@ def decide_fire(
     room_floor_area = room_breadth * room_depth
 
     # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + (
-            (room_breadth + room_depth) * 2 * room_height
-    )
+    room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
 
     # Fire load density related to the total surface area A_t
     fire_load_density_total = (
@@ -113,9 +111,7 @@ def decide_fire(
     fire_spread_entire_room_time = room_depth / fire_spread_speed
     burn_out_time = max([fire_load_density_deducted / fire_hrr_density, 900.0])
 
-    if (
-            fire_mode == 0 or fire_mode == 1 or fire_mode == 2
-    ):  # enforced to selected fire, i.e. 0 is ec parametric; 1 is travelling; and 2 is din ec parametric
+    if fire_mode == 0 or fire_mode == 1 or fire_mode == 2:  # enforced to selected fire, i.e. 0 is ec parametric; 1 is travelling; and 2 is din ec parametric
         fire_type = fire_mode
     elif fire_mode == 3:  # enforced to ec parametric + travelling
         if (
@@ -199,9 +195,7 @@ def evaluate_fire_temperature(
     room_floor_area = room_breadth * room_depth
 
     # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + (
-            (room_breadth + room_depth) * 2 * room_height
-    )
+    room_total_area = 2 * room_floor_area + (room_breadth + room_depth) * 2 * room_height
 
     if fire_type == 0:
         kwargs_fire_0_paramec = dict(
@@ -221,9 +215,7 @@ def evaluate_fire_temperature(
 
     elif fire_type == 1:
         if beam_position_horizontal < 0:
-            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[
-                                       1:-1
-                                       ]
+            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
 
         kwargs_fire_1_travel = dict(
             t=fire_time,
@@ -239,9 +231,7 @@ def evaluate_fire_temperature(
             opening_height_m=window_height,
             opening_fraction=window_open_fraction,
         )
-        fire_temperature, beam_position_horizontal = _fire_travelling(
-            **kwargs_fire_1_travel
-        )
+        fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
 
         if beam_position_horizontal <= 0:
             raise ValueError("Beam position less or equal to 0.")
@@ -354,19 +344,9 @@ def solve_time_equivalence(
         #   x       is the thickness,
         #   θ       is the steel temperature goal
 
-        time_at_max_temperature = fire_time[np.argmax(fire_temperature)]
-
-        def f_(x, terminate_check_wait_time):
-            kwarg_ht_ec["protection_thickness"] = x
-            T_ = _steel_temperature_max(
-                **kwarg_ht_ec,
-                terminate_check_wait_time=terminate_check_wait_time
-            )
-            return T_
-
         # Check whether there is a solution within predefined protection thickness boundaries
         x1, x2 = solver_thickness_lbound, solver_thickness_ubound
-        y1, y2 = f_(x1, time_at_max_temperature), f_(x2, time_at_max_temperature)
+        y1, y2 = _steel_temperature_max(**kwarg_ht_ec, protection_thickness=x1), _steel_temperature_max(**kwarg_ht_ec, protection_thickness=x2)
         t1, t2 = (
             solver_temperature_goal - solver_tol,
             solver_temperature_goal + solver_tol,
@@ -384,7 +364,7 @@ def solve_time_equivalence(
 
                 # work out new y based upon interpolated y
                 x3 = solver_protection_thickness = (solver_temperature_goal - b) / a
-                y3 = solver_steel_temperature_solved = f_(x3, time_at_max_temperature)
+                y3 = solver_steel_temperature_solved = _steel_temperature_max(**kwarg_ht_ec, protection_thickness=x3)
 
                 if x1 < 0 or x2 < 0 or x3 < 0:
                     print("check")
@@ -850,7 +830,7 @@ def _test_teq_phi():
         index=0,
         case_name="Standard 1",
         probability_weight=1.,
-        fire_time_step=30.,
+        fire_time_step=1.,
         fire_time_duration=5. * 60 * 60,
         n_simulations=1,
         beam_cross_section_area=0.017,
@@ -871,7 +851,7 @@ def _test_teq_phi():
         protection_c=1700.,
         protection_k=0.2,
         protection_protected_perimeter=2.14,
-        protection_rho=7850.,
+        protection_rho=800.,
         room_breadth=16,
         room_depth=31.25,
         room_height=3,
@@ -899,7 +879,7 @@ def _test_teq_phi():
 
     input_param["phi_teq"] = 0.1
     teq_01 = teq_main(**input_param)["solver_time_equivalence_solved"]
-
+    print(teq_10)
     assert abs(teq_10 / teq_01 - 10) < 0.001
 
 
@@ -988,6 +968,6 @@ def _test_standard_case_new():
 
 
 if __name__ == '__main__':
-    # _test_teq_phi()
-    # _test_standard_case()
+    _test_teq_phi()
+    _test_standard_case()
     _test_standard_case_new()
