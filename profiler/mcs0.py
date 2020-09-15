@@ -4,10 +4,8 @@ import cProfile
 
 def profile_standard_case():
     import copy
-    from sfeprapy.func.mcs_obj import MCS
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
-    from sfeprapy.func.mcs_gen import main as gen
+    from sfeprapy.mcs0.mcs0_calc import MCS0
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
@@ -19,18 +17,17 @@ def profile_standard_case():
         mcs_input[k].pop("beam_position_horizontal")
         mcs_input[k]["beam_position_horizontal:dist"] = "uniform_"
         mcs_input[k]["beam_position_horizontal:ubound"] = (
-            mcs_input[k]["room_depth"] * 0.9
+                mcs_input[k]["room_depth"] * 0.9
         )
         mcs_input[k]["beam_position_horizontal:lbound"] = (
-            mcs_input[k]["room_depth"] * 0.6
+                mcs_input[k]["room_depth"] * 0.6
         )
 
     # increase the number of threads so it runs faster
     mcs_config["n_threads"] = 3
-    mcs = MCS()
-    mcs.define_problem(data=mcs_input, config=mcs_config)
-    mcs.define_stochastic_parameter_generator(gen)
-    mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+    mcs = MCS0()
+    mcs.mcs_inputs = mcs_input
+    mcs.mcs_config = mcs_config
     mcs.run_mcs()
 
 
