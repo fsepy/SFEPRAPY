@@ -16,20 +16,12 @@ def __example_input_dict():
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
-            fire_hrr_density=dict(
-                dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001
-            ),
-            fire_load_density=dict(
-                dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126
-            ),
+            fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(
-                dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93
-            ),
+            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
             fire_combustion_efficiency=dict(dist="uniform_", lbound=0.8, ubound=1.0),
-            window_open_fraction=dict(
-                dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2
-            ),
+            window_open_fraction=dict(dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2),
             phi_teq=dict(dist="constant_", ubound=1, lbound=1, mean=0, sd=0),
             beam_cross_section_area=0.017,
             beam_position_horizontal=-1,
@@ -68,20 +60,12 @@ def __example_input_dict():
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
-            fire_hrr_density=dict(
-                dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001
-            ),
-            fire_load_density=dict(
-                dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126
-            ),
+            fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(
-                dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93
-            ),
+            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
             fire_combustion_efficiency=dict(dist="uniform_", lbound=0.8, ubound=1.0),
-            window_open_fraction=dict(
-                dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2
-            ),
+            window_open_fraction=dict(dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2),
             phi_teq=dict(dist="lognorm_", ubound=3, lbound=0.00001, mean=1, sd=0.25),
             beam_cross_section_area=0.017,
             beam_position_horizontal=-1,
@@ -120,20 +104,12 @@ def __example_input_dict():
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
-            fire_hrr_density=dict(
-                dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001
-            ),
-            fire_load_density=dict(
-                dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126
-            ),
+            fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(
-                dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93
-            ),
+            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
             fire_combustion_efficiency=dict(dist="uniform_", lbound=0.8, ubound=1.0),
-            window_open_fraction=dict(
-                dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2
-            ),
+            window_open_fraction=dict(dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2),
             phi_teq=dict(dist="constant_", ubound=1, lbound=1, mean=0, sd=0),
             beam_cross_section_area=0.017,
             beam_position_horizontal=-1,
@@ -189,6 +165,7 @@ EXAMPLE_CONFIG_DICT = __example_config_dict()
 EXAMPLE_INPUT_DICT = __example_input_dict()
 EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_dict())
 EXAMPLE_INPUT_DF = __example_input_df(__example_input_dict())
+
 
 if __name__ == "__main__":
     print(EXAMPLE_CONFIG_DICT, "\n")
