@@ -1,7 +1,6 @@
 import copy
 import multiprocessing as mp
 import os
-import threading
 import time
 from abc import ABC, abstractmethod
 from typing import Union, Callable
@@ -34,7 +33,7 @@ class MCS(ABC):
         `MCS.mcs_deterministic_calc`
             A method to carry out deterministic calculation.
             NOTE! This method needs to be re-defined in a child class.
-        `MCS.mcs_post`
+        `MCS.mcs_post_per_case`
             A method to post processing results.
             NOTE! This method needs to be re-defined in a child class.
     """
@@ -48,7 +47,7 @@ class MCS(ABC):
         # ------------------------------
         # instantiate internal variables
         # ------------------------------
-        self.__cwd: str = None  # work folder path
+        self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
         self.__mcs_config: dict = None  # configuration parameters
         self.__mcs_sampler: Callable = mcs_gen_main  # stochastic variable generator function
@@ -86,8 +85,8 @@ class MCS(ABC):
         """
         if isinstance(fp_df_dict, str):
             fp = fp_df_dict
-            if self.__cwd is None:
-                self.__cwd = os.path.dirname(fp)
+            if self.cwd is None:
+                self.cwd = os.path.dirname(fp)
             if fp.endswith(".xlsx") or fp.endswith(".xls"):
                 self.__mcs_inputs = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
             elif fp.endswith(".csv"):
@@ -113,7 +112,7 @@ class MCS(ABC):
     def mcs_config(self, config):
         self.__mcs_config = config
         if 'cwd' in config:
-            self.__cwd = config['cwd']
+            self.cwd = config['cwd']
 
     def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None):
         # ----------------------------
@@ -182,36 +181,35 @@ class MCS(ABC):
                 p=p,
                 qt_prog_signal_1=qt_prog_signal_1
             )
-            if self.mcs_post:
-                mcs_post = self.mcs_post
-                x3_ = mcs_post(x3_)
+
+            # Post process output upon completion per case
+            if self.mcs_post_per_case:
+                self.mcs_post_per_case(df=x3_)
             x3[k] = copy.copy(x3_)
 
-            # save outputs if work direction is provided per iteration
-            if self.__cwd:
-                def _save_(fp: str):
-                    if not os.path.exists(os.path.dirname(fp)):
-                        os.makedirs(os.path.dirname(fp))
-                    x3_.to_csv(
-                        os.path.join(fp),
-                        index=False,
-                    )
-
-                threading.Thread(
-                    target=_save_,
-                    kwargs=dict(
-                        fp=os.path.join(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME), f"{k}.csv")
-                    )
-                ).start()
         p.close()
         p.join()
+
         # ------------
         # Pack results
         # ------------
         self.__mcs_out = pd.concat([v for v in x3.values()])
 
+        # Post process output upon completion of all cases
+        self.mcs_post_all_cases(self.__mcs_out)
+
     @abstractmethod
-    def mcs_post(self, *arg, **kwargs):
+    def mcs_post_per_case(self, *arg, **kwargs):
+        """
+        This method will be called upon completion of each case
+        """
+        raise NotImplementedError('This method should be overridden by a child class')
+
+    @abstractmethod
+    def mcs_post_all_cases(self, *args, **kwargs):
+        """
+        This method will be called upon completion of all cases
+        """
         raise NotImplementedError('This method should be overridden by a child class')
 
     @property

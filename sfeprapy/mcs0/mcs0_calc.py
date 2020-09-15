@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
+import os
+import threading
 import warnings
 from typing import Union
 
@@ -610,7 +612,19 @@ def solve_time_equivalence_wip(
     return results
 
 
-def mcs_out_post(df: pd.DataFrame) -> pd.DataFrame:
+def mcs_out_post_per_case(df: pd.DataFrame, fp: str) -> pd.DataFrame:
+    # save outputs if work direction is provided per iteration
+    if fp:
+        def _save_(fp_: str):
+            try:
+                if not os.path.exists(os.path.dirname(fp_)):
+                    os.makedirs(os.path.dirname(fp_))
+            except Exception as e:
+                print(e)
+            df.to_csv(os.path.join(fp_), index=False)
+
+        threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
+
     df_res = copy.copy(df)
     df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
     df_res = df_res.dropna(axis=0, how="any")
@@ -804,6 +818,11 @@ def teq_main(
     return outputs
 
 
+def mcs_out_post_all_cases(df: pd.DataFrame, fp: str):
+    if fp:
+        df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(fp, index=False)
+
+
 class MCS0(MCS):
     def __init__(self):
         super().__init__()
@@ -814,8 +833,26 @@ class MCS0(MCS):
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
         return teq_main_wrapper(*args, **kwargs)
 
-    def mcs_post(self, *args, **kwargs):
-        return mcs_out_post(*args, **kwargs)
+    def mcs_post_per_case(self, df: pd.DataFrame):
+
+        case_name = df['case_name'].to_numpy()
+        assert (case_name == case_name[0]).all()
+        case_name = case_name[0]
+
+        try:
+            fp = os.path.join(self.cwd, self.DEFAULT_TEMP_FOLDER_NAME, f'{case_name}.csv')
+        except TypeError:
+            fp = None
+
+        return mcs_out_post_per_case(df=df, fp=fp)
+
+    def mcs_post_all_cases(self, df: pd.DataFrame):
+        try:
+            fp = os.path.join(self.cwd, self.DEFAULT_MCS_OUTPUT_FILE_NAME)
+        except TypeError:
+            fp = None
+
+        return mcs_out_post_all_cases(df=df, fp=fp)
 
 
 def _test_teq_phi():
@@ -885,10 +922,8 @@ def _test_teq_phi():
 
 def _test_standard_case():
     import copy
-    from sfeprapy.func.mcs_obj import MCS
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    # from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post
-    from sfeprapy.func.mcs_gen import main as gen
+    # from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post_per_case
     from scipy.interpolate import interp1d
     import numpy as np
 
@@ -912,10 +947,10 @@ def _test_standard_case():
 
     # increase the number of threads so it runs faster
     mcs_config["n_threads"] = 1  # coverage does not support
-    mcs = MCS()
-    mcs.define_problem(data=mcs_input, config=mcs_config)
-    mcs.define_stochastic_parameter_generator(gen)
-    mcs.define_calculation_routine(teq_main, teq_main_wrapper, mcs_out_post)
+    mcs = MCS0()
+
+    mcs.mcs_inputs = mcs_input
+    mcs.mcs_config = mcs_config
     mcs.run_mcs()
     mcs_out = mcs.mcs_out
     teq = mcs_out["solver_time_equivalence_solved"] / 60.0
