@@ -812,7 +812,7 @@ def teq_main(
         i: inputs[i] for i in
         ['phi_teq', 'fire_spread_speed', 'fire_nft_limit', 'fire_mode', 'fire_load_density', 'fire_hrr_density', 'fire_combustion_efficiency', 'beam_position_horizontal',
          'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
-         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count']
+         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count', 'window_open_fraction']
     }
 
     return outputs
