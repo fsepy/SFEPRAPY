@@ -137,9 +137,9 @@ if __name__ == "__main__":
     )
     ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.05), "--k")
     ax3.plot(x3 - 273.15, ky2T_probabilistic_vectorised(x3, 0.95), "--k")
-    ax3.plot(x3 - 273.15, ky2T_vectorised(x3), "k", label="Eurocode $k_{y,\Theta}$")
-    ax3.set_xlabel("Temperature [$^\circ C$]")
-    ax3.set_ylabel("$k_{y,ach}$")
+    ax3.plot(x3 - 273.15, ky2T_vectorised(x3), "k", label=r"Eurocode $k_{y,\Theta}$")
+    ax3.set_xlabel(r"Temperature [$^\circ C$]")
+    ax3.set_ylabel(r"$k_{y,ach}$")
 
     plt.legend(loc=0, fontsize=9)
     plt.tight_layout()
