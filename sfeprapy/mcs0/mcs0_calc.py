@@ -3,7 +3,7 @@ import copy
 import os
 import threading
 import warnings
-from typing import Union
+from typing import Union, Callable
 
 import numpy as np
 import pandas as pd
@@ -255,12 +255,10 @@ def evaluate_fire_temperature(
     else:
         fire_temperature = None
 
-    results = dict(
+    return dict(
         fire_temperature=fire_temperature,
         beam_position_horizontal=beam_position_horizontal,
     )
-
-    return results
 
 
 def solve_time_equivalence(
@@ -498,15 +496,13 @@ def solve_time_equivalence(
 
     solver_time_equivalence_solved *= phi_teq
 
-    results = dict(
+    return dict(
         solver_convergence_status=solver_convergence_status,
         solver_time_equivalence_solved=solver_time_equivalence_solved,
         solver_steel_temperature_solved=solver_steel_temperature_solved,
         solver_protection_thickness=solver_protection_thickness,
         solver_iter_count=solver_iter_count,
     )
-
-    return results
 
 
 def solve_time_equivalence_wip(
@@ -748,32 +744,31 @@ def teq_main(
     fire_time_iso834 = fire_time
     fire_temperature_iso834 = (345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0) + 273.15  # in [K]
 
-    inputs = locals()
-    inputs.pop('_')
-    inputs.pop('__')
-
-    # initial timber exposure time
-    if timber_exposed_area > 0:
-        timber_exposed_duration = 1200
-    else:
-        timber_exposed_duration = 0
+    inputs = copy.deepcopy(locals())
+    inputs.pop('_'), inputs.pop('__')
 
     # initialise solver iteration count for timber fuel contribution
-    timber_solver_iter = -1
-    if isinstance(timber_charring_rate, (int, float)):
-        timber_charring_rate_ = copy.copy(timber_charring_rate)
-        timber_charring_rate = lambda x: timber_charring_rate_
+    timber_solver_iter_count = -1
+    timber_exposed_duration = 0  # initial condition, timber exposed duration
+    _fire_load_density_ = inputs.pop('fire_load_density')  # preserve original fire load density
 
     while True:
-        timber_solver_iter += 1
-        timber_charring_rate_ = timber_charring_rate(timber_exposed_duration)
-        timber_charring_rate_ *= 1 / 1000  # [mm/min] -> [m/min]
-        timber_charring_rate_ *= 1 / 60  # [m/min] -> [m/s]
-        timber_charred_depth = timber_charring_rate_ * timber_exposed_duration
+        timber_solver_iter_count += 1
+        if isinstance(timber_charring_rate, (float, int)):
+            timber_charring_rate_i = timber_charring_rate
+        elif isinstance(timber_charring_rate, Callable):
+            timber_charring_rate_i = timber_charring_rate(timber_exposed_duration)
+        else:
+            raise TypeError('`timber_charring_rate_i` is not numerical nor Callable type')
+        timber_charring_rate_i *= 1 / 1000  # [mm/min] -> [m/min]
+        timber_charring_rate_i *= 1 / 60  # [m/min] -> [m/s]
+        timber_charred_depth = timber_charring_rate_i * timber_exposed_duration
         timber_charred_volume = timber_charred_depth * timber_exposed_area
         timber_charred_mass = timber_density * timber_charred_volume
         timber_fire_load = timber_charred_mass * timber_hc
         timber_fire_load_density = timber_fire_load / (room_breadth * room_depth)
+
+        inputs['fire_load_density'] = _fire_load_density_ + timber_fire_load_density
 
         # To check what design fire to use
         inputs.update(decide_fire(**inputs))
@@ -784,26 +779,34 @@ def teq_main(
         # To calculate time equivalence
         inputs.update(solve_time_equivalence(**inputs))
 
+        # print(timber_solver_iter_count, timber_exposed_duration, inputs["solver_time_equivalence_solved"])
+
         # additional fuel contribution from timber
         if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
             break
         elif not inputs["solver_convergence_status"]:  # no time equivalence solution
+            timber_exposed_duration = np.nan
             break
-        elif timber_solver_iter >= timber_solver_ilim:  # over the solver iteration limit
+        elif inputs['solver_time_equivalence_solved'] == 0 or inputs['solver_time_equivalence_solved'] == np.inf:
+            # time equivalence successfully sought but out of the bounds
+            timber_exposed_duration = np.inputs['solver_time_equivalence_solved']
+        elif timber_solver_iter_count >= timber_solver_ilim:  # over the solver iteration limit
             break
         elif abs(timber_exposed_duration - inputs["solver_time_equivalence_solved"]) <= timber_solver_tol:  # convergence sought successfully
             break
         else:
             timber_exposed_duration = inputs["solver_time_equivalence_solved"]
 
-    res_timber_solver = dict(
-        timber_charring_rate=timber_charring_rate_,
-        timber_exposed_duration=timber_exposed_duration,
-        timber_solver_iter=timber_solver_iter,
-        timber_fire_load=timber_fire_load,
-        timber_charred_depth=timber_charred_depth,
-        timber_charred_mass=timber_charred_mass,
-        timber_charred_volume=timber_charred_volume,
+    inputs.update(
+        dict(
+            timber_charring_rate=timber_charring_rate_i,
+            timber_exposed_duration=timber_exposed_duration,
+            timber_solver_iter_count=timber_solver_iter_count,
+            timber_fire_load=timber_fire_load,
+            timber_charred_depth=timber_charred_depth,
+            timber_charred_mass=timber_charred_mass,
+            timber_charred_volume=timber_charred_volume,
+        )
     )
 
     # Prepare results to be returned, only the items in the list below will be returned
@@ -812,7 +815,7 @@ def teq_main(
         i: inputs[i] for i in
         ['phi_teq', 'fire_spread_speed', 'fire_nft_limit', 'fire_mode', 'fire_load_density', 'fire_hrr_density', 'fire_combustion_efficiency', 'beam_position_horizontal',
          'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
-         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count', 'window_open_fraction']
+         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count', 'window_open_fraction', 'timber_solver_iter_count', 'timber_charred_depth']
     }
 
     return outputs
@@ -923,27 +926,21 @@ def _test_teq_phi():
 def _test_standard_case():
     import copy
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
-    # from sfeprapy.mcs0.mcs0_calc import teq_main, teq_main_wrapper, mcs_out_post_per_case
     from scipy.interpolate import interp1d
-    import numpy as np
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     for k in list(mcs_input.keys()):
         mcs_input[k]["phi_teq"] = 1
-        mcs_input[k]["n_simulations"] = 333
+        mcs_input[k]["n_simulations"] = 1000
         mcs_input[k]["probability_weight"] = 1 / 3.0
         mcs_input[k]["fire_time_duration"] = 10000
         mcs_input[k]["timber_exposed_area"] = 0
         mcs_input[k].pop("beam_position_horizontal")
         mcs_input[k]["beam_position_horizontal:dist"] = "uniform_"
-        mcs_input[k]["beam_position_horizontal:ubound"] = (
-                mcs_input[k]["room_depth"] * 0.9
-        )
-        mcs_input[k]["beam_position_horizontal:lbound"] = (
-                mcs_input[k]["room_depth"] * 0.6
-        )
+        mcs_input[k]["beam_position_horizontal:ubound"] = mcs_input[k]["room_depth"] * 0.9
+        mcs_input[k]["beam_position_horizontal:lbound"] = mcs_input[k]["room_depth"] * 0.6
 
     # increase the number of threads so it runs faster
     mcs_config["n_threads"] = 1  # coverage does not support
@@ -962,47 +959,43 @@ def _test_standard_case():
     assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
-def _test_standard_case_new():
+def _test_standard_case_timber():
     import copy
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
     from scipy.interpolate import interp1d
-    import numpy as np
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     for k in list(mcs_input.keys()):
         mcs_input[k]["phi_teq"] = 1
-        mcs_input[k]["n_simulations"] = 333
+        mcs_input[k]["n_simulations"] = 1000
         mcs_input[k]["probability_weight"] = 1 / 3.0
         mcs_input[k]["fire_time_duration"] = 10000
-        mcs_input[k]["timber_exposed_area"] = 0
+        mcs_input[k]["timber_exposed_area"] = 500
         mcs_input[k].pop("beam_position_horizontal")
         mcs_input[k]["beam_position_horizontal:dist"] = "uniform_"
-        mcs_input[k]["beam_position_horizontal:ubound"] = (
-                mcs_input[k]["room_depth"] * 0.9
-        )
-        mcs_input[k]["beam_position_horizontal:lbound"] = (
-                mcs_input[k]["room_depth"] * 0.6
-        )
+        mcs_input[k]["beam_position_horizontal:ubound"] = mcs_input[k]["room_depth"] * 0.9
+        mcs_input[k]["beam_position_horizontal:lbound"] = mcs_input[k]["room_depth"] * 0.6
 
     # increase the number of threads so it runs faster
     mcs_config["n_threads"] = 1  # coverage does not support
-    mcs0 = MCS0()
-    mcs0.mcs_inputs = mcs_input
-    mcs0.mcs_config = EXAMPLE_CONFIG_DICT
-    mcs0.run_mcs()
-    mcs_out = mcs0.mcs_out
+
+    mcs = MCS0()
+    mcs.mcs_inputs = mcs_input
+    mcs.mcs_config = mcs_config
+    mcs.run_mcs()
+    mcs_out = mcs.mcs_out
     teq = mcs_out["solver_time_equivalence_solved"] / 60.0
     hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     teq_at_80_percentile = interp1d(y, x)(0.8)
     print(teq_at_80_percentile)
-    target, target_tol = 60, 2
+    target, target_tol = 81, 1  # 81 minutes based on a test run on 2nd Oct 2020
     assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
 if __name__ == '__main__':
     _test_teq_phi()
     _test_standard_case()
-    _test_standard_case_new()
+    _test_standard_case_timber()
