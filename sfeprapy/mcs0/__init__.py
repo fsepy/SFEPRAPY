@@ -12,7 +12,7 @@ def __example_input_dict():
     y = {
         "Standard Case 1": dict(
             case_name="Standard Case 1",
-            n_simulations=500,
+            n_simulations=1000,
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
@@ -53,10 +53,15 @@ def __example_input_dict():
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            p1=3e-7,
+            p2=0.1,
+            p3=0.25,
+            p4=0.09,
+            general_room_area=500,
         ),
         "Standard Case 2 (with teq_phi)": dict(
             case_name="Standard Case 2 (with teq_phi)",
-            n_simulations=500,
+            n_simulations=1000,
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
@@ -97,10 +102,15 @@ def __example_input_dict():
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            p1=3e-7,
+            p2=0.1,
+            p3=0.25,
+            p4=0.09,
+            general_room_area=500,
         ),
         "Standard Case 3 (with timber)": dict(
             case_name="Standard Case 3 (with timber)",
-            n_simulations=500,
+            n_simulations=1000,
             probability_weight=1 / 3,
             fire_time_step=30,
             fire_time_duration=18000,
@@ -141,6 +151,11 @@ def __example_input_dict():
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            p1=3e-7,
+            p2=0.1,
+            p3=0.25,
+            p4=0.09,
+            general_room_area=500,
         ),
     }
     return y
