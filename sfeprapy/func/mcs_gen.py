@@ -230,7 +230,10 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
                 )
                 t_ = d_.iloc[:, 0]
                 v_ = d_.iloc[:, 1]
-                f_interp = interp1d(t_, v_, bounds_error=False, fill_value=0)
+                if all(v_ == v_[0]):
+                    f_interp = v_[0]
+                else:
+                    f_interp = interp1d(t_, v_, bounds_error=False, fill_value=0)
                 dict_out[k] = np.full((num_samples,), f_interp)
             else:
                 raise ValueError("Unknown input data type for {}.".format(k))
@@ -280,21 +283,6 @@ def _test_random_variable_generator():
     assert abs(np.max(y["v"].values) - 2000) <= 1
     assert abs(np.min(y["v"].values) - 50) <= 1
     assert abs(np.mean(y["v"].values) - 420) <= 1
-
-    # todo: lognormal distribution need to be verified.
-    # x = dict(
-    #     v=dict(
-    #         dist='lognorm_',
-    #         ubound=2.5,
-    #         lbound=0.00001,
-    #         mean=0.00001,
-    #         sd=0.25,
-    #     ),
-    # )
-    # y = main(x, 1000)
-    # assert len(y['v'].values) == 1000
-    # print(np.mean(y['v'].values))
-    # assert abs(np.mean(y['v'].values) - 0.5) <= 0.001
 
 
 if __name__ == "__main__":
