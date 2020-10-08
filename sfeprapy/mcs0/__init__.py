@@ -57,7 +57,7 @@ def __example_input_dict():
             p2=0.1,
             p3=0.25,
             p4=0.09,
-            general_room_area=500,
+            general_floor_room_area=500,
         ),
         "Standard Case 2 (with teq_phi)": dict(
             case_name="Standard Case 2 (with teq_phi)",
@@ -106,7 +106,7 @@ def __example_input_dict():
             p2=0.1,
             p3=0.25,
             p4=0.09,
-            general_room_area=500,
+            general_floor_room_area=500,
         ),
         "Standard Case 3 (with timber)": dict(
             case_name="Standard Case 3 (with timber)",
@@ -155,7 +155,7 @@ def __example_input_dict():
             p2=0.1,
             p3=0.25,
             p4=0.09,
-            general_room_area=500,
+            general_floor_room_area=500,
         ),
     }
     return y
