@@ -333,7 +333,6 @@ def solve_time_equivalence(
             protection_rho=protection_rho,
             protection_c=protection_c,
             protection_protected_perimeter=protection_protected_perimeter,
-            # terminate_max_temperature=solver_temperature_goal + 2 * solver_tol,
         )
 
         # SOLVER START FROM HERE
@@ -1133,10 +1132,10 @@ def _test_teq_phi():
     print(
         f'Time equivalence at phi_teq=0.1: {teq_01:<8.3f}\n'
         f'Time equivalence at phi_teq=1.0: {teq_10:<8.3f}\n'
-        f'Ratio between the above:         {teq_01 / teq_10:<8.3f}\n'
+        f'Ratio between the above:         {teq_10 / teq_01:<8.3f}\n'
     )
 
-    assert abs(teq_10 / teq_01 - 10) < 0.001
+    assert abs(teq_10 / teq_01 - 10) < 0.005
 
 
 def _test_standard_case():
