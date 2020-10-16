@@ -13,8 +13,7 @@ def __example_input_dict():
         "Standard Case 1": dict(
             case_name="Standard Case 1",
             n_simulations=1000,
-            probability_weight=1 / 3,
-            fire_time_step=30,
+            fire_time_step=10,
             fire_time_duration=18000,
             fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
             fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
@@ -62,8 +61,7 @@ def __example_input_dict():
         "Standard Case 2 (with teq_phi)": dict(
             case_name="Standard Case 2 (with teq_phi)",
             n_simulations=1000,
-            probability_weight=1 / 3,
-            fire_time_step=30,
+            fire_time_step=10,
             fire_time_duration=18000,
             fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
             fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
@@ -111,9 +109,7 @@ def __example_input_dict():
         "Standard Case 3 (with timber)": dict(
             case_name="Standard Case 3 (with timber)",
             n_simulations=1000,
-            probability_weight=1 / 3,
-            fire_time_step=30,
-            fire_time_duration=18000,
+            fire_time_step=10,
             fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
             fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
