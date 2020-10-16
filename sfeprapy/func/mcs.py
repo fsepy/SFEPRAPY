@@ -170,7 +170,7 @@ class MCS(ABC):
         m, p = mp.Manager(), mp.Pool(self.mcs_config["n_threads"], maxtasksperchild=1000)
         for k, v in x2.items():
             if qt_prog_signal_0:
-                qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)}')
+                qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
 
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
