@@ -733,7 +733,7 @@ def teq_main_wrapper(args):
 def teq_main(
         case_name: str,
         n_simulations: int,
-        probability_weight: float,
+        # probability_weight: float,
         index: int,
         beam_cross_section_area: float,
         beam_position_vertical: float,
@@ -874,7 +874,8 @@ def teq_main(
     outputs = {
         i: inputs[i] for i in
         ['phi_teq', 'fire_spread_speed', 'fire_nft_limit', 'fire_mode', 'fire_load_density', 'fire_hrr_density', 'fire_combustion_efficiency', 'beam_position_horizontal',
-         'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
+         # 'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
+         'beam_position_vertical', 'index', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
          'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count', 'window_open_fraction', 'timber_solver_iter_count', 'timber_charred_depth']
     }
 
@@ -1135,7 +1136,7 @@ def _test_teq_phi():
         f'Ratio between the above:         {teq_10 / teq_01:<8.3f}\n'
     )
 
-    assert abs(teq_10 / teq_01 - 10) < 0.005
+    assert abs(teq_10 / teq_01 - 10) < 0.01
 
 
 def _test_standard_case():
