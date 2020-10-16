@@ -6,3 +6,4 @@ tqdm>=4.36
 xlrd>=1.2.0
 docopt>=0.6
 openpyxl>=3.0.3
+git+git://github.com/fsepy/fsetools@dev
