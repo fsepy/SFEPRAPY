@@ -1107,10 +1107,10 @@ def _test_teq_phi():
         room_height=3,
         room_wall_thermal_inertia=720,
         solver_temperature_goal=620 + 273.15,
-        solver_max_iter=20,
+        solver_max_iter=200,
         solver_thickness_lbound=0.0001,
         solver_thickness_ubound=0.0500,
-        solver_tol=1.0,
+        solver_tol=0.01,
         window_height=2,
         window_open_fraction=0.8,
         window_width=72,
@@ -1185,4 +1185,4 @@ def _test_standard_case():
 
 if __name__ == '__main__':
     _test_teq_phi()
-    _test_standard_case()
+    # _test_standard_case()
