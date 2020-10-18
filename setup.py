@@ -10,8 +10,12 @@ import sfeprapy
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.md")) as f:
     long_description = f.read()
 
-with open("requirements.txt") as f:
-    requirements = f.read().splitlines()
+try:
+    with open("requirements.txt") as f:
+        requirements = f.read().splitlines()
+except FileNotFoundError:
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "requirements.txt")) as f:
+        requirements = f.read().splitlines()
 
 setuptools.setup(
     name="sfeprapy",
