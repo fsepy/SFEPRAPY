@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 
-from sfeprapy.func.fire_iso834 import fire as _fire_standard
 from sfeprapy.mcs1.mcs1_func_gen import mc_inputs_generator
 from sfeprapy.mcs1.mcs1_func_main import main as func_main
 
@@ -61,10 +60,10 @@ class MonteCarloCase:
     )
 
     def __init__(
-        self,
-        path_wd: str,
-        name: str,
-        func: (types.FunctionType, types.BuiltinFunctionType),
+            self,
+            path_wd: str,
+            name: str,
+            func: (types.FunctionType, types.BuiltinFunctionType),
     ):
         self._path_wd = path_wd
         self._name = name
@@ -228,7 +227,7 @@ class MonteCarloCase:
             input_param["fire_time_step"],
         )
         iso834_time = np.arange(0, 6 * 60 * 60, 30)
-        iso834_temperature = _fire_standard(iso834_time, 273.15 + 20)
+        iso834_temperature = 345.0 * np.log10(iso834_time / 60. * 8.0 + 1.0) + 293.15
 
         dict_input_param = self.input_param
         df_mc_params = mc_inputs_generator(**dict_input_param)
@@ -239,8 +238,8 @@ class MonteCarloCase:
 
         df_mc_params["fire_iso834_time"] = [iso834_time] * self.n_simulations
         df_mc_params["fire_iso834_temperature"] = [
-            iso834_temperature
-        ] * self.n_simulations
+                                                      iso834_temperature
+                                                  ] * self.n_simulations
         df_mc_params["fire_time"] = [fire_time] * self.n_simulations
         df_mc_params["index"] = np.arange(0, self.n_simulations, 1)
 
@@ -511,10 +510,10 @@ class MonteCarlo:
 
     @staticmethod
     def _plot_figure(
-        path_save_figure: str,
-        data: dict,
-        plot_xlim: tuple,
-        plot_figuresize=(3.94, 2.76),
+            path_save_figure: str,
+            data: dict,
+            plot_xlim: tuple,
+            plot_figuresize=(3.94, 2.76),
     ):
 
         teq_fig, teq_ax = plt.subplots(figsize=plot_figuresize)

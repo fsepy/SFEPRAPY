@@ -5,8 +5,6 @@ from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _stee
 from fsetools.lib.fse_travelling_fire import temperature_si as _fire_travelling
 from matplotlib import pyplot as plt
 
-from sfeprapy.func.fire_iso834 import fire as _fire_iso
-
 
 def fire_param(ax, label=None):
     x = np.arange(0, 60 * 180, 1, dtype=float)
@@ -116,7 +114,7 @@ def heat_transfer_travel(ax, label=None):
 
 def fire_iso834(ax, label=None):
     x = np.arange(0, 60 * 180, 1)
-    y = _fire_iso(x, 20 + 273.15)
+    y = 345.0 * np.log10(x / 60. * 8.0 + 1.0) + 293.15
 
     ax.plot(x / 60., y - 273.15, label=label)
 

@@ -7,6 +7,7 @@ from typing import Union, Callable
 
 import numpy as np
 import pandas as pd
+from fsetools.etc.asciiplot import AsciiPlot
 from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
@@ -15,7 +16,6 @@ from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fir
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from scipy.interpolate import interp1d
 
-from sfeprapy.func.asciiplot import AsciiPlot
 from sfeprapy.func.mcs import MCS
 
 
@@ -678,10 +678,8 @@ class MCS0(MCS):
 def _test_teq_phi():
     warnings.filterwarnings("ignore")
 
-    from sfeprapy.func.fire_iso834 import fire as fire_iso834
-
     fire_time_ = np.arange(0, 2 * 60 * 60, 1)
-    fire_temperature_iso834_ = fire_iso834(fire_time_, 293.15)
+    fire_temperature_iso834_ = 345.0 * np.log10(fire_time_ / 60. * 8.0 + 1.0) + 293.15
 
     input_param = dict(
         index=0,
