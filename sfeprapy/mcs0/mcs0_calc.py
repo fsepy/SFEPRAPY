@@ -7,15 +7,15 @@ from typing import Union, Callable
 
 import numpy as np
 import pandas as pd
+from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature_max as _steel_temperature_max
+from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
+from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from scipy.interpolate import interp1d
 
 from sfeprapy.func.asciiplot import AsciiPlot
-from sfeprapy.func.fire_parametric_ec import fire as _fire_param
-from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
-from sfeprapy.func.fire_travelling import fire as fire_travelling
 from sfeprapy.func.mcs import MCS
 
 
