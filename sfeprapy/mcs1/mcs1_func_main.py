@@ -1,48 +1,42 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
-
-from sfeprapy.dat.ec_3_1_2_kyT import ky2T_probabilistic_vectorised
-from sfeprapy.func.fire_parametric_ec import fire as _fire_param
-from sfeprapy.func.fire_parametric_ec_din import fire as _fire_param_ger
-from sfeprapy.func.fire_travelling import fire as _fire_travelling
-from sfeprapy.func.heat_transfer_protected_steel_ec import (
-    protected_steel_eurocode_max_temperature as _steel_temperature_max,
-)
+from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer import temperature_max as _steel_temperature_max
+from fsetools.lib.fse_bs_en_1993_1_2_strength_reduction_factor import k_y_theta_prob
+from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
+from fsetools.lib.fse_travelling_fire import temperature as _fire_travelling
 
 
 def a_solve_steel_protection_thickness_in_iso_fire(
-    fire_iso834_time,
-    fire_iso834_temperature,
-    beam_rho,
-    beam_cross_section_area,
-    protection_k,
-    protection_rho,
-    protection_c,
-    protection_protected_perimeter,
-    solver_temperature_target,
-    solver_fire_duration,
-    solver_thickness_lbound,
-    solver_thickness_ubound,
-    solver_tolerance,
-    solver_iteration_limit,
-    **_
+        fire_iso834_time,
+        fire_iso834_temperature,
+        beam_rho,
+        beam_cross_section_area,
+        protection_k,
+        protection_rho,
+        protection_c,
+        protection_protected_perimeter,
+        solver_temperature_target,
+        solver_fire_duration,
+        solver_thickness_lbound,
+        solver_thickness_ubound,
+        solver_tolerance,
+        solver_iteration_limit,
+        **_
 ):
     # Solve heat transfer using EC3 correlations
     # SI UNITS FOR INPUTS!
 
     kwarg_ht_ec = dict(
-        time=fire_iso834_time[fire_iso834_time <= solver_fire_duration],
-        temperature_ambient=fire_iso834_temperature[
-            fire_iso834_time <= solver_fire_duration
-        ],
-        rho_steel=beam_rho,
-        area_steel_section=beam_cross_section_area,
-        k_protection=protection_k,
-        rho_protection=protection_rho,
-        c_protection=protection_c,
-        perimeter_protected=protection_protected_perimeter,
-        terminate_max_temperature=solver_temperature_target + 5 * solver_tolerance,
+        fire_time=fire_iso834_time[fire_iso834_time <= solver_fire_duration],
+        fire_temperature=fire_iso834_temperature[fire_iso834_time <= solver_fire_duration],
+        beam_rho=beam_rho,
+        beam_cross_section_area=beam_cross_section_area,
+        protection_k=protection_k,
+        protection_rho=protection_rho,
+        protection_c=protection_c,
+        protection_protected_perimeter=protection_protected_perimeter,
     )
 
     solver_iteration_count = 0  # count how many iterations for  the seeking process
@@ -52,7 +46,7 @@ def a_solve_steel_protection_thickness_in_iso_fire(
     solver_thickness_solved = -1
 
     if (
-        solver_temperature_target > 0
+            solver_temperature_target > 0
     ):  # check seeking temperature, opt out if less than 0
 
         # def f_(x):
@@ -66,13 +60,11 @@ def a_solve_steel_protection_thickness_in_iso_fire(
         # y1, y2 = f_(x1), f_(x2)
         y1 = _steel_temperature_max(
             **kwarg_ht_ec,
-            thickness_protection=x1,
-            terminate_check_wait_time=solver_fire_duration - 30
+            protection_thickness=x1,
         )
         y2 = _steel_temperature_max(
             **kwarg_ht_ec,
-            thickness_protection=x2,
-            terminate_check_wait_time=solver_fire_duration - 30
+            protection_thickness=x2,
         )
 
         t1, t2 = (
@@ -81,9 +73,9 @@ def a_solve_steel_protection_thickness_in_iso_fire(
         )
 
         if (
-            (y2 - solver_tolerance)
-            <= solver_temperature_target
-            <= (y1 + solver_tolerance)
+                (y2 - solver_tolerance)
+                <= solver_temperature_target
+                <= (y1 + solver_tolerance)
         ):
 
             while True:
@@ -99,8 +91,7 @@ def a_solve_steel_protection_thickness_in_iso_fire(
                 # y3 = f_(x3)
                 y3 = _steel_temperature_max(
                     **kwarg_ht_ec,
-                    thickness_protection=x3,
-                    terminate_check_wait_time=solver_fire_duration - 30
+                    protection_thickness=x3,
                 )
 
                 if y3 < t1:  # steel temperature is too low, decrease thickness
@@ -113,7 +104,7 @@ def a_solve_steel_protection_thickness_in_iso_fire(
                     flag_solver_status = True
 
                 if flag_solver_status or (
-                    solver_iteration_count >= solver_iteration_limit
+                        solver_iteration_count >= solver_iteration_limit
                 ):
                     break
 
@@ -129,32 +120,32 @@ def a_solve_steel_protection_thickness_in_iso_fire(
 
 
 def b_calc_steel_temperature_in_design_fire(
-    fire_time,
-    fire_mode,
-    room_depth,
-    room_breadth,
-    room_height,
-    room_wall_thermal_inertia,
-    window_height,
-    window_width,
-    window_open_fraction,
-    beam_loc_z,
-    beam_position,
-    beam_rho,
-    beam_cross_section_area,
-    protection_k,
-    protection_rho,
-    protection_c,
-    protection_protected_perimeter,
-    protection_thickness,
-    fire_load_density,
-    fire_hrr_density,
-    fire_tlim,
-    fire_spread_speed,
-    fire_nft_ubound,
-    fire_t_alpha,
-    fire_gamma_fi_q,
-    **_
+        fire_time,
+        fire_mode,
+        room_depth,
+        room_breadth,
+        room_height,
+        room_wall_thermal_inertia,
+        window_height,
+        window_width,
+        window_open_fraction,
+        beam_loc_z,
+        beam_position,
+        beam_rho,
+        beam_cross_section_area,
+        protection_k,
+        protection_rho,
+        protection_c,
+        protection_protected_perimeter,
+        protection_thickness,
+        fire_load_density,
+        fire_hrr_density,
+        fire_tlim,
+        fire_spread_speed,
+        fire_nft_ubound,
+        fire_t_alpha,
+        fire_gamma_fi_q,
+        **_
 ):
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
     room_depth, room_breadth = (
@@ -170,7 +161,7 @@ def b_calc_steel_temperature_in_design_fire(
 
     # Room internal surface area, total, including window openings
     room_total_area = (2 * room_floor_area) + (
-        (room_breadth + room_depth) * 2 * room_height
+            (room_breadth + room_depth) * 2 * room_height
     )
 
     # Fire load density related to the total surface area A_t
@@ -243,9 +234,9 @@ def b_calc_steel_temperature_in_design_fire(
 
     elif fire_mode == 3:  # enforced to ec parametric + travelling
         if (
-            fire_spread_entire_room_time < burn_out_time
-            and 0.02 < opening_factor <= 0.2
-            and 50 <= fire_load_density_total <= 1000
+                fire_spread_entire_room_time < burn_out_time
+                and 0.02 < opening_factor <= 0.2
+                and 50 <= fire_load_density_total <= 1000
         ):  # If fire spreads throughout compartment and ventilation is within EC limits = Parametric fire
 
             fire_temp = _fire_param(**kwargs_fire_0_paramec)
@@ -259,8 +250,8 @@ def b_calc_steel_temperature_in_design_fire(
     elif fire_mode == 4:  # enforced to german parametric + travelling
 
         if (
-            fire_spread_entire_room_time < burn_out_time
-            and 0.125 <= (window_area / room_floor_area) <= 0.5
+                fire_spread_entire_room_time < burn_out_time
+                and 0.125 <= (window_area / room_floor_area) <= 0.5
         ):  # If fire spreads throughout compartment and ventilation is within EC limits = Parametric fire
 
             fire_temp = _fire_param_ger(**kwargs_fire_2_paramdin)
@@ -297,23 +288,19 @@ def b_calc_steel_temperature_in_design_fire(
 
 
 def c_strength_reduction_factor(
-    solver_steel_temperature_solved: np.ndarray, is_random_q: bool = True
+        solver_steel_temperature_solved: np.ndarray, is_random_q: bool = True
 ):
-
     if is_random_q:
         epsilon_q = np.random.random_sample(len(solver_steel_temperature_solved))
     else:
         epsilon_q = np.full(len(solver_steel_temperature_solved), 0.5)
 
-    steel_strength_reduction_factor = ky2T_probabilistic_vectorised(
-        T=solver_steel_temperature_solved, epsilon_q=epsilon_q
-    )
+    steel_strength_reduction_factor = k_y_theta_prob(theta_a=solver_steel_temperature_solved, epsilon_q=epsilon_q)
 
     return steel_strength_reduction_factor
 
 
 def main(df_mc_params: pd.DataFrame):
-
     dict_mc_params = df_mc_params.to_dict(orient="index")
 
     # ==================================================================================================================
@@ -337,88 +324,25 @@ def main(df_mc_params: pd.DataFrame):
     )
 
     for uid, kwargs in dict_mc_params.items():
-
-        solver_steel_temperature_solved, fire_type = b_calc_steel_temperature_in_design_fire(
-            protection_thickness=solver_thickness_solved, **kwargs
-        )
+        solver_steel_temperature_solved, fire_type = b_calc_steel_temperature_in_design_fire(protection_thickness=solver_thickness_solved, **kwargs)
 
         dict_mc_params[uid]["solver_thickness_solved"] = solver_thickness_solved
         dict_mc_params[uid]["flag_solver_status"] = flag_solver_status
         dict_mc_params[uid]["solver_iteration_count"] = solver_iteration_count
         dict_mc_params[uid]["fire_type"] = fire_type
-        dict_mc_params[uid][
-            "solver_steel_temperature_solved"
-        ] = solver_steel_temperature_solved
+        dict_mc_params[uid]["solver_steel_temperature_solved"] = solver_steel_temperature_solved
 
     df_out = pd.DataFrame.from_dict(dict_mc_params, orient="index")
     df_out.set_index("index", inplace=True)  # assign 'index' column as DataFrame index
 
-    list_c_strength_reduction_factor = c_strength_reduction_factor(
-        df_out["solver_steel_temperature_solved"].values, True
-    )
+    list_c_strength_reduction_factor = c_strength_reduction_factor(df_out["solver_steel_temperature_solved"].values, True)
     df_out["strength_reduction_factor"] = list_c_strength_reduction_factor
 
-    # TODO: HASH ITEMS BELOW TO REMOVE FROM OUTPUT CSV
-    df_out.pop("fire_time")
-    df_out.pop("fire_iso834_time")
-    df_out.pop("fire_iso834_temperature")
-    df_out.pop("window_height")
-    df_out.pop("window_width")
-    # df_mcs_in.pop("room_breadth")
-    # df_mcs_in.pop("room_depth")
-    # df_mcs_in.pop("room_height")
-    df_out.pop("room_wall_thermal_inertia")
-    df_out.pop("fire_mode")
-    df_out.pop("fire_time_step")
-    df_out.pop("fire_tlim")
-    df_out.pop("fire_hrr_density")
-    df_out.pop("fire_duration")
-    df_out.pop("fire_t_alpha")
-    df_out.pop("fire_gamma_fi_q")
-    df_out.pop("beam_rho")
-    df_out.pop("beam_cross_section_area")
-    df_out.pop("beam_loc_z")
-    df_out.pop("protection_k")
-    df_out.pop("protection_rho")
-    df_out.pop("protection_c")
-    df_out.pop("protection_protected_perimeter")
-    df_out.pop("solver_temperature_target")
-    df_out.pop("solver_fire_duration")
-    df_out.pop("solver_thickness_lbound")
-    df_out.pop("solver_thickness_ubound")
-    df_out.pop("solver_tolerance")
-    df_out.pop("solver_iteration_limit")
-    # df_mcs_in.pop("solver_thickness_solved")
-    # df_mcs_in.pop("flag_solver_status")
-    # df_mcs_in.pop("solver_iteration_count")
-    # df_mcs_in.pop("fire_type")
+    # TODO: HASH ITEMS BELOW TO REMOVE FROM OUTPUT CSV,
+    for k in ("fire_time", "fire_iso834_time", "fire_iso834_temperature", "window_height", "window_width", "room_wall_thermal_inertia", "fire_mode", "fire_time_step", "fire_tlim",
+              "fire_hrr_density", "fire_duration", "fire_t_alpha", "fire_gamma_fi_q", "beam_rho", "beam_cross_section_area", "beam_loc_z", "protection_k", "protection_rho",
+              "protection_c", "protection_protected_perimeter", "solver_temperature_target", "solver_fire_duration", "solver_thickness_lbound", "solver_thickness_ubound",
+              "solver_tolerance", "solver_iteration_limit"):
+        df_out.pop(k)
 
     return df_out
-
-
-# if self.n_threads <= 1:
-#     results = []
-#     for dict_mc_params in mc_param_list:
-#         results.append(calc_main(**dict_mc_params))
-#
-# else:
-#     time_simulation_start = time.perf_counter()
-#     m = mp.Manager()
-#     q = m.Queue()
-#     p = mp.Pool(n_threads, maxtasksperchild=1000)
-#     jobs = p.map_async(calc_time_equivalence_worker, [(dict_mc_param, q) for dict_mc_param in mc_param_list])
-#     n_steps = 24  # length of the progress bar
-#     while True:
-#         if jobs.ready():
-#             time_simulation_consumed = time.perf_counter() - time_simulation_start
-#             print("{}{} {:.1f}s ".format('█' * round(n_steps), '-' * round(0), time_simulation_consumed))
-#             break
-#         else:
-#             path_ = q.qsize() / n_simulations * n_steps
-#             print("{}{} {:03.1f}%".format('█' * int(round(path_)), '-' * int(n_steps - round(path_)),
-#                                           path_ / n_steps * 100),
-#                   end='\r')
-#             time.sleep(1)
-#     p.close()
-#     p.join()
-#     results = jobs.get()

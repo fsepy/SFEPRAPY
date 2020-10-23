@@ -1,6 +1,8 @@
 import copy
+import multiprocessing as mp
 import os
 import time
+from abc import ABC, abstractmethod
 from typing import Union, Callable
 
 import pandas as pd
@@ -9,7 +11,7 @@ from tqdm import tqdm
 from sfeprapy.func.mcs_gen import main as mcs_gen_main
 
 
-class MCS:
+class MCS(ABC):
     """
     Monte Carlo Simulation (MCS) object defines the framework of a MCS process. MCS is designed to work as parent class
     and certain methods defined in this class are placeholders.
@@ -31,7 +33,7 @@ class MCS:
         `MCS.mcs_deterministic_calc`
             A method to carry out deterministic calculation.
             NOTE! This method needs to be re-defined in a child class.
-        `MCS.mcs_post`
+        `MCS.mcs_post_per_case`
             A method to post processing results.
             NOTE! This method needs to be re-defined in a child class.
     """
@@ -45,7 +47,7 @@ class MCS:
         # ------------------------------
         # instantiate internal variables
         # ------------------------------
-        self.__cwd: str = None  # work folder path
+        self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
         self.__mcs_config: dict = None  # configuration parameters
         self.__mcs_sampler: Callable = mcs_gen_main  # stochastic variable generator function
@@ -57,17 +59,19 @@ class MCS:
         # assign default properties
         self.func_mcs_gen = mcs_gen_main
 
+    @abstractmethod
     def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
         """
-        pass
+        raise NotImplementedError('This method should be overridden by a child class')
 
+    @abstractmethod
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
         """
-        pass
+        raise NotImplementedError('This method should be overridden by a child class')
 
     @property
     def mcs_inputs(self) -> dict:
@@ -81,7 +85,8 @@ class MCS:
         """
         if isinstance(fp_df_dict, str):
             fp = fp_df_dict
-            self.path_wd = os.path.dirname(fp)
+            if self.cwd is None:
+                self.cwd = os.path.dirname(fp)
             if fp.endswith(".xlsx") or fp.endswith(".xls"):
                 self.__mcs_inputs = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
             elif fp.endswith(".csv"):
@@ -107,9 +112,9 @@ class MCS:
     def mcs_config(self, config):
         self.__mcs_config = config
         if 'cwd' in config:
-            self.__cwd = config['cwd']
+            self.cwd = config['cwd']
 
-    def run_mcs(self):
+    def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None):
         # ----------------------------
         # Prepare mcs parameter inputs
         # ----------------------------
@@ -161,49 +166,58 @@ class MCS:
         #   'case_1': df1,
         #   'case_2': df2
         # }
+
+        m, p = mp.Manager(), mp.Pool(self.mcs_config["n_threads"], maxtasksperchild=1000)
         for k, v in x2.items():
+            if qt_prog_signal_0:
+                qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
 
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
                 self.mcs_deterministic_calc_mp,
                 x=v,
                 n_threads=self.mcs_config["n_threads"],
+                m=m,
+                p=p,
+                qt_prog_signal_1=qt_prog_signal_1
             )
-            if self.mcs_post:
-                mcs_post = self.mcs_post
-                x3_ = mcs_post(x3_)
+
+            # Post process output upon completion per case
+            if self.mcs_post_per_case:
+                self.mcs_post_per_case(df=x3_)
             x3[k] = copy.copy(x3_)
 
-            if self.__cwd:
-                if not os.path.exists(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME)):
-                    os.makedirs(os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME))
-                x3_.to_csv(
-                    os.path.join(
-                        os.path.join(self.__cwd, self.DEFAULT_TEMP_FOLDER_NAME),
-                        f"{k}.csv",
-                    )
-                )
+        p.close()
+        p.join()
 
         # ------------
         # Pack results
         # ------------
         self.__mcs_out = pd.concat([v for v in x3.values()])
 
-        if self.__cwd:
-            self.mcs_out.to_csv(
-                os.path.join(self.__cwd, self.DEFAULT_MCS_OUTPUT_FILE_NAME),
-                index=False,
-            )
+        # Post process output upon completion of all cases
+        self.mcs_post_all_cases(self.__mcs_out)
 
-    def mcs_post(self, *arg, **kwargs):
-        pass
+    @abstractmethod
+    def mcs_post_per_case(self, *arg, **kwargs):
+        """
+        This method will be called upon completion of each case
+        """
+        raise NotImplementedError('This method should be overridden by a child class')
+
+    @abstractmethod
+    def mcs_post_all_cases(self, *args, **kwargs):
+        """
+        This method will be called upon completion of all cases
+        """
+        raise NotImplementedError('This method should be overridden by a child class')
 
     @property
     def mcs_out(self):
         return self.__mcs_out
 
     @staticmethod
-    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int) -> pd.DataFrame:
+    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, m, p, qt_prog_signal_1=None) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
 
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
@@ -212,31 +226,35 @@ class MCS:
         print("{:<24.24}: {}".format("NO. OF SIMULATIONS", len(x.index)))
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
 
+        n_simulations = len(list_mcs_in)
         if n_threads == 1 or func_mp is None:
             mcs_out = list()
+            j = 0
             for i in tqdm(list_mcs_in, ncols=60):
                 mcs_out.append(func(**i))
+                j += 1
+                if qt_prog_signal_1:
+                    qt_prog_signal_1.emit(int(j / n_simulations * 100))
         else:
-            import multiprocessing as mp
 
-            m, p = mp.Manager(), mp.Pool(n_threads, maxtasksperchild=1000)
             q = m.Queue()
             jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
-            n_simulations = len(list_mcs_in)
             with tqdm(total=n_simulations, ncols=60) as pbar:
                 while True:
                     if jobs.ready():
                         if n_simulations > pbar.n:
                             pbar.update(n_simulations - pbar.n)
+                            if qt_prog_signal_1:
+                                qt_prog_signal_1.emit(100)
                         break
                     else:
                         if q.qsize() - pbar.n > 0:
                             pbar.update(q.qsize() - pbar.n)
+                            if qt_prog_signal_1:
+                                qt_prog_signal_1.emit(int(q.qsize() / n_simulations * 100))
                         time.sleep(1)
-                p.close()
-                p.join()
-                mcs_out = jobs.get()
-                time.sleep(0.5)
+            mcs_out = jobs.get()
+            time.sleep(0.5)
 
         # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)

@@ -1,15 +1,12 @@
 import os
-import warnings
 
-from sfeprapy.mcs0.mcs0_calc import MCS0
-
-warnings.filterwarnings("ignore")
+from sfeprapy.mcs2.mcs2_calc import MCS2
 
 
 def main(fp_mcs_in: str, n_threads: int = None):
     fp_mcs_in = os.path.realpath(fp_mcs_in)
 
-    mcs = MCS0()
+    mcs = MCS2()
     try:
         mcs.mcs_inputs = fp_mcs_in
     except Exception as e:
@@ -26,7 +23,3 @@ def main(fp_mcs_in: str, n_threads: int = None):
         pass
 
     mcs.run_mcs()
-
-
-if __name__ == "__main__":
-    print("Use `sfeprapy` CLI, `sfeprapy.mcs0:__main__` is depreciated on 22 Oct 2019.")

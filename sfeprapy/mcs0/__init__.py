@@ -12,27 +12,18 @@ def __example_input_dict():
     y = {
         "Standard Case 1": dict(
             case_name="Standard Case 1",
-            n_simulations=500,
-            probability_weight=1 / 3,
-            fire_time_step=30,
+            n_simulations=1000,
+            fire_time_step=10,
             fire_time_duration=18000,
-            fire_hrr_density=dict(
-                dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001
-            ),
-            fire_load_density=dict(
-                dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126
-            ),
+            fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(
-                dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93
-            ),
+            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
             fire_combustion_efficiency=dict(dist="uniform_", lbound=0.8, ubound=1.0),
-            window_open_fraction=dict(
-                dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2
-            ),
+            window_open_fraction=dict(dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2),
             phi_teq=dict(dist="constant_", ubound=1, lbound=1, mean=0, sd=0),
             beam_cross_section_area=0.017,
-            beam_position_horizontal=-1,
+            beam_position_horizontal=dict(dist="uniform_", lbound=0.6 * 31.25, ubound=0.9 * 31.25),
             beam_position_vertical=3.2,
             beam_rho=7850,
             fire_mode=3,
@@ -50,7 +41,7 @@ def __example_input_dict():
             solver_temperature_goal=893.15,
             solver_max_iter=20,
             solver_thickness_lbound=0.0001,
-            solver_thickness_ubound=0.0500,
+            solver_thickness_ubound=0.0300,
             solver_tol=1.0,
             window_height=2.8,
             window_width=72,
@@ -61,30 +52,26 @@ def __example_input_dict():
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            p1=3e-7,
+            p2=0.1,
+            p3=0.25,
+            p4=0.09,
+            general_room_floor_area=500,
         ),
         "Standard Case 2 (with teq_phi)": dict(
             case_name="Standard Case 2 (with teq_phi)",
-            n_simulations=500,
-            probability_weight=1 / 3,
-            fire_time_step=30,
+            n_simulations=1000,
+            fire_time_step=10,
             fire_time_duration=18000,
-            fire_hrr_density=dict(
-                dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001
-            ),
-            fire_load_density=dict(
-                dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126
-            ),
+            fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(
-                dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93
-            ),
+            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
             fire_combustion_efficiency=dict(dist="uniform_", lbound=0.8, ubound=1.0),
-            window_open_fraction=dict(
-                dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2
-            ),
+            window_open_fraction=dict(dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2),
             phi_teq=dict(dist="lognorm_", ubound=3, lbound=0.00001, mean=1, sd=0.25),
             beam_cross_section_area=0.017,
-            beam_position_horizontal=-1,
+            beam_position_horizontal=dict(dist="uniform_", lbound=0.6 * 31.25, ubound=0.9 * 31.25),
             beam_position_vertical=3.2,
             beam_rho=7850,
             fire_mode=3,
@@ -102,7 +89,7 @@ def __example_input_dict():
             solver_temperature_goal=893.15,
             solver_max_iter=20,
             solver_thickness_lbound=0.0001,
-            solver_thickness_ubound=0.0500,
+            solver_thickness_ubound=0.0300,
             solver_tol=1.0,
             window_height=2.8,
             window_width=72,
@@ -113,30 +100,26 @@ def __example_input_dict():
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            p1=3e-7,
+            p2=0.1,
+            p3=0.25,
+            p4=0.09,
+            general_room_floor_area=500,
         ),
         "Standard Case 3 (with timber)": dict(
             case_name="Standard Case 3 (with timber)",
-            n_simulations=500,
-            probability_weight=1 / 3,
-            fire_time_step=30,
+            n_simulations=1000,
+            fire_time_step=10,
             fire_time_duration=18000,
-            fire_hrr_density=dict(
-                dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001
-            ),
-            fire_load_density=dict(
-                dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126
-            ),
+            fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1500, mean=420, sd=126),
             fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(
-                dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93
-            ),
+            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
             fire_combustion_efficiency=dict(dist="uniform_", lbound=0.8, ubound=1.0),
-            window_open_fraction=dict(
-                dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2
-            ),
+            window_open_fraction=dict(dist="lognorm_mod_", ubound=0.9999, lbound=0.0001, mean=0.2, sd=0.2),
             phi_teq=dict(dist="constant_", ubound=1, lbound=1, mean=0, sd=0),
             beam_cross_section_area=0.017,
-            beam_position_horizontal=-1,
+            beam_position_horizontal=dict(dist="uniform_", lbound=0.6 * 31.25, ubound=0.9 * 31.25),
             beam_position_vertical=3.2,
             beam_rho=7850,
             fire_mode=3,
@@ -154,7 +137,7 @@ def __example_input_dict():
             solver_temperature_goal=893.15,
             solver_max_iter=20,
             solver_thickness_lbound=0.0001,
-            solver_thickness_ubound=0.0500,
+            solver_thickness_ubound=0.0300,
             solver_tol=1.0,
             window_height=2.8,
             window_width=72,
@@ -165,6 +148,11 @@ def __example_input_dict():
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            p1=3e-7,
+            p2=0.1,
+            p3=0.25,
+            p4=0.09,
+            general_room_floor_area=500,
         ),
     }
     return y
@@ -189,6 +177,7 @@ EXAMPLE_CONFIG_DICT = __example_config_dict()
 EXAMPLE_INPUT_DICT = __example_input_dict()
 EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_dict())
 EXAMPLE_INPUT_DF = __example_input_df(__example_input_dict())
+
 
 if __name__ == "__main__":
     print(EXAMPLE_CONFIG_DICT, "\n")
