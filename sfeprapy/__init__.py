@@ -1,18 +1,6 @@
 import logging
 import os
 
-# make root directory of this app which will be used 1. when running the app; 2. pyinstaller at compiling the app.
-if os.path.exists(os.path.dirname(__file__)):
-    # this path should be used when running the app as a Python package (non compiled) and/or pyinstaller at compiling
-    # stage.
-    __root_dir__ = os.path.dirname(__file__)
-elif os.path.exists(os.path.dirname(os.path.dirname(__file__))):
-    # the path will become invalid when the app run after compiled as the dirname `fsetoolsGUI` will disappear.
-    # instead, the parent folder of the project dir will be used.
-    __root_dir__ = os.path.dirname(os.path.dirname(__file__))
-else:
-    __root_dir__ = None
-
 
 # setup logger
 def get_logger(f_handler_fp: str = None, f_handler_level=logging.WARNING, c_handler_level=logging.INFO):
@@ -37,6 +25,22 @@ def get_logger(f_handler_fp: str = None, f_handler_level=logging.WARNING, c_hand
 
 
 logger = get_logger()
+
+# make root directory of this app which will be used 1. when running the app; 2. pyinstaller at compiling the app.
+if os.path.exists(os.path.dirname(__file__)):
+    # this path should be used when running the app as a Python package (non compiled) and/or pyinstaller at compiling
+    # stage.
+    __root_dir__ = os.path.realpath(os.path.dirname(__file__))
+elif os.path.exists(os.path.dirname(os.path.dirname(__file__))):
+    # the path will become invalid when the app run after compiled as the dirname `fsetoolsGUI` will disappear.
+    # instead, the parent folder of the project dir will be used.
+    __root_dir__ = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
+else:
+    raise IsADirectoryError(
+        f'Project root directory undefined: '
+        f'{os.path.dirname(__file__)} nor '
+        f'{os.path.dirname(os.path.dirname(__file__))}'
+    )
 
 """
 VERSION IDENTIFICATION RULES DOCUMENTED IN PEP 440 ARE FOLLOWED.
@@ -74,7 +78,7 @@ Public version identifiers are separated into up to five segments:
 
 """
 
-__version__ = "0.7.1.post7"
+__version__ = "0.8.1"
 
 
 def check_pip_upgrade():
