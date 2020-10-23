@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_heat_transfer
 from fsetools.lib.fse_travelling_fire import temperature_si as _fire_travelling
 from matplotlib import pyplot as plt
 
 from sfeprapy.func.fire_iso834 import fire as _fire_iso
-from sfeprapy.func.fire_parametric_ec import fire as _fire_param
-from sfeprapy.func.heat_transfer_protected_steel_ec import protected_steel_eurocode as _steel_heat_transfer
 
 
 def fire_param(ax, label=None):
