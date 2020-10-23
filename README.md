@@ -1,6 +1,5 @@
 # SfePrapy
 [![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)](https://github.com/fsepy/SfePrapy)
-[![Updates](https://pyup.io/repos/github/fsepy/SfePrapy/shield.svg)](https://pyup.io/repos/github/fsepy/SfePrapy/)
 [![Build Status](https://img.shields.io/travis/fsepy/SfePrapy.svg?branch=master&label=build%20(master)&style=flat)](https://travis-ci.org/fsepy/SfePrapy)
 [![Build Status](https://img.shields.io/travis/fsepy/SfePrapy.svg?branch=dev&label=build%20(dev)&style=flat)](https://travis-ci.org/fsepy/SfePrapy)
 [![codecov](https://codecov.io/gh/fsepy/SfePrapy/branch/dev/graph/badge.svg)](https://codecov.io/gh/fsepy/SfePrapy)
