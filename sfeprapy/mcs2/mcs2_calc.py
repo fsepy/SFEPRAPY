@@ -114,7 +114,7 @@ class MCS2(MCS0):
         return teq_main_wrapper(*args, **kwargs)
 
 
-def _test_standard_case_new():
+def _test_standard_case():
     import copy
     from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
     from scipy.interpolate import interp1d
@@ -149,4 +149,4 @@ def _test_standard_case_new():
 if __name__ == '__main__':
     # _test_teq_phi()
     # _test_standard_case()
-    _test_standard_case_new()
+    _test_standard_case()
