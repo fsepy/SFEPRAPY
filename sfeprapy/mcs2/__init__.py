@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
 
-from sfeprapy.func.mcs_gen import dict_flatten
+from sfeprapy.mcs0 import __example_input_df, __example_input_csv
 
 
 def __example_config_dict():
@@ -54,21 +53,6 @@ def __example_input_dict():
             timber_solver_tol=1,
         ),
     }
-    return y
-
-
-def __example_input_csv(x: dict):
-    y = {k: dict_flatten(v) for k, v in x.items()}
-    y = pd.DataFrame.from_dict(y, orient="columns")
-    y.index.name = "PARAMETERS"
-    y = y.to_csv(index=True, line_terminator='\n')
-    return y
-
-
-def __example_input_df(x: dict) -> pd.DataFrame:
-    y = {k: dict_flatten(v) for k, v in x.items()}
-    y = pd.DataFrame.from_dict(y, orient="columns")
-    y.index.name = "PARAMETERS"
     return y
 
 
