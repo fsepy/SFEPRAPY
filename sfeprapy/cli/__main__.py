@@ -5,6 +5,8 @@ Usage:
     sfeprapy mcs0 template <file_name>
     sfeprapy mcs2 run [-p=<int>] <file_name>
     sfeprapy mcs2 template <file_name>
+    sfeprapy mcs3 run [-p=<int>] <file_name>
+    sfeprapy mcs3 template <file_name>
 
 Examples:
     sfeprapy mcs0 template inputs.csv
@@ -27,17 +29,25 @@ Commands:
     mcs0 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
     mcs0 figure     produce figure from the output file <file_name>.
     mcs0 template   save example input file to <file_name>.
+    mcs2 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
+    mcs2 figure     produce figure from the output file <file_name>.
+    mcs2 template   save example input file to <file_name>.
+    mcs3 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
+    mcs3 figure     produce figure from the output file <file_name>.
+    mcs3 template   save example input file to <file_name>.
 """
 
 from docopt import docopt
 
-from sfeprapy.func.stats_dist_fit import auto_fit_2
 from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS0
 from sfeprapy.mcs0 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS0
 from sfeprapy.mcs0.__main__ import main as mcs0
 from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS2
 from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS2
 from sfeprapy.mcs2.__main__ import main as mcs2
+from sfeprapy.mcs3 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS3
+from sfeprapy.mcs3 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS3
+from sfeprapy.mcs3.__main__ import main as mcs3
 
 
 def main():
@@ -58,7 +68,7 @@ def main():
 
         else:
             fp_mcs_in = arguments["<file_name>"]
-            n_threads = arguments["-p"] or 2
+            n_threads = arguments["-p"] or 1
             mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments['mcs2']:
@@ -70,16 +80,19 @@ def main():
                     f.write(EXAMPLE_INPUT_CSV_MCS2)
         else:
             fp_mcs_in = arguments["<file_name>"]
-            n_threads = arguments["-p"] or 2
+            n_threads = arguments["-p"] or 1
             mcs2(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
-    elif arguments["distfit"]:
-        # Default values
-        data_type = arguments["--data_t"] or 2
-        distribution_list = arguments["--dist_g"] or 1
-        # Main
-        auto_fit_2(
-            data_type=int(data_type),
-            distribution_list=int(distribution_list),
-            data=arguments["<file_name>"],
-        )
+    elif arguments['mcs3']:
+        if arguments['template']:
+            if arguments["<file_name>"].endswith('.xlsx'):
+                EXAMPLE_INPUT_DF_MCS3.to_excel(arguments["<file_name>"])
+            else:
+                with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
+                    f.write(EXAMPLE_INPUT_CSV_MCS3)
+        else:
+            fp_mcs_in = arguments["<file_name>"]
+            n_threads = arguments["-p"] or 1
+            mcs3(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
+    else:
+        raise ValueError(f'sfeprapy -h for help')
