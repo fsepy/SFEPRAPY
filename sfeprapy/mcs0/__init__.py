@@ -5,7 +5,7 @@ from sfeprapy.func.mcs_gen import dict_flatten
 
 
 def __example_config_dict():
-    return dict(n_threads=2, cwd='')
+    return dict(n_threads=2, cwd=None)
 
 
 def __example_input_dict():
@@ -142,7 +142,7 @@ def __example_input_dict():
             window_height=2.8,
             window_width=72,
             window_open_fraction_permanent=0,
-            timber_exposed_area=500,
+            timber_exposed_area=500.,
             timber_charring_rate=0.7,  # mm/min
             timber_hc=13.2,  # MJ/kg
             timber_density=400,  # [kg/m3]
@@ -177,7 +177,6 @@ EXAMPLE_CONFIG_DICT = __example_config_dict()
 EXAMPLE_INPUT_DICT = __example_input_dict()
 EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_dict())
 EXAMPLE_INPUT_DF = __example_input_df(__example_input_dict())
-
 
 if __name__ == "__main__":
     print(EXAMPLE_CONFIG_DICT, "\n")
