@@ -230,9 +230,6 @@ def evaluate_fire_temperature(
             beam_location_height_m=beam_position_vertical,
             beam_location_length_m=beam_position_horizontal,
             fire_nft_limit_c=fire_nft_limit - 273.15,
-            opening_width_m=window_width,
-            opening_height_m=window_height,
-            opening_fraction=window_open_fraction,
         )
         fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
 
@@ -278,28 +275,26 @@ def solve_time_equivalence_iso834(
         **__,
 ) -> dict:
     """
-    **WIP**
-    Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
+    Calculates equivalent time exposure for a protected steel element member in more realistic fire environment (i.e. travelling fire, parameteric fires)
     opposing to the standard fire curve ISO 834.
 
     PARAMETERS:
-    :param fire_time: [s], time array
-    :param fire_temperature: [K], temperature array
-    :param beam_cross_section_area: [m2], the steel beam element cross section area
-    :param beam_rho: [kg/m3], steel beam element density
-    :param protection_k: steel beam element protection material thermal conductivity
-    :param protection_rho: steel beam element protection material density
-    :param protection_c: steel beam element protection material specific heat
-    :param protection_protected_perimeter: [m], steel beam element protection material perimeter
-    :param fire_time_iso834: [s], the time (array) component of ISO 834 fire curve
-    :param fire_temperature_iso834: [K], the temperature (array) component of ISO 834 fire curve
-    :param solver_temperature_goal: [K], steel beam element expected failure temperature
-    :param solver_max_iter: Maximum allowable iteration counts for seeking solution for time equivalence
-    :param solver_thickness_ubound: [m], protection layer thickness upper bound initial condition for solving time equivalence
-    :param solver_thickness_lbound: [m], protection layer thickness lower bound initial condition for solving time equivalence
-    :param solver_tol: [K], tolerance for solving time equivalence
-    :param phi_teq: [-], model uncertainty factor
-    :return results: dict
+    :param beam_cross_section_area:             [m2], the steel beam element cross section area
+    :param beam_rho:                            [kg/m3], steel beam element density
+    :param protection_k:                        steel beam element protection material thermal conductivity
+    :param protection_rho:                      steel beam element protection material density
+    :param protection_c:                        steel beam element protection material specific heat
+    :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
+    :param fire_time_iso834:                    [s], the time (array) component of ISO 834 fire curve
+    :param fire_temperature_iso834:             [K], the temperature (array) component of ISO 834 fire curve
+    :param solver_temperature_goal:             [K], steel beam element expected failure temperature
+    :param solver_max_iter:                     Maximum allowable iteration counts for seeking solution for time equivalence
+    :param solver_thickness_ubound:             [m], protection layer thickness upper bound initial condition for solving time equivalence
+    :param solver_thickness_lbound:             [m], protection layer thickness lower bound initial condition for solving time equivalence
+    :param solver_tol:                          [K], tolerance for solving time equivalence
+    :param phi_teq:                             [-], model uncertainty factor
+    :return results:                            A dict containing the following:
+                                                    solver_time_equivalence_solved: [s], solved equivalent time exposure
     EXAMPLE:
     """
 
@@ -365,23 +360,23 @@ def solve_protection_thickness(
     opposing to the standard fire curve ISO 834.
 
     PARAMETERS:
-    :param fire_time: [s], time array
-    :param fire_temperature: [K], temperature array
-    :param beam_cross_section_area: [m2], the steel beam element cross section area
-    :param beam_rho: [kg/m3], steel beam element density
-    :param protection_k: steel beam element protection material thermal conductivity
-    :param protection_rho: steel beam element protection material density
-    :param protection_c: steel beam element protection material specific heat
-    :param protection_protected_perimeter: [m], steel beam element protection material perimeter
-    :param fire_time_iso834: [s], the time (array) component of ISO 834 fire curve
-    :param fire_temperature_iso834: [K], the temperature (array) component of ISO 834 fire curve
-    :param solver_temperature_goal: [K], steel beam element expected failure temperature
-    :param solver_max_iter: Maximum allowable iteration counts for seeking solution for time equivalence
-    :param solver_thickness_ubound: [m], protection layer thickness upper bound initial condition for solving time equivalence
-    :param solver_thickness_lbound: [m], protection layer thickness lower bound initial condition for solving time equivalence
-    :param solver_tol: [K], tolerance for solving time equivalence
-    :param phi_teq: [-], model uncertainty factor
-    :return results: dict
+    :param fire_time:                       [s], time array
+    :param fire_temperature:                [K], temperature array
+    :param beam_cross_section_area:         [m2], the steel beam element cross section area
+    :param beam_rho:                        [kg/m3], steel beam element density
+    :param protection_k:                    [], steel beam element protection material thermal conductivity
+    :param protection_rho:                  [kg/m3], steel beam element protection material density
+    :param protection_c:                    [], steel beam element protection material specific heat
+    :param protection_protected_perimeter:  [m], steel beam element protection material perimeter
+    :param fire_time_iso834:                [s], the time (array) component of ISO 834 fire curve
+    :param fire_temperature_iso834:         [K], the temperature (array) component of ISO 834 fire curve
+    :param solver_temperature_goal:         [K], steel beam element expected failure temperature
+    :param solver_max_iter:                 Maximum allowable iteration counts for seeking solution for time equivalence
+    :param solver_thickness_ubound:         [m], protection layer thickness upper bound initial condition for solving time equivalence
+    :param solver_thickness_lbound:         [m], protection layer thickness lower bound initial condition for solving time equivalence
+    :param solver_tol:                      [K], tolerance for solving time equivalence
+    :param phi_teq:                         [-], model uncertainty factor
+    :return results:                        dict
     EXAMPLE:
     """
 
@@ -417,9 +412,9 @@ def solve_protection_thickness(
     )
 
 
-def mcs_out_post_per_case(df: pd.DataFrame, fp: str) -> pd.DataFrame:
+def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
     # save outputs if work direction is provided per iteration
-    if fp:
+    if fp is not None:
         def _save_(fp_: str):
             try:
                 if not os.path.exists(os.path.dirname(fp_)):
@@ -587,6 +582,9 @@ def teq_main(
         # To solve protection thickness at critical temperature
         inputs.update(solve_protection_thickness(**inputs))
 
+        # To solve time equivalence in ISO 834
+        inputs.update(solve_time_equivalence_iso834(**inputs))
+
         # additional fuel contribution from timber
         if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
             # Exit timber fuel contribution solver if:
@@ -609,9 +607,7 @@ def teq_main(
             # convergence sought successfully
             break
         else:
-            timber_exposed_duration = inputs["solver_time_solved"]
-
-    inputs.update(solve_time_equivalence_iso834(**inputs))
+            timber_exposed_duration = inputs["solver_time_equivalence_solved"]
 
     inputs.update(
         dict(
@@ -638,8 +634,8 @@ def teq_main(
     return outputs
 
 
-def mcs_out_post_all_cases(df: pd.DataFrame, fp: str):
-    if fp:
+def mcs_out_post_all_cases(df: pd.DataFrame, fp: str = None):
+    if fp is not None:
         df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(fp, index=False)
 
 
@@ -784,7 +780,7 @@ def _test_standard_case():
     teq = mcs_out_standard_case_3["solver_time_equivalence_solved"] / 60.0
     teq_at_80_percentile = get_time_equivalence(teq, 0.8)
     print(f'Time equivalence at CDF 0.8 is {teq_at_80_percentile:<6.3f} min')
-    target, target_tol = 90, 2  # 81 minutes based on a test run on 2nd Oct 2020
+    target, target_tol = 80, 2  # 80 minutes based on a test run on 2nd Oct 2020
     assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
