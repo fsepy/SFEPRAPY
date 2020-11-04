@@ -43,17 +43,9 @@ class MCS(ABC):
     DEFAULT_CONFIG = dict(n_threads=1)
 
     def __init__(self):
-
-        # ------------------------------
-        # instantiate internal variables
-        # ------------------------------
         self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
         self.__mcs_config: dict = None  # configuration parameters
-        self.__mcs_sampler: Callable = mcs_gen_main  # stochastic variable generator function
-        self._func_mcs_calc: Callable = None  # monte carlo simulation deterministic calculation routine
-        self._func_mcs_calc_mp: Callable = None  # multiprocessing version of `MCS._mcs_calc`
-        self.__mcs_post: Callable = None
         self.__mcs_out: pd.DataFrame = None
 
         # assign default properties
@@ -109,10 +101,13 @@ class MCS(ABC):
             return self.DEFAULT_CONFIG
 
     @mcs_config.setter
-    def mcs_config(self, config):
+    def mcs_config(self, config: dict):
         self.__mcs_config = config
-        if 'cwd' in config:
-            self.cwd = config['cwd']
+        try:
+            if len(config['cwd']) > 0:
+                self.cwd = os.path.realpath(config['cwd'])
+        except (KeyError, TypeError):
+            pass
 
     def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None):
         # ----------------------------
