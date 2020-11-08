@@ -406,7 +406,7 @@ def solve_protection_thickness(
     return dict(
         solver_convergence_status=-np.inf < solver_d_p < np.inf,
         solver_steel_temperature_solved=solver_T_max_a,
-        solver_time_solved=solver_t,
+        solver_time_critical_temp_solved=solver_t,
         solver_protection_thickness=solver_d_p,
         solver_iter_count=solver_iter_count,
     )
@@ -593,8 +593,9 @@ def teq_main(
             break
         elif timber_solver_iter_count >= timber_solver_ilim:
             inputs['solver_convergence_status'] = np.nan
+            inputs['solver_time_critical_temp_solved'] = np.nan
+            inputs['solver_time_equivalence_solved'] = np.nan
             inputs['solver_steel_temperature_solved'] = np.nan
-            inputs['solver_time_solved'] = np.nan
             inputs['solver_protection_thickness'] = np.nan
             inputs['solver_iter_count'] = np.nan
             timber_exposed_duration = np.nan
@@ -780,7 +781,7 @@ def _test_standard_case():
     teq = mcs_out_standard_case_3["solver_time_equivalence_solved"] / 60.0
     teq_at_80_percentile = get_time_equivalence(teq, 0.8)
     print(f'Time equivalence at CDF 0.8 is {teq_at_80_percentile:<6.3f} min')
-    target, target_tol = 80, 2  # 80 minutes based on a test run on 2nd Oct 2020
+    target, target_tol = 77, 2  # 77 minutes based on a test run on 2nd Oct 2020
     assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
