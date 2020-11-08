@@ -151,7 +151,7 @@ def teq_main(
             # no protection thickness solution
             timber_exposed_duration = inputs['solver_protection_thickness']
             break
-        elif abs(timber_exposed_duration - inputs["solver_time_solved"]) <= timber_solver_tol:
+        elif abs(timber_exposed_duration - inputs["solver_time_equivalence_solved"]) <= timber_solver_tol:
             # convergence sought successfully
             break
         else:
@@ -280,4 +280,17 @@ def _test_standard_case():
 
 
 if __name__ == '__main__':
-    _test_standard_case()
+    # _test_standard_case()
+
+    from sfeprapy.mcs3 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    import numpy as np
+
+    # increase the number of simulations so it gives sensible results
+    mcs_input = r'D:\projects_fse\!southwark_pra\trial_00-clt_vary\0-mcs0.xlsx'
+    mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
+    mcs_config["n_threads"] = 6  # coverage does not support
+    mcs3 = MCS3()
+    mcs3.mcs_inputs = mcs_input
+    mcs3.mcs_config = mcs_config
+    mcs3.run_mcs()
+    mcs_out = mcs3.mcs_out

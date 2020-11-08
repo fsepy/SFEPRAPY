@@ -603,7 +603,7 @@ def teq_main(
             # no protection thickness solution
             timber_exposed_duration = inputs['solver_protection_thickness']
             break
-        elif abs(timber_exposed_duration - inputs["solver_time_solved"]) <= timber_solver_tol:
+        elif abs(timber_exposed_duration - inputs["solver_time_equivalence_solved"]) <= timber_solver_tol:
             # convergence sought successfully
             break
         else:
