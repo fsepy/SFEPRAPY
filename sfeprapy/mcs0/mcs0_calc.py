@@ -16,6 +16,7 @@ from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fir
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from scipy.interpolate import interp1d
 
+from sfeprapy import logger
 from sfeprapy.func.mcs import MCS
 
 
@@ -319,9 +320,19 @@ def solve_time_equivalence_iso834(
             protection_thickness=solver_d_p,
             protection_protected_perimeter=protection_protected_perimeter,
         )
-        func_teq = interp1d(steel_temperature, fire_time_iso834, kind="linear", bounds_error=False, fill_value=-1)
-        solver_time_equivalence_solved = func_teq(solver_temperature_goal)
-        solver_time_equivalence_solved = solver_time_equivalence_solved * phi_teq
+
+        # Check whether steel temperature (when exposed to ISO 834 fire temperature) contains `solver_temperature_goal`
+        if solver_temperature_goal < np.amin(steel_temperature):
+            # critical temperature is lower than exposed steel temperature
+            # this shouldn't be theoretically possible unless the given critical temperature is less than ambient temperature
+            logger.error('Unexpected outputs when solving for time equivalence. Esculate this error to developers!')
+            solver_time_equivalence_solved = np.nan
+        elif solver_temperature_goal > np.amax(steel_temperature):
+            solver_time_equivalence_solved = np.inf
+        else:
+            func_teq = interp1d(steel_temperature, fire_time_iso834, kind="linear", bounds_error=False, fill_value=-1)
+            solver_time_equivalence_solved = func_teq(solver_temperature_goal)
+            solver_time_equivalence_solved = solver_time_equivalence_solved * phi_teq
 
     elif solver_d_p == np.inf:
         solver_time_equivalence_solved = np.inf
@@ -751,6 +762,8 @@ def _test_standard_case():
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     mcs_config["n_threads"] = 1
 
+    mcs_input['Standard Case 3 (with timber)']['n_simulations'] = 2500
+
     mcs = MCS0()
 
     mcs.mcs_inputs = mcs_input
@@ -781,7 +794,7 @@ def _test_standard_case():
     teq = mcs_out_standard_case_3["solver_time_equivalence_solved"] / 60.0
     teq_at_80_percentile = get_time_equivalence(teq, 0.8)
     print(f'Time equivalence at CDF 0.8 is {teq_at_80_percentile:<6.3f} min')
-    target, target_tol = 77, 2  # 77 minutes based on a test run on 2nd Oct 2020
+    target, target_tol = 78, 3  # 80 minutes based on a test run on 18th Nov 2020
     assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
