@@ -423,67 +423,6 @@ def solve_protection_thickness(
     )
 
 
-def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
-    # save outputs if work direction is provided per iteration
-    if fp is not None:
-        def _save_(fp_: str):
-            try:
-                if not os.path.exists(os.path.dirname(fp_)):
-                    os.makedirs(os.path.dirname(fp_))
-            except Exception as e:
-                print(e)
-            df.to_csv(os.path.join(fp_), index=False)
-
-        threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
-
-    df_res = copy.copy(df)
-    df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
-    df_res = df_res.dropna(axis=0, how="any")
-
-    dict_ = dict()
-    dict_["fire_type"] = str(
-        {
-            k: np.sum(df_res["fire_type"].values == k)
-            for k in np.unique(df_res["fire_type"].values)
-        }
-    )
-
-    for k in [
-        "beam_position_horizontal",
-        "fire_combustion_efficiency",
-        "fire_hrr_density",
-        "fire_load_density",
-        "fire_nft_limit",
-        "fire_spread_speed",
-        "window_open_fraction",
-        "phi_teq",
-        "timber_fire_load",
-    ]:
-        try:
-            x = df_res[k].values
-            x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
-            dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
-        except Exception:
-            pass
-
-    list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
-
-    print("\n".join(list_), "\n")
-
-    try:
-        x = np.array(df_res['solver_time_equivalence_solved'].values / 60, dtype=float)
-        x[x == -np.inf] = 0
-        x[x == np.inf] = np.amax(x[x != np.inf])
-        y = np.linspace(0, 1, len(x), dtype=float)
-        aplot = AsciiPlot(size=(55, 15))
-        aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
-        aplot.show()
-    except Exception as e:
-        print(f'Failed to plot time equivalence, {e}')
-
-    return df
-
-
 def teq_main_wrapper(args):
     try:
         kwargs, q = args
@@ -659,6 +598,67 @@ def teq_main(
     return outputs
 
 
+def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
+    # save outputs if work direction is provided per iteration
+    if fp is not None:
+        def _save_(fp_: str):
+            try:
+                if not os.path.exists(os.path.dirname(fp_)):
+                    os.makedirs(os.path.dirname(fp_))
+            except Exception as e:
+                print(e)
+            df.to_csv(os.path.join(fp_), index=False)
+
+        threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
+
+    df_res = copy.copy(df)
+    df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
+    df_res = df_res.dropna(axis=0, how="any")
+
+    dict_ = dict()
+    dict_["fire_type"] = str(
+        {
+            k: np.sum(df_res["fire_type"].values == k)
+            for k in np.unique(df_res["fire_type"].values)
+        }
+    )
+
+    for k in [
+        "beam_position_horizontal",
+        "fire_combustion_efficiency",
+        "fire_hrr_density",
+        "fire_load_density",
+        "fire_nft_limit",
+        "fire_spread_speed",
+        "window_open_fraction",
+        "phi_teq",
+        "timber_fire_load",
+    ]:
+        try:
+            x = df_res[k].values
+            x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
+            dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
+        except Exception:
+            pass
+
+    list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
+
+    print("\n".join(list_), "\n")
+
+    try:
+        x = np.array(df_res['solver_time_equivalence_solved'].values / 60, dtype=float)
+        x[x == -np.inf] = 0
+        x[x == np.inf] = np.amax(x[x != np.inf])
+        y = np.linspace(0, 1, len(x), dtype=float)
+        aplot = AsciiPlot(size=(55, 15))
+        aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
+        aplot.show()
+    except Exception as e:
+        print(f'Failed to plot time equivalence, {e}')
+
+    return df
+
+
 def mcs_out_post_all_cases(df: pd.DataFrame, fp: str = None):
     if fp is not None:
         df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(fp, index=False)
@@ -688,12 +688,14 @@ class MCS0(MCS):
         return mcs_out_post_per_case(df=df, fp=fp)
 
     def mcs_post_all_cases(self, df: pd.DataFrame):
-        try:
-            fp = os.path.join(self.cwd, self.DEFAULT_MCS_OUTPUT_FILE_NAME)
-        except TypeError:
-            fp = None
-
-        return mcs_out_post_all_cases(df=df, fp=fp)
+        # DEPRECIATED 23rd Nov 2020
+        # The concept of `sfeprapy` is a pure solver and with bare minimal data processing features
+        # try:
+        #     fp = os.path.join(self.cwd, self.DEFAULT_MCS_OUTPUT_FILE_NAME)
+        # except TypeError:
+        #     fp = None
+        # return mcs_out_post_all_cases(df=df, fp=fp)
+        pass
 
 
 def _test_teq_phi():

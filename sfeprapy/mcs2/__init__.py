@@ -1,59 +1,75 @@
 # -*- coding: utf-8 -*-
 
-from sfeprapy.mcs0 import __example_input_df, __example_input_csv
+import copy
 
-
-def __example_config_dict():
-    return dict(n_threads=2, cwd='')
+from sfeprapy.mcs0 import __example_config_dict, __example_input_df, __example_input_csv
 
 
 def __example_input_dict():
-    y = {
-        "Standard Case 1": dict(
-            case_name="Standard Case 1",
-            n_simulations=5000,
-            fire_time_step=30,
-            fire_time_duration=18000,
-            fire_hrr_density=0.25,
-            fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=420, sd=126),
-            fire_spread_speed=dict(dist="uniform_", lbound=0.0035, ubound=0.0190),
-            fire_nft_limit=dict(dist="norm_", lbound=623.15, ubound=2023.15, mean=1323.15, sd=93),
-            fire_combustion_efficiency=1.0,
-            window_open_fraction=1.0,
-            phi_teq=dict(dist="constant_", ubound=1, lbound=1, mean=0, sd=0),
-            beam_cross_section_area=0.017,
-            beam_position_horizontal=-1,
-            beam_position_vertical=3.2,
-            beam_rho=7850,
-            fire_mode=0,
-            fire_gamma_fi_q=1,
-            fire_t_alpha=300,
-            fire_tlim=0.333,
-            protection_c=1700,
-            protection_k=0.2,
-            protection_protected_perimeter=2.14,
-            protection_rho=800,
-            room_floor_area=500,
-            room_breadth_depth_ratio=dict(dist="uniform_", lbound=0.512 - 0.2, ubound=0.512 + 0.2),
-            room_height=3,
-            room_wall_thermal_inertia=720,
-            solver_temperature_goal=893.15,
-            solver_max_iter=20,
-            solver_thickness_lbound=0.0001,
-            solver_thickness_ubound=0.0500,
-            solver_tol=1.0,
-            window_height=2.8,
-            window_floor_ratio=dict(dist="uniform_", lbound=0.05, ubound=0.4),
-            window_open_fraction_permanent=0,
-            timber_exposed_area=0,
-            timber_charring_rate=0.7,  # mm/min
-            timber_hc=13.2,  # MJ/kg
-            timber_density=400,  # [kg/m3]
-            timber_solver_ilim=20,
-            timber_solver_tol=1,
-        ),
-    }
-    return y
+    # =====================================
+    # Create base case from `sfeprapy.mcs0`
+    # =====================================
+    # use example `sfeprapy.mcs0` example inputs
+    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT as EXAMPLE_INPUT_DICT_
+    # only use "Standard Case 1"
+    base_case = copy.deepcopy(EXAMPLE_INPUT_DICT_['Standard Case 1'])
+    # remove items which are no longer used in `sfeprapy.mcs2` (comparing to `sfeprapy.mcs0`)
+    [base_case.pop(i) for i in ['room_breadth', 'room_depth', 'window_width', 'p1', 'p2', 'p3', 'p4', 'general_room_floor_area']]
+    # create variable for dumping new inputs
+    input_dict = dict()
+
+    # ===========
+    # Residential
+    # ===========
+    input_dict["Residential"] = copy.copy(base_case)
+    input_dict["Residential"].update(dict(
+        fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
+        fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=780, sd=234),
+        fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+        room_floor_area=dict(dist='uniform_', lbound=9., ubound=30.),
+        room_height=dict(dist='constant_', lbound=2.4, ubound=2.4),
+        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),  # todo
+        window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
+        window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.20),
+        case_name='Residential',
+        phi_teq=1.,
+    ))
+
+    # ======
+    # Office
+    # ======
+    input_dict['Office'] = copy.copy(base_case)
+    input_dict["Office"].update(dict(
+        fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
+        fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=420, sd=126),
+        fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+        room_floor_area=dict(dist='uniform_', lbound=50., ubound=1000.),
+        room_height=dict(dist='uniform_', lbound=2.8, ubound=4.5),
+        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),
+        window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
+        window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
+        case_name='Office',
+        phi_teq=1.,
+    ))
+
+    # ======
+    # Retail
+    # ======
+    input_dict["Retail"] = copy.copy(base_case)
+    input_dict["Retail"].update(dict(
+        fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
+        fire_load_density=dict(dist="gumbel_r_", lbound=10., ubound=2000., mean=600., sd=180.),
+        fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+        room_floor_area=dict(dist='constant_', lbound=400., ubound=400.),
+        room_height=dict(dist='uniform_', lbound=4.5, ubound=7.0),
+        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),
+        window_height_room_height_ratio=dict(dist='uniform_', lbound=0.5, ubound=1.0),
+        window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
+        case_name='Retail',
+        phi_teq=1.,
+    ))
+
+    return input_dict
 
 
 EXAMPLE_CONFIG_DICT = __example_config_dict()
