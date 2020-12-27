@@ -76,15 +76,21 @@ class MCS(ABC):
         :return:
         """
         if isinstance(fp_df_dict, str):
+            '''
+            If a string is provided, regard as full spreadsheet file path.
+            Currently support *.csv, *.xls and *.xlsx
+            '''
             fp = fp_df_dict
             if self.cwd is None:
                 self.cwd = os.path.dirname(fp)
-            if fp.endswith(".xlsx") or fp.endswith(".xls"):
+            if fp.endswith(".xlsx"):
+                self.__mcs_inputs = pd.read_excel(fp, engine='openpyxl').set_index("PARAMETERS").to_dict()
+            elif fp.endswith(".xls"):
                 self.__mcs_inputs = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
             elif fp.endswith(".csv"):
                 self.__mcs_inputs = pd.read_csv(fp).set_index("PARAMETERS").to_dict()
             else:
-                raise ValueError("Unknown input file format.")
+                raise ValueError(f"Unknown input file format, {os.path.basename(fp_df_dict)}")
         elif isinstance(fp_df_dict, pd.DataFrame):
             self.__mcs_inputs = fp_df_dict.to_dict()
         elif isinstance(fp_df_dict, dict):
@@ -151,7 +157,12 @@ class MCS(ABC):
         # ------------------------------
         # Generate mcs parameter samples
         # ------------------------------
-        x2 = {k: self.func_mcs_gen(v, int(v["n_simulations"])) for k, v in x1.items()}
+        x2 = dict()
+        for k, v in x1.items():
+            try:
+                x2[k] = self.func_mcs_gen(v, int(v['n_simulations']))
+            except Exception as e:
+                raise ValueError(f'Failed to generate stochastic samples from user defined inputs for case {k}, {e}')
 
         # ------------------
         # Run mcs simulation
