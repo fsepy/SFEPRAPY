@@ -75,17 +75,17 @@ def decide_fire(
     opposing to the standard fire curve ISO 834.
 
     PARAMETERS:
-    :param window_height: [m], weighted window opening height
-    :param window_width: [m], total window opening width
-    :param window_open_fraction: [-], a factor is multiplied with the given total window opening area
-    :param room_breadth: [m], room breadth (shorter direction of the floor plan)
-    :param room_depth: [m], room depth (longer direction of the floor plan)
-    :param room_height: [m], room height from floor to soffit (structural), disregard any non fire resisting floors
-    :param fire_hrr_density: [MW m-2], fire maximum release rate per unit area
+    :param window_height:               [m], weighted window opening height
+    :param window_width:                [m], total window opening width
+    :param window_open_fraction:        [-], a factor is multiplied with the given total window opening area
+    :param room_breadth:                [m], room breadth (shorter direction of the floor plan)
+    :param room_depth:                  [m], room depth (longer direction of the floor plan)
+    :param room_height:                 [m], room height from floor to soffit (structural), disregard any non fire resisting floors
+    :param fire_hrr_density:            [MW/m], fire maximum release rate per unit area
     :param fire_load_density:
-    :param fire_combustion_efficiency:
-    :param fire_spread_speed: [m s-1], TRAVELLING FIRE, fire spread speed
-    :param fire_mode: 0 - parametric, 1 - travelling, 2 - ger parametric, 3 - (0 & 1), 4 (1 & 2)
+    :param fire_combustion_efficiency:  [-]
+    :param fire_spread_speed:           [m/s], TRAVELLING FIRE, fire spread speed
+    :param fire_mode:                   0 - parametric, 1 - travelling, 2 - ger parametric, 3 - (0 & 1), 4 (1 & 2)
     :return:
     EXAMPLE:
     """
@@ -115,9 +115,11 @@ def decide_fire(
     fire_spread_entire_room_time = room_depth / fire_spread_speed
     burn_out_time = max([fire_load_density_deducted / fire_hrr_density, 900.0])
 
-    if fire_mode == 0 or fire_mode == 1 or fire_mode == 2:  # enforced to selected fire, i.e. 0 is ec parametric; 1 is travelling; and 2 is din ec parametric
+    if fire_mode == 0 or fire_mode == 1 or fire_mode == 2:
+        # enforced to selected fire, i.e. 0 is ec parametric; 1 is travelling; and 2 is din ec parametric
         fire_type = fire_mode
-    elif fire_mode == 3:  # enforced to ec parametric + travelling
+    elif fire_mode == 3:
+        # enforced to ec parametric + travelling
         if (
                 fire_spread_entire_room_time < burn_out_time
                 and 0.01 < opening_factor <= 0.2
@@ -126,14 +128,16 @@ def decide_fire(
             fire_type = 0  # parametric fire
         else:  # Otherwise, it is a travelling fire
             fire_type = 1  # travelling fire
-    elif fire_mode == 4:  # enforced to german parametric + travelling
+    elif fire_mode == 4:
+        # enforced to german parametric + travelling
         # If fire spreads throughout compartment and ventilation is within EC limits = Parametric fire
         if (
                 fire_spread_entire_room_time < burn_out_time
                 and 0.125 <= (window_area / room_floor_area) <= 0.5
         ):
             fire_type = 2  # german parametric
-        else:  # Otherwise, it is a travelling fire
+        else:
+            # Otherwise, it is a travelling fire
             fire_type = 1  # travelling fire
     else:
         raise ValueError("Unknown fire mode {fire_mode}.".format(fire_mode=fire_mode))
@@ -167,25 +171,25 @@ def evaluate_fire_temperature(
     """Calculate temperature array of pre-defined fire type `fire_type`.
 
     PARAMETERS:
-    :param window_height: [m], weighted window opening height
-    :param window_width: [m], total window opening width
-    :param window_open_fraction: [-], a factor is multiplied with the given total window opening area
-    :param room_breadth: [m], room breadth (shorter direction of the floor plan)
-    :param room_depth: [m], room depth (longer direction of the floor plan)
-    :param room_height: [m], room height from floor to soffit (structural), disregard any non fire resisting floors
-    :param room_wall_thermal_inertia: [J m-2 K-1 s-1/2], thermal inertia of room lining material
-    :param fire_tlim: [s], PARAMETRIC FIRE, see parametric fire function for details
-    :param fire_type: [-],
-    :param fire_time: [K],
+    :param window_height:               [m], weighted window opening height
+    :param window_width:                [m], total window opening width
+    :param window_open_fraction:        [-], a factor is multiplied with the given total window opening area
+    :param room_breadth:                [m], room breadth (shorter direction of the floor plan)
+    :param room_depth:                  [m], room depth (longer direction of the floor plan)
+    :param room_height:                 [m], room height from floor to soffit (structural), disregard any non fire resisting floors
+    :param room_wall_thermal_inertia:   [J/m2/K/s0.5], thermal inertia of room lining material
+    :param fire_tlim:                   [s], PARAMETRIC FIRE, see parametric fire function for details
+    :param fire_type:                   [-],
+    :param fire_time:                   [K],
     :param fire_load_density:
     :param fire_combustion_efficiency:
     :param fire_t_alpha:
     :param fire_gamma_fi_q:
     :param beam_position_vertical:
-    :param fire_hrr_density: [MW m-2], fire maximum release rate per unit area
-    :param fire_spread_speed: [m s-1], TRAVELLING FIRE, fire spread speed
-    :param beam_position_horizontal: [s], beam location, will be solved for the worst case if less than 0.
-    :param fire_nft_limit: [K], TRAVELLING FIRE, maximum temperature of near field temperature
+    :param fire_hrr_density:            [MW/m2], fire maximum release rate per unit area
+    :param fire_spread_speed:           [m/s], TRAVELLING FIRE, fire spread speed
+    :param beam_position_horizontal:    [s], beam location, will be solved for the worst case if less than 0.
+    :param fire_nft_limit:              [K], TRAVELLING FIRE, maximum temperature of near field temperature
     :return:
     EXAMPLE:
     """
@@ -282,20 +286,20 @@ def solve_time_equivalence_iso834(
     PARAMETERS:
     :param beam_cross_section_area:             [m2], the steel beam element cross section area
     :param beam_rho:                            [kg/m3], steel beam element density
-    :param protection_k:                        steel beam element protection material thermal conductivity
-    :param protection_rho:                      steel beam element protection material density
-    :param protection_c:                        steel beam element protection material specific heat
+    :param protection_k:                        [], steel beam element protection material thermal conductivity
+    :param protection_rho:                      [kg/m3], steel beam element protection material density
+    :param protection_c:                        [], steel beam element protection material specific heat
     :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
     :param fire_time_iso834:                    [s], the time (array) component of ISO 834 fire curve
     :param fire_temperature_iso834:             [K], the temperature (array) component of ISO 834 fire curve
     :param solver_temperature_goal:             [K], steel beam element expected failure temperature
-    :param solver_max_iter:                     Maximum allowable iteration counts for seeking solution for time equivalence
+    :param solver_max_iter:                     [-], Maximum allowable iteration counts for seeking solution for time equivalence
     :param solver_thickness_ubound:             [m], protection layer thickness upper bound initial condition for solving time equivalence
     :param solver_thickness_lbound:             [m], protection layer thickness lower bound initial condition for solving time equivalence
     :param solver_tol:                          [K], tolerance for solving time equivalence
+    :param solver_protection_thickness:         [m], steel section protection layer thickness
     :param phi_teq:                             [-], model uncertainty factor
-    :return results:                            A dict containing the following:
-                                                    solver_time_equivalence_solved: [s], solved equivalent time exposure
+    :return results:                            A dict containing `solver_time_equivalence_solved` which is ,[s], solved equivalent time exposure
     EXAMPLE:
     """
 
@@ -387,7 +391,13 @@ def solve_protection_thickness(
     :param solver_thickness_lbound:         [m], protection layer thickness lower bound initial condition for solving time equivalence
     :param solver_tol:                      [K], tolerance for solving time equivalence
     :param phi_teq:                         [-], model uncertainty factor
-    :return results:                        dict
+    :return results:
+        A dict containing the following items.
+        solver_convergence_status:          [-], True if time equivalence has been successfully solved.
+        solver_steel_temperature_solved
+        solver_time_critical_temp_solved
+        solver_protection_thickness
+        solver_iter_count
     EXAMPLE:
     """
 
@@ -776,8 +786,6 @@ def _test_standard_case():
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
     mcs_config["n_threads"] = 1
-
-    mcs_input['Standard Case 3 (with timber)']['n_simulations'] = 2500
 
     mcs = MCS0()
 

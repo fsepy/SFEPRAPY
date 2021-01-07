@@ -12,7 +12,7 @@ def __example_input_dict():
     y = {
         "Standard Case 1": dict(
             case_name="Standard Case 1",
-            n_simulations=1000,
+            n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
             fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
@@ -60,7 +60,7 @@ def __example_input_dict():
         ),
         "Standard Case 2 (with teq_phi)": dict(
             case_name="Standard Case 2 (with teq_phi)",
-            n_simulations=1000,
+            n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
             fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
@@ -108,7 +108,7 @@ def __example_input_dict():
         ),
         "Standard Case 3 (with timber)": dict(
             case_name="Standard Case 3 (with timber)",
-            n_simulations=1000,
+            n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
             fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
