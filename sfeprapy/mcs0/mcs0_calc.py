@@ -684,7 +684,7 @@ class MCS0(MCS):
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
         return teq_main_wrapper(*args, **kwargs)
 
-    def mcs_post_per_case(self, df: pd.DataFrame):
+    def mcs_post_per_case(self, df: pd.DataFrame, write_outputs:bool = True, *_, **__):
 
         case_name = df['case_name'].to_numpy()
         assert (case_name == case_name[0]).all()
@@ -695,7 +695,10 @@ class MCS0(MCS):
         except TypeError:
             fp = None
 
-        return mcs_out_post_per_case(df=df, fp=fp)
+        if write_outputs:
+            return mcs_out_post_per_case(df=df, fp=fp)
+        else:
+            return mcs_out_post_per_case(df=df)
 
     def mcs_post_all_cases(self, df: pd.DataFrame):
         # DEPRECIATED 23rd Nov 2020
@@ -821,6 +824,24 @@ def _test_standard_case():
     assert target - target_tol < teq_at_80_percentile < target + target_tol
 
 
+def _test_file_input():
+    import tempfile
+    from sfeprapy.mcs0 import EXAMPLE_INPUT_DF, EXAMPLE_CONFIG_DICT
+
+    # save input as .xlsx
+    temp = tempfile.NamedTemporaryFile(suffix='.xlsx',delete=False)
+    EXAMPLE_INPUT_DF.to_excel(temp)
+    fp = f'{temp.name}'
+    print(f"A temporary input file has been created: {fp}")  # 4
+    temp.close()  # 5
+
+    mcs = MCS0()
+    mcs.mcs_inputs = fp
+    mcs.mcs_config = EXAMPLE_CONFIG_DICT
+    mcs.run_mcs()
+
+
 if __name__ == '__main__':
     _test_teq_phi()
     _test_standard_case()
+    _test_file_input()
