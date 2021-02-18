@@ -80,17 +80,9 @@ class MCS(ABC):
             If a string is provided, regard as full spreadsheet file path.
             Currently support *.csv, *.xls and *.xlsx
             '''
-            fp = fp_df_dict
             if self.cwd is None:
-                self.cwd = os.path.dirname(fp)
-            if fp.endswith(".xlsx"):
-                self.__mcs_inputs = pd.read_excel(fp, engine='openpyxl').set_index("PARAMETERS").to_dict()
-            elif fp.endswith(".xls"):
-                self.__mcs_inputs = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
-            elif fp.endswith(".csv"):
-                self.__mcs_inputs = pd.read_csv(fp).set_index("PARAMETERS").to_dict()
-            else:
-                raise ValueError(f"Unknown input file format, {os.path.basename(fp_df_dict)}")
+                self.cwd = os.path.dirname(fp_df_dict)
+            self.__mcs_inputs = self.read_spreadsheet_input(fp_df_dict)
         elif isinstance(fp_df_dict, pd.DataFrame):
             self.__mcs_inputs = fp_df_dict.to_dict()
         elif isinstance(fp_df_dict, dict):
@@ -115,7 +107,7 @@ class MCS(ABC):
         except (KeyError, TypeError):
             pass
 
-    def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None):
+    def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None, *args, **kwargs):
         # ----------------------------
         # Prepare mcs parameter inputs
         # ----------------------------
@@ -177,6 +169,8 @@ class MCS(ABC):
         for k, v in x2.items():
             if qt_prog_signal_0:
                 qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
+            if qt_prog_signal_1:
+                qt_prog_signal_1.emit(0)
 
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
@@ -190,7 +184,7 @@ class MCS(ABC):
 
             # Post process output upon completion per case
             if self.mcs_post_per_case:
-                self.mcs_post_per_case(df=x3_)
+                self.mcs_post_per_case(df=x3_, *args, **kwargs)
             x3[k] = copy.copy(x3_)
 
         p.close()
@@ -266,3 +260,27 @@ class MCS(ABC):
         df_mcs_out = pd.DataFrame(mcs_out)
         df_mcs_out.sort_values("solver_time_equivalence_solved", inplace=True)  # sort base on time equivalence
         return df_mcs_out
+
+    @staticmethod
+    def read_spreadsheet_input(fp: str):
+        if fp.endswith(".xlsx"):
+            dict_input = pd.read_excel(fp, engine='openpyxl').set_index("case_name").to_dict()
+            for k in dict_input.keys():
+                if 'case_name' not in tuple(dict_input[k].keys()):
+                    dict_input[k]['case_name'] = k
+
+        elif fp.endswith(".xls"):
+            dict_input = pd.read_excel(fp).set_index("case_name").to_dict()
+            for k in dict_input.keys():
+                if 'case_name' not in tuple(dict_input[k].keys()):
+                    dict_input[k]['case_name'] = k
+        elif fp.endswith(".csv"):
+            dict_input = pd.read_csv(fp).set_index("case_name").to_dict()
+            for k in dict_input.keys():
+                if 'case_name' not in tuple(dict_input[k].keys()):
+                    dict_input[k]['case_name'] = k
+
+        else:
+            raise ValueError(f"Unknown input file format, {os.path.basename(fp)}")
+
+        return dict_input
