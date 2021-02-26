@@ -84,7 +84,7 @@ def _test_standard_case():
     # increase the number of threads so it runs faster
     mcs_config["n_threads"] = 1  # coverage does not support
     mcs2 = MCS2()
-    mcs2.mcs_inputs = mcs_input
+    mcs2.inputs = mcs_input
     mcs2.mcs_config = mcs_config
     mcs2.run_mcs()
     mcs_out = mcs2.mcs_out

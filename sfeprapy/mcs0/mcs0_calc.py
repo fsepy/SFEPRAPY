@@ -484,6 +484,7 @@ def teq_main(
         timber_hc: float = None,
         timber_density: float = None,
         timber_exposed_area: float = None,
+        timber_depth: float = None,
         timber_solver_tol: float = None,
         timber_solver_ilim: float = None,
         *_,
@@ -539,6 +540,11 @@ def teq_main(
             else:
                 raise TypeError('`timber_charring_rate_i` is not numerical nor Callable type')
             timber_charred_depth_i /= 1000.
+
+        # make sure the calculated charred depth does not exceed the the available timber depth
+        if timber_depth is not None:
+            timber_charred_depth_i = min(timber_charred_depth_i, timber_depth)
+
         timber_charred_volume = timber_charred_depth_i * timber_exposed_area
         timber_charred_mass = timber_density * timber_charred_volume
         timber_fire_load = timber_charred_mass * timber_hc
@@ -684,7 +690,7 @@ class MCS0(MCS):
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
         return teq_main_wrapper(*args, **kwargs)
 
-    def mcs_post_per_case(self, df: pd.DataFrame, write_outputs:bool = True, *_, **__):
+    def mcs_post_per_case(self, df: pd.DataFrame, write_outputs: bool = True, *_, **__):
 
         case_name = df['case_name'].to_numpy()
         assert (case_name == case_name[0]).all()
@@ -792,7 +798,7 @@ def _test_standard_case():
 
     mcs = MCS0()
 
-    mcs.mcs_inputs = mcs_input
+    mcs.inputs = mcs_input
     mcs.mcs_config = mcs_config
     mcs.run_mcs()
     mcs_out = mcs.mcs_out
@@ -829,14 +835,14 @@ def _test_file_input():
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DF, EXAMPLE_CONFIG_DICT
 
     # save input as .xlsx
-    temp = tempfile.NamedTemporaryFile(suffix='.xlsx',delete=False)
+    temp = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
     EXAMPLE_INPUT_DF.to_excel(temp)
     fp = f'{temp.name}'
     print(f"A temporary input file has been created: {fp}")  # 4
     temp.close()  # 5
 
     mcs = MCS0()
-    mcs.mcs_inputs = fp
+    mcs.inputs = fp
     mcs.mcs_config = EXAMPLE_CONFIG_DICT
     mcs.run_mcs()
 

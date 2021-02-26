@@ -8,9 +8,10 @@ def __example_config_dict() -> dict:
     return dict(n_threads=2, cwd=None)
 
 
-def __example_input_dict() -> dict:
-    y = {
-        "Standard Case 1": dict(
+def __example_input_list() -> list:
+    y = [
+        dict(
+            case_name="Standard Case 1",
             n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
@@ -57,7 +58,8 @@ def __example_input_dict() -> dict:
             p4=0.09,
             general_room_floor_area=500,
         ),
-        "Standard Case 2 (with teq_phi)": dict(
+        dict(
+            case_name="Standard Case 2 (with teq_phi)",
             n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
@@ -104,7 +106,8 @@ def __example_input_dict() -> dict:
             p4=0.09,
             general_room_floor_area=500,
         ),
-        "Standard Case 3 (with timber)": dict(
+        dict(
+            case_name="Standard Case 3 (with timber)",
             n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
@@ -151,29 +154,41 @@ def __example_input_dict() -> dict:
             p4=0.09,
             general_room_floor_area=500,
         ),
-    }
+    ]
     return y
 
 
-def __example_input_csv(x: dict):
-    y = {k: dict_flatten(v) for k, v in x.items()}
-    y = pd.DataFrame.from_dict(y, orient="columns")
+def __example_input_dict(x: list) -> dict:
+    y = dict()
+    for i in x:
+        y[i['case_name']] = i
+    return y
+
+
+def __example_input_csv(x: list):
+    y = [dict_flatten(v) for v in x]
+    y = pd.DataFrame(y)
+    y = y.transpose()
     y.index.name = "case_name"
     y = y.to_csv(index=True, line_terminator='\n')
     return y
 
 
-def __example_input_df(x: dict) -> pd.DataFrame:
-    y = {k: dict_flatten(v) for k, v in x.items()}
-    y = pd.DataFrame.from_dict(y, orient="columns")
+def __example_input_df(x: list) -> pd.DataFrame:
+    y = dict()
+    for d in x:
+        case_name = d.pop('case_name')
+        d = dict_flatten(d)
+        y[case_name] = d
+    y = pd.DataFrame.from_dict(y)
     y.index.name = "case_name"
     return y
 
 
 EXAMPLE_CONFIG_DICT = __example_config_dict()
-EXAMPLE_INPUT_DICT = __example_input_dict()
-EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_dict())
-EXAMPLE_INPUT_DF = __example_input_df(__example_input_dict())
+EXAMPLE_INPUT_DICT = __example_input_dict(x=__example_input_list())
+EXAMPLE_INPUT_CSV = __example_input_csv(x=__example_input_list())
+EXAMPLE_INPUT_DF = __example_input_df(x=__example_input_list())
 
 if __name__ == "__main__":
     print(EXAMPLE_CONFIG_DICT, "\n")

@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Union, Callable
+from typing import Union
 
 import pandas as pd
 from tqdm import tqdm
@@ -66,11 +66,19 @@ class MCS(ABC):
         raise NotImplementedError('This method should be overridden by a child class')
 
     @property
-    def mcs_inputs(self) -> dict:
+    def inputs(self) -> dict:
         return self.__mcs_inputs
 
-    @mcs_inputs.setter
-    def mcs_inputs(self, fp_df_dict: Union[str, pd.DataFrame, dict]):
+    @property
+    def mcs_config(self) -> dict:
+        """simulation configuration"""
+        if self.__mcs_config is not None:
+            return self.__mcs_config
+        else:
+            return self.DEFAULT_CONFIG
+
+    @inputs.setter
+    def inputs(self, fp_df_dict: Union[str, pd.DataFrame, dict]):
         """
         :param fp_df_dict:
         :return:
@@ -89,14 +97,6 @@ class MCS(ABC):
             self.__mcs_inputs = fp_df_dict
         else:
             raise TypeError("Unknown input data type.")
-
-    @property
-    def mcs_config(self) -> dict:
-        """simulation configuration"""
-        if self.__mcs_config is not None:
-            return self.__mcs_config
-        else:
-            return self.DEFAULT_CONFIG
 
     @mcs_config.setter
     def mcs_config(self, config: dict):
@@ -123,7 +123,7 @@ class MCS(ABC):
         #       'ubound': 200
         #    }
         # }
-        x1 = self.mcs_inputs
+        x1 = self.inputs
         for case_name in list(x1.keys()):
             for param_name in list(x1[case_name].keys()):
                 if ":" in param_name:
@@ -264,7 +264,8 @@ class MCS(ABC):
     @staticmethod
     def read_spreadsheet_input(fp: str):
         if fp.endswith(".xlsx"):
-            dict_input = pd.read_excel(fp, engine='openpyxl').set_index("case_name").to_dict()
+            df_input = pd.read_excel(fp, engine='openpyxl', index_col='case_name')
+            dict_input = df_input.to_dict(orient='dict')
             for k in dict_input.keys():
                 if 'case_name' not in tuple(dict_input[k].keys()):
                     dict_input[k]['case_name'] = k

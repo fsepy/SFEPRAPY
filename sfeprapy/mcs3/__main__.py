@@ -8,7 +8,7 @@ def main(fp_mcs_in: str, n_threads: int = None):
 
     mcs = MCS3()
     try:
-        mcs.mcs_inputs = fp_mcs_in
+        mcs.inputs = fp_mcs_in
     except Exception as e:
         raise e
 

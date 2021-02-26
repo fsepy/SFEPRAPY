@@ -22,7 +22,7 @@ def profile_standard_case():
     # increase the number of threads so it runs faster
     mcs_config["n_threads"] = 3
     mcs = MCS0()
-    mcs.mcs_inputs = mcs_input
+    mcs.inputs = mcs_input
     mcs.mcs_config = mcs_config
     mcs.run_mcs()
 
