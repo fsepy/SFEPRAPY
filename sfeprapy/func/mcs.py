@@ -167,9 +167,9 @@ class MCS(ABC):
 
         m, p = mp.Manager(), mp.Pool(self.mcs_config["n_threads"], maxtasksperchild=1000)
         for k, v in x2.items():
-            if qt_prog_signal_0:
+            if qt_prog_signal_0 is not None:
                 qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
-            if qt_prog_signal_1:
+            if qt_prog_signal_1 is not None:
                 qt_prog_signal_1.emit(0)
 
             x3_ = self.__mcs_mp(
