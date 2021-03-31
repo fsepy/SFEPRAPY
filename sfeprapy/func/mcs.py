@@ -265,23 +265,16 @@ class MCS(ABC):
     def read_spreadsheet_input(fp: str):
         if fp.endswith(".xlsx"):
             df_input = pd.read_excel(fp, engine='openpyxl', index_col='case_name')
-            dict_input = df_input.to_dict(orient='dict')
-            for k in dict_input.keys():
-                if 'case_name' not in tuple(dict_input[k].keys()):
-                    dict_input[k]['case_name'] = k
-
         elif fp.endswith(".xls"):
-            dict_input = pd.read_excel(fp).set_index("case_name").to_dict()
-            for k in dict_input.keys():
-                if 'case_name' not in tuple(dict_input[k].keys()):
-                    dict_input[k]['case_name'] = k
+            df_input = pd.read_excel(fp, index_col='case_name')
         elif fp.endswith(".csv"):
-            dict_input = pd.read_csv(fp).set_index("case_name").to_dict()
-            for k in dict_input.keys():
-                if 'case_name' not in tuple(dict_input[k].keys()):
-                    dict_input[k]['case_name'] = k
-
+            df_input = pd.read_csv(fp, index_col="case_name")
         else:
             raise ValueError(f"Unknown input file format, {os.path.basename(fp)}")
+
+        dict_input = df_input.to_dict(orient='dict')
+        for k in dict_input.keys():
+            if 'case_name' not in tuple(dict_input[k].keys()):
+                dict_input[k]['case_name'] = k
 
         return dict_input
