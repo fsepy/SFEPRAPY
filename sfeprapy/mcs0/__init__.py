@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 
-from sfeprapy.func.mcs_gen import dict_flatten
-
-
-def __example_config_dict() -> dict:
-    return dict(n_threads=2, cwd=None)
+from sfeprapy.mcs.mcs_gen import dict_flatten
 
 
 def __example_input_list() -> list:
@@ -185,12 +181,10 @@ def __example_input_df(x: list) -> pd.DataFrame:
     return y
 
 
-EXAMPLE_CONFIG_DICT = __example_config_dict()
 EXAMPLE_INPUT_DICT = __example_input_dict(x=__example_input_list())
 EXAMPLE_INPUT_CSV = __example_input_csv(x=__example_input_list())
 EXAMPLE_INPUT_DF = __example_input_df(x=__example_input_list())
 
 if __name__ == "__main__":
-    print(EXAMPLE_CONFIG_DICT, "\n")
     print(EXAMPLE_INPUT_DICT, "\n")
     print(EXAMPLE_INPUT_CSV, "\n")

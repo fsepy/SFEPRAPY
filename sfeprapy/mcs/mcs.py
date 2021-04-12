@@ -8,7 +8,7 @@ from typing import Union
 import pandas as pd
 from tqdm import tqdm
 
-from sfeprapy.func.mcs_gen import main as mcs_gen_main
+from sfeprapy.mcs.mcs_gen import main as mcs_gen_main
 
 
 class MCS(ABC):
@@ -39,16 +39,20 @@ class MCS(ABC):
     """
     DEFAULT_TEMP_FOLDER_NAME = "mcs.out"
     DEFAULT_MCS_OUTPUT_FILE_NAME = "mcs.out.csv"
-    DEFAULT_CONFIG_FILE_NAME = "config.json"
-    DEFAULT_CONFIG = dict(n_threads=1)
 
-    def __init__(self):
+    def __init__(self, n_threads: int = 1):
+        # Assign user defined properties
+        if isinstance(n_threads, int) and n_threads > 0:
+            self.n_threads = n_threads
+        else:
+            raise ValueError('`n_threads` must be an integer greater than zero')
+
+        # Assign other properties
         self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
-        self.__mcs_config: dict = None  # configuration parameters
         self.__mcs_out: pd.DataFrame = None
 
-        # assign default properties
+        # Assign default properties
         self.func_mcs_gen = mcs_gen_main
 
     @abstractmethod
@@ -68,14 +72,6 @@ class MCS(ABC):
     @property
     def inputs(self) -> dict:
         return self.__mcs_inputs
-
-    @property
-    def mcs_config(self) -> dict:
-        """simulation configuration"""
-        if self.__mcs_config is not None:
-            return self.__mcs_config
-        else:
-            return self.DEFAULT_CONFIG
 
     @inputs.setter
     def inputs(self, fp_df_dict: Union[str, pd.DataFrame, dict]):
@@ -97,15 +93,6 @@ class MCS(ABC):
             self.__mcs_inputs = fp_df_dict
         else:
             raise TypeError("Unknown input data type.")
-
-    @mcs_config.setter
-    def mcs_config(self, config: dict):
-        self.__mcs_config = config
-        try:
-            if len(config['cwd']) > 0:
-                self.cwd = os.path.realpath(config['cwd'])
-        except (KeyError, TypeError):
-            pass
 
     def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None, *args, **kwargs):
         # ----------------------------
@@ -165,7 +152,7 @@ class MCS(ABC):
         #   'case_2': df2
         # }
 
-        m, p = mp.Manager(), mp.Pool(self.mcs_config["n_threads"], maxtasksperchild=1000)
+        m, p = mp.Manager(), mp.Pool(self.n_threads, maxtasksperchild=1000)
         for k, v in x2.items():
             if qt_prog_signal_0 is not None:
                 qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
@@ -176,7 +163,7 @@ class MCS(ABC):
                 self.mcs_deterministic_calc,
                 self.mcs_deterministic_calc_mp,
                 x=v,
-                n_threads=self.mcs_config["n_threads"],
+                n_threads=self.n_threads,
                 m=m,
                 p=p,
                 qt_prog_signal_1=qt_prog_signal_1

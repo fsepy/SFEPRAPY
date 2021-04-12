@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from sfeprapy.mcs0.mcs0_calc import MCS0
 from sfeprapy.mcs0.mcs0_calc import teq_main as teq_main_mcs0
 
@@ -74,22 +75,20 @@ class MCS2(MCS0):
 
 def _test_standard_case():
     import copy
-    from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT
     from scipy.interpolate import interp1d
     import numpy as np
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
-    mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
 
     # increase the number of threads so it runs faster
-    mcs_config["n_threads"] = 1  # coverage does not support
     mcs2 = MCS2()
     mcs2.inputs = mcs_input
-    mcs2.mcs_config = mcs_config
+    mcs2.n_threads = 2
     mcs2.run_mcs()
     mcs_out = mcs2.mcs_out
-    teq = mcs_out["solver_time_equivalence_solved"] / 60.0
+    teq = mcs_out.loc[mcs_out['case_name'] == 'Office']["solver_time_equivalence_solved"] / 60.0
     hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     func_teq = interp1d(x, y)

@@ -196,31 +196,7 @@ def teq_main(
 
             inputs['fire_load_density'] = _fire_load_density_ + timber_fire_load_density
 
-    # inputs.update(
-    #     dict(
-    #         timber_charring_rate=0.,
-    #         timber_exposed_duration=timber_exposed_duration,
-    #         timber_exposed_area=timber_exposed_area,
-    #         timber_solver_iter_count=timber_solver_iter_count,
-    #         timber_fire_load=0.,
-    #         timber_charred_depth=0.,
-    #         timber_charred_mass=0.,
-    #         timber_charred_volume=0.,
-    #     )
-    # )
-
-    # Prepare results to be returned, only the items in the list below will be returned
-    # add keys accordingly if more parameters are desired to be returned
-    outputs = {
-        i: inputs[i] for i in
-        ['phi_teq', 'fire_spread_speed', 'fire_nft_limit', 'fire_mode', 'fire_load_density', 'fire_hrr_density', 'fire_combustion_efficiency', 'beam_position_horizontal',
-         # 'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
-         'beam_position_vertical', 'index', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
-         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count', 'window_open_fraction', 'timber_solver_iter_count', 'timber_charred_depth',
-         'timber_exposed_area']
-    }
-
-    return outputs
+    return inputs
 
 
 class MCS3(MCS0):
@@ -236,19 +212,17 @@ class MCS3(MCS0):
 
 def _test_standard_case():
     import copy
-    from sfeprapy.mcs3 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    from sfeprapy.mcs3 import EXAMPLE_INPUT_DICT
     from scipy.interpolate import interp1d
     import numpy as np
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
-    mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
 
     # increase the number of threads so it runs faster
-    mcs_config["n_threads"] = 1  # coverage does not support
     mcs3 = MCS3()
     mcs3.inputs = mcs_input
-    mcs3.mcs_config = mcs_config
+    mcs3.n_threads = 1
     mcs3.run_mcs()
     mcs_out = mcs3.mcs_out
 

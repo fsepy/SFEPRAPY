@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sfeprapy.mcs0
-from sfeprapy.mcs0 import __example_input_csv, __example_input_df, EXAMPLE_CONFIG_DICT
+from sfeprapy.mcs0 import __example_input_csv, __example_input_df
 
 
 def __example_input_dict():
@@ -27,6 +27,5 @@ EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_dict())
 EXAMPLE_INPUT_DF = __example_input_df(__example_input_dict())
 
 if __name__ == "__main__":
-    print(EXAMPLE_CONFIG_DICT, "\n")
     print(EXAMPLE_INPUT_DICT, "\n")
     print(EXAMPLE_INPUT_CSV, "\n")

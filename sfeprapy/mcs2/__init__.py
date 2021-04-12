@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import copy
+import copy as __copy
+from sfeprapy.mcs2.mcs2_calc import MCS2
 
-from sfeprapy.mcs0 import __example_config_dict, __example_input_df, __example_input_csv, __example_input_dict
+from sfeprapy.mcs0 import __example_input_df, __example_input_csv, __example_input_dict
 
 
 def __example_input_list() -> list:
@@ -12,7 +13,7 @@ def __example_input_list() -> list:
     # use example `sfeprapy.mcs0` example inputs
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT as EXAMPLE_INPUT_DICT_
     # only use "Standard Case 1"
-    base_case = copy.deepcopy(EXAMPLE_INPUT_DICT_['Standard Case 1'])
+    base_case = __copy.deepcopy(EXAMPLE_INPUT_DICT_['Standard Case 1'])
     # remove items which are no longer used in `sfeprapy.mcs2` (comparing to `sfeprapy.mcs0`)
     [base_case.pop(i) for i in ['room_breadth', 'room_depth', 'window_width', 'p1', 'p2', 'p3', 'p4', 'general_room_floor_area']]
     # create variable for dumping new inputs
@@ -21,7 +22,7 @@ def __example_input_list() -> list:
     # ===========
     # Residential
     # ===========
-    y.append(copy.copy(base_case))
+    y.append(__copy.copy(base_case))
     y[-1].update(dict(
         fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
         fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=780, sd=234),
@@ -35,11 +36,12 @@ def __example_input_list() -> list:
         case_name='Residential',
         phi_teq=1.,
     ))
+    y[-1].pop('beam_position_horizontal')
 
     # ======
     # Office
     # ======
-    y.append(copy.copy(base_case))
+    y.append(__copy.copy(base_case))
     y[-1].update(dict(
         fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
         fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=420, sd=126),
@@ -53,11 +55,12 @@ def __example_input_list() -> list:
         case_name='Office',
         phi_teq=1.,
     ))
+    y[-1].pop('beam_position_horizontal')
 
     # ======
     # Retail
     # ======
-    y.append(copy.copy(base_case))
+    y.append(__copy.copy(base_case))
     y[-1].update(dict(
         fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
         fire_load_density=dict(dist="gumbel_r_", lbound=10., ubound=2000., mean=600., sd=180.),
@@ -71,16 +74,15 @@ def __example_input_list() -> list:
         case_name='Retail',
         phi_teq=1.,
     ))
+    y[-1].pop('beam_position_horizontal')
 
     return y
 
 
-EXAMPLE_CONFIG_DICT = __example_config_dict()
 EXAMPLE_INPUT_DICT = __example_input_dict(__example_input_list())
 EXAMPLE_INPUT_CSV = __example_input_csv(__example_input_list())
 EXAMPLE_INPUT_DF = __example_input_df(__example_input_list())
 
 if __name__ == "__main__":
-    print(EXAMPLE_CONFIG_DICT, "\n")
     print(EXAMPLE_INPUT_DICT, "\n")
     print(EXAMPLE_INPUT_CSV, "\n")

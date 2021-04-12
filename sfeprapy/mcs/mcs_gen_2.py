@@ -9,6 +9,9 @@ from scipy.interpolate import interp1d
 
 
 class DistParamsTrue2Scipy:
+    """Converts 'normal' distribution parameters, e.g. normal, standard deviation etc., to Scipy recognisable
+    parameters, e.g. loc, scale etc.
+    """
 
     @staticmethod
     def gumbel_r_(mean: float, sd: float, **_):
@@ -130,6 +133,8 @@ class Params2Samples:
 
 
 class InputParser(Params2Samples):
+    """Converts """
+
     def __init__(self):
         super().__init__()
 
@@ -184,13 +189,17 @@ class InputParser(Params2Samples):
                 raise TypeError("Unknown input data type for {}.".format(k))
 
         dict_out["index"] = np.arange(0, num_samples, 1)
-
         df_out = pd.DataFrame.from_dict(dict_out, orient="columns")
 
         return df_out
 
     @staticmethod
     def unflatten_dict(dict_in: dict) -> dict:
+        """Invert flatten_dict.
+
+        :param dict_in:
+        :return dict_out:
+        """
         dict_out = dict()
 
         for k in list(dict_in.keys()):
@@ -207,8 +216,24 @@ class InputParser(Params2Samples):
     @staticmethod
     def flatten_dict(dict_in: dict) -> dict:
         """Converts two levels dict to single level dict. Example input and output see _test_dict_flatten.
-        :param dict_in: Any two levels (or less) dict.
-        :return dict_out: Single level dict.
+
+        >>> dict_in = {
+        >>>             'a': 1,
+        >>>             'b': {'b1': 21, 'b2': 22},
+        >>>             'c': {'c1': 31, 'c2': 32, 'c3': 33}
+        >>>         }
+        >>> output = {
+        >>>             'a': 1,
+        >>>             'b:b1': 21,
+        >>>             'b:b2': 22,
+        >>>             'c:c1': 31,
+        >>>             'c:c2': 32,
+        >>>             'c:c3': 33,
+        >>>         }
+        >>> assert InputParser.flatten_dict(dict_in) == output  # True
+
+        :param dict_in:     Any two levels (or less) dict.
+        :return dict_out:   Single level dict.
         """
 
         dict_out = dict()
@@ -261,4 +286,35 @@ class TestInputParser:
 
 
 if __name__ == "__main__":
-    TestInputParser()
+    # TestInputParser()
+
+    a = dict(
+        a=1,
+        b=dict(
+            b1=21,
+            b2=22,
+        ),
+        c=dict(
+            c31=dict(
+                c311=3111,
+                c312=3112,
+                c313=3113,
+            )
+        )
+    )
+
+    print(a)
+
+
+    def test(dict_in):
+        dict_out = dict()
+        for k in list(dict_in.keys()):
+            if isinstance(dict_in[k], dict):
+                for kk, vv in dict_in[k].items():
+                    dict_out[f"{k}:{kk}"] = vv
+            else:
+                dict_out[k] = dict_in[k]
+        return dict_out
+
+
+    print(test(a))

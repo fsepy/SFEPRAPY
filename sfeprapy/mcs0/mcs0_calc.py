@@ -17,7 +17,7 @@ from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from scipy.interpolate import interp1d
 
 from sfeprapy import logger
-from sfeprapy.func.mcs import MCS
+from sfeprapy.mcs.mcs import MCS
 
 
 def _fire_travelling(**kwargs):
@@ -496,7 +496,8 @@ def teq_main(
         room_breadth = room_depth - room_breadth
         room_depth -= room_breadth
 
-    window_open_fraction = (window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent)
+    window_open_fraction = (
+                window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent)
 
     # Fix ventilation opening size so it doesn't exceed wall area
     if window_height > room_height:
@@ -601,17 +602,7 @@ def teq_main(
         )
     )
 
-    # Prepare results to be returned, only the items in the list below will be returned
-    # add keys accordingly if more parameters are desired to be returned
-    outputs = {
-        i: inputs[i] for i in
-        ['phi_teq', 'fire_spread_speed', 'fire_nft_limit', 'fire_mode', 'fire_load_density', 'fire_hrr_density', 'fire_combustion_efficiency', 'beam_position_horizontal',
-         # 'beam_position_vertical', 'index', 'probability_weight', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
-         'beam_position_vertical', 'index', 'case_name', 'fire_type', 'solver_convergence_status', 'solver_time_equivalence_solved',
-         'solver_steel_temperature_solved', 'solver_protection_thickness', 'solver_iter_count', 'window_open_fraction', 'timber_solver_iter_count', 'timber_charred_depth']
-    }
-
-    return outputs
+    return inputs
 
 
 def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
@@ -623,21 +614,22 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
                     os.makedirs(os.path.dirname(fp_))
             except Exception as e:
                 print(e)
-            df.to_csv(os.path.join(fp_), index=False)
+
+            # only write columns contains non-unique values
+            df_ = df.copy(deep=True)
+            df_ = df_.select_dtypes(include=['number'])
+            nunique = df_.apply(pd.Series.nunique)
+            df_.drop(nunique[nunique == 1].index, axis=1).to_csv(os.path.join(fp_), index=False)
 
         threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
 
     df_res = copy.copy(df)
     df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
+    df_res = df_res.select_dtypes(include=['number'])
     df_res = df_res.dropna(axis=0, how="any")
 
     dict_ = dict()
-    dict_["fire_type"] = str(
-        {
-            k: np.sum(df_res["fire_type"].values == k)
-            for k in np.unique(df_res["fire_type"].values)
-        }
-    )
+    dict_["fire_type"] = str({k: np.sum(df_res["fire_type"].values == k) for k in df_res["fire_type"].unique()})
 
     for k in [
         "beam_position_horizontal",
@@ -670,7 +662,7 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
         aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
         aplot.show()
     except Exception as e:
-        print(f'Failed to plot time equivalence, {e}')
+        pass
 
     return df
 
@@ -788,18 +780,16 @@ def _test_teq_phi():
 
 def _test_standard_case():
     import copy
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT, EXAMPLE_CONFIG_DICT
+    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT
     from scipy.interpolate import interp1d
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
-    mcs_config = copy.deepcopy(EXAMPLE_CONFIG_DICT)
-    mcs_config["n_threads"] = 1
 
     mcs = MCS0()
 
     mcs.inputs = mcs_input
-    mcs.mcs_config = mcs_config
+    mcs.n_threads = 1
     mcs.run_mcs()
     mcs_out = mcs.mcs_out
 
@@ -832,7 +822,7 @@ def _test_standard_case():
 
 def _test_file_input():
     import tempfile
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DF, EXAMPLE_CONFIG_DICT
+    from sfeprapy.mcs0 import EXAMPLE_INPUT_DF
 
     # save input as .xlsx
     temp = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
@@ -843,7 +833,7 @@ def _test_file_input():
 
     mcs = MCS0()
     mcs.inputs = fp
-    mcs.mcs_config = EXAMPLE_CONFIG_DICT
+    mcs.n_threads = 1
     mcs.run_mcs()
 
 
