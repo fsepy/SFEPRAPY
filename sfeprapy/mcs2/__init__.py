@@ -31,6 +31,7 @@ def __example_input_list() -> list:
         room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),  # todo
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.20),
+        beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.666, ubound=0.999),
         case_name='Residential',
         phi_teq=1.,
     ))
@@ -48,6 +49,7 @@ def __example_input_list() -> list:
         room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
+        beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.666, ubound=0.999),
         case_name='Office',
         phi_teq=1.,
     ))
@@ -65,6 +67,7 @@ def __example_input_list() -> list:
         room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.5, ubound=1.0),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
+        beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.666, ubound=0.999),
         case_name='Retail',
         phi_teq=1.,
     ))

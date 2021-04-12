@@ -17,6 +17,7 @@ def teq_main(
         # room_depth: float,  # depreciated from mcs0
         room_floor_area: float,  # new from mcs0
         room_breadth_depth_ratio: float,  # new from mcs0
+        beam_position_horizontal_ratio: float,  # new from mcs0
         # window_width: float,  # depreciated from mcs0
         # window_height: float,  # depreciated from mcs0
         window_height_room_height_ratio: float,  # new from mcs0
@@ -52,7 +53,7 @@ def teq_main(
         room_depth=room_breadth,
         window_height=window_height,
         window_width=window_width,
-        beam_horizontal_location=0.8 * room_depth
+        beam_position_horizontal=room_depth * beam_position_horizontal_ratio
     ))
 
     outputs = teq_main_mcs0(**kwargs)
