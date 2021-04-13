@@ -606,6 +606,8 @@ def teq_main(
 
 
 def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
+    df = df.copy()
+    df = df.select_dtypes(include=['number'])
     # save outputs if work direction is provided per iteration
     if fp is not None:
         def _save_(fp_: str):
@@ -616,16 +618,14 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
                 print(e)
 
             # only write columns contains non-unique values
-            df_ = df.copy(deep=True)
-            df_ = df_.select_dtypes(include=['number'])
+            df_ = df.copy()
             nunique = df_.apply(pd.Series.nunique)
             df_.drop(nunique[nunique == 1].index, axis=1).to_csv(os.path.join(fp_), index=False)
 
         threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
 
-    df_res = copy.copy(df)
+    df_res = df.copy()
     df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
-    df_res = df_res.select_dtypes(include=['number'])
     df_res = df_res.dropna(axis=0, how="any")
 
     dict_ = dict()
@@ -833,7 +833,7 @@ def _test_file_input():
 
     mcs = MCS0()
     mcs.inputs = fp
-    mcs.n_threads = 1
+    mcs.n_threads = 2
     mcs.run_mcs()
 
 
