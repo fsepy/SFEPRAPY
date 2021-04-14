@@ -94,7 +94,7 @@ class MCS(ABC):
         else:
             raise TypeError("Unknown input data type.")
 
-    def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None, *args, **kwargs):
+    def run_mcs(self, cases_to_run=None, qt_prog_signal_0=None, qt_prog_signal_1=None, *args, **kwargs):
         # ----------------------------
         # Prepare mcs parameter inputs
         # ----------------------------
@@ -110,7 +110,13 @@ class MCS(ABC):
         #       'ubound': 200
         #    }
         # }
-        x1 = self.inputs
+        if cases_to_run is not None:
+            x1 = self.inputs
+            for k in list(x1.keys()):
+                if k not in cases_to_run:
+                    x1.pop(k)
+        else:
+            x1 = self.inputs
         for case_name in list(x1.keys()):
             for param_name in list(x1[case_name].keys()):
                 if ":" in param_name:
