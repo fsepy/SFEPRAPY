@@ -5,13 +5,12 @@
 
 import os
 import warnings
-from tkinter import filedialog, Tk, StringVar
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as st
-from typing import Union
 from scipy import interpolate
 
 
@@ -294,125 +293,8 @@ def pdf_to_samples(
     return samples
 
 
-def auto_fit():
-    # INPUTS
-
-    # Note 1: *.csv must contain no headers and numbers only.
-
-    # Define data type
-    # 0 - single column containing sampled values
-    # 1 - two columns with 1st column containing values and second column probability
-    # 2 - two columns with 1st column containing values and second column cumulative probability
-
-    print("This function will be depreciated, use `sfeprapy distfit`.")
-
-    data_type = input(
-        "Define Data Type\n0 - single column containing sampled values\n1 - two columns with 1st column containing values and second column probability\n2 - two columns with 1st column containing values and second column cumulative probability\nEnter your value and press Enter: "
-    )
-    data_type = int(data_type)
-
-    # Distribution type or list
-    # list - will only fit to the provided list of distributions (scipy.stats.*)
-    # 0 - fit to all available distributions
-    # 1 - fit to common distribution types
-    distribution_list = input(
-        "Distribution Type\n0 - fit to all available distributions\n1 - fit to common distribution types\nEnter your value and press Enter: "
-    )
-    distribution_list = int(distribution_list)
-
-    # Select data csv file
-    root = Tk()
-    root.withdraw()
-    folder_path = StringVar()
-    path_input_file_csv = filedialog.askopenfile(
-        title="Select data csv file", filetypes=[("csv", [".csv"])]
-    )
-    folder_path.set(path_input_file_csv)
-    root.update()
-
-    dir_work = os.path.dirname(path_input_file_csv.name)
-    print(dir_work)
-
-    # Load data
-    if data_type == 0:
-        data_csv = pd.read_csv(path_input_file_csv, header=None, dtype=float)
-        samples = data_csv.values.flatten()
-    elif data_type == 1:
-        data_csv = pd.read_csv(path_input_file_csv, header=None, dtype=float)
-        samples = pdf_to_samples(
-            pdf_x=data_csv[0].values.flatten(),
-            pdf_y=data_csv[1].values.flatten(),
-            n_samples=10000,
-        )
-    elif data_type == 2:
-        data_csv = pd.read_csv(path_input_file_csv, header=None, dtype=float)
-        #     print(data_csv[1])
-        samples = cdf_to_samples(
-            cdf_x=data_csv[0].values.flatten(),
-            cdf_y=data_csv[1].values.flatten(),
-            n_samples=10000,
-        )
-    else:
-        samples = np.nan
-
-    # FITTING DISTRIBUTIONS TO DATA
-
-    fig_fitting, ax_fitting = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
-    list_dist, list_params, list_sse = fit(
-        samples, ax=ax_fitting, distribution_list=distribution_list
-    )
-
-    # FINDING THE BEST FIT
-
-    list_dist = np.asarray(list_dist)[np.argsort(list_sse)]
-    list_params = np.asarray(list_params)[np.argsort(list_sse)]
-    list_sse = np.asarray(list_sse)[np.argsort(list_sse)]
-    print(
-        "{:30.30}{:60.60}".format(
-            "Distribution (sorted)",
-            "Loss (Residual sum of squares) and distribution parameters",
-        )
-    )
-    for i, v in enumerate(list_dist):
-        print(
-            "{:30.30}{:10.5E} - [{}]".format(
-                v.name,
-                list_sse[i],
-                ", ".join(["{:10.2f}".format(i) for j in list_params[i]]),
-            )
-        )
-
-    dist_best = list_dist[0]
-    params_best = list_params[0]
-
-    # PRODUCE FIGURES
-
-    print("Figures saved at", dir_work)
-
-    ax_fitting.set_xlabel("Sample value")
-    ax_fitting.set_ylabel("PDF")
-    ax_fitting.legend().set_visible(True)
-    fig_fitting.savefig(os.path.join(dir_work, "fitting.png"))
-
-    cdf_x_sampled = np.sort(samples)
-    cdf_y_sampled = np.linspace(0, 1, len(cdf_x_sampled))
-    cdf_y_fitted = np.linspace(0, 1, 1000)
-    cdf_x_fitted = dist_best.ppf(cdf_y_fitted, *params_best)
-
-    fig_results, ax_results = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
-    ax_results.hist(samples, bins="auto", density=True, color="black")
-    ax_results.plot(cdf_x_sampled, cdf_y_sampled, label="Sampled", color="black")
-    ax_results.plot(cdf_x_fitted, cdf_y_fitted, label="Fitted", color="red")
-    ax_results.set_xlabel("Sample values")
-    ax_results.set_ylabel("CDF")
-    ax_results.legend().set_visible(True)
-    fig_results.savefig(os.path.join(dir_work, "results.png"))
-
-    input("Press any key to finish.")
-
-
-def auto_fit_2(
-    data_type: int, distribution_list: Union[int, list], data: Union[str, pd.DataFrame]
+def auto_fit(
+        data_type: int, distribution_list: Union[int, list], data: Union[str, pd.DataFrame], savefig: bool = False,
 ):
     """
     :param data_type:
@@ -501,12 +383,33 @@ def auto_fit_2(
     cdf_y_fitted = np.linspace(0, 1, 1000)
     cdf_x_fitted = dist_best.ppf(cdf_y_fitted, *params_best)
 
-    fig_results, ax_results = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
+    if savefig is True:
+        fig_results, ax_results = plt.subplots(figsize=(3.94 * 2.5, 2.76 * 2.5))
 
-    ax_results.hist(samples, bins="auto", density=True, color="black")
-    ax_results.plot(cdf_x_sampled, cdf_y_sampled, label="Sampled", color="black")
-    ax_results.plot(cdf_x_fitted, cdf_y_fitted, label="Fitted", color="red")
-    ax_results.set_xlabel("Sample values")
-    ax_results.set_ylabel("CDF")
-    ax_results.legend().set_visible(True)
-    fig_results.savefig(os.path.join(dir_work, "distfit_results.png"))
+        ax_results.hist(samples, bins="auto", density=True, color="black")
+        ax_results.plot(cdf_x_sampled, cdf_y_sampled, label="Sampled", color="black")
+        ax_results.plot(cdf_x_fitted, cdf_y_fitted, label="Fitted", color="red")
+        ax_results.set_xlabel("Sample values")
+        ax_results.set_ylabel("CDF")
+        ax_results.legend().set_visible(True)
+        fig_results.savefig(os.path.join(dir_work, "distfit_results.png"))
+
+
+def _test_auto_fit():
+    from sfeprapy.mcs.mcs_gen_2 import InputParser
+    from scipy import stats
+
+    stats.norm(0, 1)
+
+    parser = InputParser()
+
+    data_1 = parser.inputs2samples(
+        dist_params=dict(x=dict(dist='norm_', mean=0, sd=1, ubound=5, lbound=-5)),
+        num_samples=5000
+    )
+    data_1.drop('index', axis=1, inplace=True)
+    auto_fit(data_type=0, distribution_list=0, data=data_1)
+
+
+if __name__ == '__main__':
+    _test_auto_fit()

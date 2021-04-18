@@ -40,6 +40,7 @@ Commands:
 
 from docopt import docopt
 
+from sfeprapy.func.stats_dist_fit import auto_fit
 from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS0
 from sfeprapy.mcs0 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS0
 from sfeprapy.mcs0.__main__ import main as mcs0
@@ -49,7 +50,6 @@ from sfeprapy.mcs2.__main__ import main as mcs2
 from sfeprapy.mcs3 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS3
 from sfeprapy.mcs3 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS3
 from sfeprapy.mcs3.__main__ import main as mcs3
-from sfeprapy.func.stats_dist_fit import auto_fit_2
 
 
 def main():
@@ -104,7 +104,7 @@ def main():
         distribution_list = arguments["--dist_g"] or 1
 
         # Main
-        auto_fit_2(
+        auto_fit(
             data_type=int(data_type),
             distribution_list=int(distribution_list),
             data=arguments["<file_name>"],
