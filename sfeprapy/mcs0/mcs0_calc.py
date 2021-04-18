@@ -662,7 +662,7 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
         aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
         aplot.show()
     except Exception as e:
-        pass
+        logger.warning(f'Failed to plot time equivalence, {e}')
 
     return df
 
