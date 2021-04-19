@@ -63,8 +63,8 @@ def teq_main(
 
 
 class MCS2(MCS0):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
         return teq_main(*args, **kwargs)

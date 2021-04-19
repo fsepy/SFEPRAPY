@@ -15,7 +15,6 @@ from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature_max as _
 from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from scipy.interpolate import interp1d
-
 from sfeprapy import logger
 from sfeprapy.mcs.mcs import MCS
 
@@ -497,7 +496,7 @@ def teq_main(
         room_depth -= room_breadth
 
     window_open_fraction = (
-                window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent)
+            window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent)
 
     # Fix ventilation opening size so it doesn't exceed wall area
     if window_height > room_height:
@@ -605,7 +604,8 @@ def teq_main(
     return inputs
 
 
-def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
+def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None, print_stats: bool = True,
+                          print_teq_plot: bool = False) -> pd.DataFrame:
     df = df.copy()
     df = df.select_dtypes(include=['number'])
     # save outputs if work direction is provided per iteration
@@ -624,45 +624,42 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None) -> pd.DataFrame:
 
         threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
 
-    df_res = df.copy()
-    df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
-    df_res = df_res.dropna(axis=0, how="any")
+    if print_stats is True or print_teq_plot is True:
+        df_res = df.copy()
+        df_res = df_res.replace(to_replace=[np.inf, -np.inf], value=np.nan)
+        df_res = df_res.dropna(axis=0, how="any")
 
-    dict_ = dict()
-    dict_["fire_type"] = str({k: np.sum(df_res["fire_type"].values == k) for k in df_res["fire_type"].unique()})
+    if print_stats is True:
+        dict_ = dict()
+        dict_["fire_type"] = str({k: np.sum(df_res["fire_type"].values == k) for k in df_res["fire_type"].unique()})
 
-    for k in [
-        "beam_position_horizontal",
-        "fire_combustion_efficiency",
-        "fire_hrr_density",
-        "fire_load_density",
-        "fire_nft_limit",
-        "fire_spread_speed",
-        "window_open_fraction",
-        "phi_teq",
-        "timber_fire_load",
-    ]:
+        for k in [
+            "beam_position_horizontal", "window_open_fraction",
+            "fire_combustion_efficiency", "fire_hrr_density", "fire_load_density",
+            "fire_nft_limit", "fire_spread_speed",
+            "phi_teq", "timber_fire_load",
+        ]:
+            try:
+                x = df_res[k].values
+                x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
+                dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
+            except Exception:
+                pass
+
+        list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
+        print("\n".join(list_), "\n")
+
+    if print_teq_plot is True:
         try:
-            x = df_res[k].values
-            x1, x2, x3 = np.min(x), np.mean(x), np.max(x)
-            dict_[k] = f"{x1:<9.3f} {x2:<9.3f} {x3:<9.3f}"
-        except Exception:
-            pass
-
-    list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
-
-    print("\n".join(list_), "\n")
-
-    try:
-        x = np.array(df_res['solver_time_equivalence_solved'].values / 60, dtype=float)
-        x[x == -np.inf] = 0
-        x[x == np.inf] = np.amax(x[x != np.inf])
-        y = np.linspace(0, 1, len(x), dtype=float)
-        aplot = AsciiPlot(size=(55, 15))
-        aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
-        aplot.show()
-    except Exception as e:
-        logger.warning(f'Failed to plot time equivalence, {e}')
+            x = np.array(df_res['solver_time_equivalence_solved'].values / 60, dtype=float)
+            x[x == -np.inf] = 0
+            x[x == np.inf] = np.amax(x[x != np.inf])
+            y = np.linspace(0, 1, len(x), dtype=float)
+            aplot = AsciiPlot(size=(55, 15))
+            aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
+            aplot.show()
+        except Exception as e:
+            logger.warning(f'Failed to plot time equivalence, {e}')
 
     return df
 
@@ -673,7 +670,8 @@ def mcs_out_post_all_cases(df: pd.DataFrame, fp: str = None):
 
 
 class MCS0(MCS):
-    def __init__(self):
+    def __init__(self, print_stats: bool = True):
+        self.__print_stats = print_stats
         super().__init__()
 
     def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
@@ -694,9 +692,9 @@ class MCS0(MCS):
             fp = None
 
         if write_outputs:
-            return mcs_out_post_per_case(df=df, fp=fp)
+            return mcs_out_post_per_case(df=df, fp=fp, print_stats=self.__print_stats)
         else:
-            return mcs_out_post_per_case(df=df)
+            return mcs_out_post_per_case(df=df, print_stats=self.__print_stats)
 
     def mcs_post_all_cases(self, df: pd.DataFrame):
         # DEPRECIATED 23rd Nov 2020

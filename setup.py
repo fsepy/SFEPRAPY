@@ -4,7 +4,6 @@ import os
 from codecs import open  # To use a consistent encoding
 
 import setuptools
-
 import sfeprapy
 
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.md")) as f:
@@ -39,6 +38,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=[
         "sfeprapy",
+        "sfeprapy.mcs",
         "sfeprapy.mcs0",
         "sfeprapy.mcs1",
         "sfeprapy.mcs2",
