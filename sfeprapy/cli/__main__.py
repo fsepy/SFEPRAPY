@@ -40,17 +40,6 @@ Commands:
 
 from docopt import docopt
 
-from sfeprapy.func.stats_dist_fit import auto_fit
-from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS0
-from sfeprapy.mcs0 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS0
-from sfeprapy.mcs0.__main__ import main as mcs0
-from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS2
-from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS2
-from sfeprapy.mcs2.__main__ import main as mcs2
-from sfeprapy.mcs3 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS3
-from sfeprapy.mcs3 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS3
-from sfeprapy.mcs3.__main__ import main as mcs3
-
 
 def main():
     import os
@@ -61,6 +50,10 @@ def main():
         arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
 
     if arguments["mcs0"]:
+        from sfeprapy.mcs0.__main__ import main as mcs0
+        from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS0
+        from sfeprapy.mcs0 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS0
+
         if arguments["template"]:
             if arguments["<file_name>"].endswith('.xlsx'):
                 EXAMPLE_INPUT_DF_MCS0.to_excel(arguments["<file_name>"])
@@ -74,6 +67,8 @@ def main():
             mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments['mcs2']:
+        from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS2
+        from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS2
         if arguments['template']:
             if arguments["<file_name>"].endswith('.xlsx'):
                 EXAMPLE_INPUT_DF_MCS2.to_excel(arguments["<file_name>"])
@@ -81,11 +76,14 @@ def main():
                 with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
                     f.write(EXAMPLE_INPUT_CSV_MCS2)
         else:
+            from sfeprapy.mcs2.__main__ import main as mcs2
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 1
             mcs2(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments['mcs3']:
+        from sfeprapy.mcs3 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS3
+        from sfeprapy.mcs3 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS3
         if arguments['template']:
             if arguments["<file_name>"].endswith('.xlsx'):
                 EXAMPLE_INPUT_DF_MCS3.to_excel(arguments["<file_name>"])
@@ -93,11 +91,13 @@ def main():
                 with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
                     f.write(EXAMPLE_INPUT_CSV_MCS3)
         else:
+            from sfeprapy.mcs3.__main__ import main as mcs3
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 1
             mcs3(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments["distfit"]:
+        from sfeprapy.func.stats_dist_fit import auto_fit
 
         # Default values
         data_type = arguments["--data_t"] or 2
