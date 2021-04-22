@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sfeprapy.mcs0
 from sfeprapy.mcs0 import __example_input_csv, __example_input_df
 
 
@@ -19,7 +18,6 @@ def __example_input_dict() -> dict:
             v["timber_exposed_breadth"] = 0.
 
         inputs_new[k] = v
-    # return {"Standard Case 3 (with timber)": inputs["Standard Case 3 (with timber)"]}
     return inputs_new
 
 
