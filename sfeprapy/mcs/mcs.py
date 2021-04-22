@@ -88,7 +88,11 @@ class MCS(ABC):
                 self.cwd = os.path.dirname(fp_df_dict)
             self.__mcs_inputs = self.read_spreadsheet_input(fp_df_dict)
         elif isinstance(fp_df_dict, pd.DataFrame):
-            self.__mcs_inputs = fp_df_dict.to_dict()
+            mcs_inputs = fp_df_dict.to_dict()
+            for k in list(mcs_inputs.keys()):
+                if 'case_name' not in mcs_inputs[k]:
+                    mcs_inputs[k]['case_name'] = k
+            self.__mcs_inputs = mcs_inputs
         elif isinstance(fp_df_dict, dict):
             self.__mcs_inputs = fp_df_dict
         else:
