@@ -87,8 +87,6 @@ def fit(
             st.fisk,
             st.foldcauchy,
             st.foldnorm,
-            st.frechet_r,
-            st.frechet_l,
             st.genlogistic,
             st.genpareto,
             st.gennorm,
