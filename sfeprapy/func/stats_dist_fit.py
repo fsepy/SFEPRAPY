@@ -296,14 +296,14 @@ def auto_fit(
 ):
     """
     :param data_type:
-    :param distribution_list:   a list of distribution function names as defined in scipy.stats; or integers:
-                                0   single column containing sampled values.
-                                1   two columns with 1st column containing values and second column probability.
-                                2   two columns with 1st column containing values and second column cumulative
+    :param distribution_list:   a csv file path string or a pandas.DataFrame object; or
+                                0   fit to all available distributions
+                                1   fit to common distribution types
+    :param data:    a list of distribution function names as defined in scipy.stats; or integers:
+                    0   single column containing sampled values.
+                    1   two columns with 1st column containing values and second column probability.
+                    2   two columns with 1st column containing values and second column cumulative
                                     probability.
-    :param data:    a csv file path string or a pandas.DataFrame object; or
-                    0   fit to all available distributions
-                    1   fit to common distribution types
     :return:
     """
 
@@ -394,19 +394,8 @@ def auto_fit(
 
 
 def _test_auto_fit():
-    from sfeprapy.mcs.mcs_gen_2 import InputParser
     from scipy import stats
-
-    stats.norm(0, 1)
-
-    parser = InputParser()
-
-    data_1 = parser.inputs2samples(
-        dist_params=dict(x=dict(dist='norm_', mean=0, sd=1, ubound=5, lbound=-5)),
-        num_samples=5000
-    )
-    data_1.drop('index', axis=1, inplace=True)
-    auto_fit(data_type=0, distribution_list=0, data=data_1)
+    auto_fit(data_type=0, distribution_list=1, data=pd.DataFrame.from_dict(dict(x=stats.norm(0, 1).rvs(1000))))
 
 
 if __name__ == '__main__':
