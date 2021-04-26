@@ -24,57 +24,51 @@ def __example_input_list() -> list:
     # ===========
     y.append(__copy.copy(base_case))
     y[-1].update(dict(
-        fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
-        fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=780, sd=234),
-        fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+        case_name='Residential',
+        fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=2000, mean=780, sd=234),
+        fire_hrr_density=dict(dist="uniform_", lbound=0.32, ubound=0.57),
         room_floor_area=dict(dist='uniform_', lbound=9., ubound=30.),
         room_height=dict(dist='constant_', lbound=2.4, ubound=2.4),
-        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),  # todo
+        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.4, ubound=0.6),  # todo
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.20),
         beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.666, ubound=0.999),
-        case_name='Residential',
-        phi_teq=1.,
+        phi_teq=dict(dist='lognorm_', mean=1, sd=0.25, ubound=3, lbound=1e-4),
     ))
-    y[-1].pop('beam_position_horizontal')
 
     # ======
     # Office
     # ======
     y.append(__copy.copy(base_case))
     y[-1].update(dict(
-        fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
+        case_name='Office',
         fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=420, sd=126),
-        fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+        fire_hrr_density=dict(dist="uniform_", lbound=0.15, ubound=0.65),
         room_floor_area=dict(dist='uniform_', lbound=50., ubound=1000.),
-        room_height=dict(dist='uniform_', lbound=2.8, ubound=4.5),
-        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),
+        room_height=dict(dist='uniform_', lbound=2.8, ubound=4.),
+        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.4, ubound=0.6),  # todo
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
         beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.666, ubound=0.999),
-        case_name='Office',
-        phi_teq=1.,
+        phi_teq=dict(dist='lognorm_', mean=1, sd=0.25, ubound=3, lbound=1e-4),
     ))
-    y[-1].pop('beam_position_horizontal')
 
     # ======
     # Retail
     # ======
     y.append(__copy.copy(base_case))
     y[-1].update(dict(
-        fire_mode=0,  # force to use BS EN 1991-1-2 parametric fire
+        case_name='Retail',
         fire_load_density=dict(dist="gumbel_r_", lbound=10., ubound=2000., mean=600., sd=180.),
-        fire_hrr_density=dict(dist="uniform_", lbound=0.25 - 0.001, ubound=0.25 + 0.001),
+        fire_hrr_density=dict(dist="uniform_", lbound=0.27, ubound=1.0),
         room_floor_area=dict(dist='constant_', lbound=400., ubound=400.),
-        room_height=dict(dist='uniform_', lbound=4.5, ubound=7.0),
-        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.512 - 0.2, ubound=0.512 + 0.2),
+        room_height=dict(dist='constant_', lbound=4., ubound=4.),
+        room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.4, ubound=0.6),  # todo
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.5, ubound=1.0),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
         beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.666, ubound=0.999),
-        case_name='Retail',
-        phi_teq=1.,
+        phi_teq=dict(dist='lognorm_', mean=1, sd=0.25, ubound=3, lbound=1e-4),
     ))
-    y[-1].pop('beam_position_horizontal')
 
     return y
 
@@ -86,3 +80,4 @@ EXAMPLE_INPUT_DF = __example_input_df(__example_input_list())
 if __name__ == "__main__":
     print(EXAMPLE_INPUT_DICT, "\n")
     print(EXAMPLE_INPUT_CSV, "\n")
+    print(EXAMPLE_INPUT_DF, "\n")
