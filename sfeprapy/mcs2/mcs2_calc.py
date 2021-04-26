@@ -83,19 +83,25 @@ def _test_standard_case():
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
+    for k in list(mcs_input.keys()):
+        mcs_input[k]['n_simulations'] = 50000
 
     # increase the number of threads so it runs faster
     mcs2 = MCS2()
     mcs2.inputs = mcs_input
     mcs2.n_threads = 2
-    mcs2.run_mcs()
+    mcs2.run_mcs(cases_to_run=['Office'])
     mcs_out = mcs2.mcs_out
     teq = mcs_out.loc[mcs_out['case_name'] == 'Office']["solver_time_equivalence_solved"] / 60.0
+    teq = teq[~np.isnan(teq)]
     hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     func_teq = interp1d(x, y)
     for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
-        print(f'{fire_rating:<4.0f}  {func_teq(fire_rating):<.4f}')
+        print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')
+
+    assert abs(func_teq(60) - 0.64109512) <= 5e-3
+    assert abs(func_teq(90) - 0.92440939) <= 5e-3
 
 
 if __name__ == '__main__':
