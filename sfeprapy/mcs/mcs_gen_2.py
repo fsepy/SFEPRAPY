@@ -210,6 +210,8 @@ class InputParser(Params2Samples):
                     dict_out[k1][k2] = dict_in[k]
                 else:
                     dict_out[k1] = {k2: dict_in[k]}
+            else:
+                dict_out[k] = dict_in[k]
 
         return dict_out
 
