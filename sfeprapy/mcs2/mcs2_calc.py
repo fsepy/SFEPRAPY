@@ -45,9 +45,11 @@ def teq_main(
     window_width = room_floor_area * window_area_floor_ratio / window_height
     assert 0 < window_height_room_height_ratio <= 1.  # ensure within (0, 1]
 
-    # ----------------------------------
-    # Calculate beam horizontal location
-    # ----------------------------------
+    # --------------------------------
+    # Calculate beam vertical location
+    # --------------------------------
+    beam_position_vertical = kwargs['beam_position_vertical']
+    kwargs['beam_position_vertical'] = min(beam_position_vertical, kwargs['room_height'])
 
     kwargs.update(dict(
         room_breadth=room_depth,
