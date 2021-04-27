@@ -45,6 +45,7 @@ def format_ax(
         xlabel_fontsize='small', ylabel_fontsize='small',
         xscale=None, yscale=None,
         xticks=None, yticks=None,
+        xticks_minor=None, yticks_minor=None,
         xticklabels=None, yticklabels=None,
         ticks_labelsize='x-small',
         xlim=None, ylim=None,
@@ -59,6 +60,8 @@ def format_ax(
     if yscale is not None: ax.set_yscale(yscale)
     if xticks is not None: ax.set_xticks(xticks)
     if yticks is not None: ax.set_yticks(yticks)
+    if xticks_minor is not None: ax.set_xticks(xticks_minor, minor=True)
+    if yticks_minor is not None: ax.set_yticks(yticks_minor, minor=True)
     if xticklabels is not None: ax.set_xticklabels(xticklabels)
     if yticklabels is not None: ax.set_yticklabels(yticklabels)
     if xlim is not None: ax.set_xlim(xlim)
@@ -128,9 +131,10 @@ def plot_contour(
         ax, xx, yy, zz,
         xlabel: str, xticks=None, xticks_minor=None, xticklabels=None, xlim=None,
         levels=None, clabel_fmt=lambda x: f'{x:.0f}', clabel_manual=False,
+        cmap: str = 'Greys',
 ):
-    cs = ax.contour(xx, yy, zz, levels=levels, linewidths=0.5, colors='k', antialiased=True)
-    cf = ax.contourf(xx, yy, zz, levels=levels, cmap='coolwarm', alpha=0.6, extend='both')
+    cs = ax.contour(xx, yy, zz, levels=levels, linewidths=0.5, colors='k', linestyles='dotted', antialiased=True)
+    cf = ax.contourf(xx, yy, zz, levels=levels, cmap=cmap, alpha=0.6, extend='both')
     ax.clabel(
         cs, cs.levels, inline=True, fmt=clabel_fmt, fontsize='x-small',
         use_clabeltext=True, inline_spacing=5, manual=clabel_manual
@@ -168,4 +172,3 @@ def ax_annotate(
         arrowprops=dict(arrowstyle=arrowprops_style, lw=arrowprops_lw),
         bbox=dict(boxstyle=f'square,pad={bbox_pad}', fc=bbox_fc, ec=bbox_ec)
     )
-
