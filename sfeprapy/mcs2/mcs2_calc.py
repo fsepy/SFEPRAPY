@@ -18,6 +18,7 @@ def teq_main(
         # room_depth: float,  # depreciated from mcs0
         room_floor_area: float,  # new from mcs0
         room_breadth_depth_ratio: float,  # new from mcs0
+        # beam_position_horizontal,  # depreciated from mcs0
         beam_position_horizontal_ratio: float,  # new from mcs0
         # window_width: float,  # depreciated from mcs0
         # window_height: float,  # depreciated from mcs0
@@ -84,7 +85,7 @@ def _test_standard_case():
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     for k in list(mcs_input.keys()):
-        mcs_input[k]['n_simulations'] = 50000
+        mcs_input[k]['n_simulations'] = 10_000
 
     # increase the number of threads so it runs faster
     mcs2 = MCS2()
