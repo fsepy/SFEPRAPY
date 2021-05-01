@@ -22,7 +22,7 @@ def __example_input_list() -> list:
     y[-1].update(dict(
         case_name='Residential',
         beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.6, ubound=0.9),
-        fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=2000, mean=780, sd=234),
+        fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=780, sd=234),
         fire_hrr_density=dict(dist="uniform_", lbound=0.32, ubound=0.57),
         phi_teq=dict(dist='lognorm_', mean=1, sd=0.25, ubound=3, lbound=1e-4),
         room_floor_area=dict(dist='uniform_', lbound=9., ubound=30.),
@@ -40,7 +40,7 @@ def __example_input_list() -> list:
         fire_load_density=dict(dist="gumbel_r_", lbound=10, ubound=1200, mean=420, sd=126),
         fire_hrr_density=dict(dist="uniform_", lbound=0.15, ubound=0.65),
         room_floor_area=dict(dist='uniform_', lbound=50., ubound=1000.),
-        room_height=dict(dist='uniform_', lbound=2.8, ubound=4.),
+        room_height=dict(dist='uniform_', lbound=2.8, ubound=4.5),
         room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.4, ubound=0.6),  # todo
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.3, ubound=0.9),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
@@ -54,8 +54,8 @@ def __example_input_list() -> list:
         beam_position_horizontal_ratio=dict(dist='uniform_', lbound=0.6, ubound=0.9),
         fire_load_density=dict(dist="gumbel_r_", lbound=10., ubound=2000., mean=600., sd=180.),
         fire_hrr_density=dict(dist="uniform_", lbound=0.27, ubound=1.0),
-        room_floor_area=dict(dist='constant_', lbound=400., ubound=400.),
-        room_height=dict(dist='constant_', lbound=4., ubound=4.),
+        room_floor_area=dict(dist='uniform_', lbound=50., ubound=1000.),
+        room_height=dict(dist='constant_', lbound=4.5, ubound=7.0),
         room_breadth_depth_ratio=dict(dist='uniform_', lbound=0.4, ubound=0.6),  # todo
         window_height_room_height_ratio=dict(dist='uniform_', lbound=0.5, ubound=1.0),
         window_area_floor_ratio=dict(dist='uniform_', lbound=0.05, ubound=0.40),
