@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
+import pandas as __pd
 
-from sfeprapy.mcs.mcs_gen import dict_flatten
+from sfeprapy.mcs.mcs_gen import dict_flatten as __dict_flatten
+from sfeprapy.mcs0.mcs0_calc import MCS0
 
 
 def __example_input_list() -> list:
@@ -162,21 +163,21 @@ def __example_input_dict(x: list) -> dict:
 
 
 def __example_input_csv(x: list):
-    y = [dict_flatten(v) for v in x]
-    y = pd.DataFrame(y)
+    y = [__dict_flatten(v) for v in x]
+    y = __pd.DataFrame(y)
     y = y.transpose()
     y.index.name = "case_name"
     y = y.to_csv(index=True, line_terminator='\n')
     return y
 
 
-def __example_input_df(x: list) -> pd.DataFrame:
+def __example_input_df(x: list) -> __pd.DataFrame:
     y = dict()
     for d in x:
         case_name = d.pop('case_name')
-        d = dict_flatten(d)
+        d = __dict_flatten(d)
         y[case_name] = d
-    y = pd.DataFrame.from_dict(y)
+    y = __pd.DataFrame.from_dict(y)
     y.index.name = "case_name"
     return y
 
