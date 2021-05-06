@@ -17,7 +17,7 @@ except FileNotFoundError:
         requirements = f.read().splitlines()
 
 setuptools.setup(
-    name="sfeprapy",
+    name="SFEPRAPY",
     version=sfeprapy.__version__,
     description="Structural Fire Engineering - Probabilistic Reliability Assessment (Equivalent Time Exposure)",
     author="Ian Fu",
