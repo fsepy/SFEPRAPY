@@ -85,7 +85,7 @@ def _test_standard_case():
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
     for k in list(mcs_input.keys()):
-        mcs_input[k]['n_simulations'] = 10_000
+        mcs_input[k]['n_simulations'] = 50_000
 
     # increase the number of threads so it runs faster
     mcs2 = MCS2()
@@ -101,8 +101,8 @@ def _test_standard_case():
     for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
         print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')
 
-    assert abs(func_teq(60) - 0.65456945) <= 5e-3
-    assert abs(func_teq(90) - 0.93054259) <= 5e-3
+    assert abs(func_teq(60) - 0.65924953) <= 4e-3
+    assert abs(func_teq(90) - 0.93234327) <= 4e-3
 
 
 if __name__ == '__main__':
