@@ -95,14 +95,15 @@ def _test_standard_case():
     mcs_out = mcs2.mcs_out
     teq = mcs_out.loc[mcs_out['case_name'] == 'Office']["solver_time_equivalence_solved"] / 60.0
     teq = teq[~np.isnan(teq)]
-    hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.5))
+    hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.05))
     x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
     func_teq = interp1d(x, y)
     for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
         print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')
 
-    assert abs(func_teq(60) - 0.65924953) <= 4e-3
-    assert abs(func_teq(90) - 0.93234327) <= 4e-3
+    assert abs(func_teq(30) - 0.07519936) <= 5e-3
+    assert abs(func_teq(60) - 0.65458147) <= 5e-3
+    assert abs(func_teq(90) - 0.93229350) <= 5e-3
 
 
 if __name__ == '__main__':
