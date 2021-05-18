@@ -5,8 +5,6 @@ Usage:
     sfeprapy mcs0 template <file_name>
     sfeprapy mcs2 run [-p=<int>] <file_name>
     sfeprapy mcs2 template <file_name>
-    sfeprapy mcs3 run [-p=<int>] <file_name>
-    sfeprapy mcs3 template <file_name>
     sfeprapy distfit [--data_t=<int>] [--dist_g=<int>] <file_name>
 
 Examples:
@@ -30,12 +28,9 @@ Commands:
     mcs0 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
     mcs0 figure     produce figure from the output file <file_name>.
     mcs0 template   save example input file to <file_name>.
-    mcs2 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
+    mcs2 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 2.
     mcs2 figure     produce figure from the output file <file_name>.
     mcs2 template   save example input file to <file_name>.
-    mcs3 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
-    mcs3 figure     produce figure from the output file <file_name>.
-    mcs3 template   save example input file to <file_name>.
 """
 
 from docopt import docopt
@@ -80,21 +75,6 @@ def main():
             fp_mcs_in = arguments["<file_name>"]
             n_threads = arguments["-p"] or 1
             mcs2(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
-
-    elif arguments['mcs3']:
-        from sfeprapy.mcs3 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS3
-        from sfeprapy.mcs3 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS3
-        if arguments['template']:
-            if arguments["<file_name>"].endswith('.xlsx'):
-                EXAMPLE_INPUT_DF_MCS3.to_excel(arguments["<file_name>"])
-            else:
-                with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
-                    f.write(EXAMPLE_INPUT_CSV_MCS3)
-        else:
-            from sfeprapy.mcs3.__main__ import main as mcs3
-            fp_mcs_in = arguments["<file_name>"]
-            n_threads = arguments["-p"] or 1
-            mcs3(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
 
     elif arguments["distfit"]:
         from sfeprapy.func.stats_dist_fit import auto_fit
