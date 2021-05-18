@@ -101,7 +101,6 @@ def _test_standard_case():
     for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
         print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')
 
-    assert abs(func_teq(30) - 0.07496162) <= 5e-3
     assert abs(func_teq(60) - 0.65456945) <= 5e-3
     assert abs(func_teq(90) - 0.93054259) <= 5e-3
 
