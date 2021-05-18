@@ -42,7 +42,6 @@ setuptools.setup(
         "sfeprapy.mcs0",
         "sfeprapy.mcs1",
         "sfeprapy.mcs2",
-        "sfeprapy.mcs3",
         "sfeprapy.func",
         "sfeprapy.cli",
     ],
