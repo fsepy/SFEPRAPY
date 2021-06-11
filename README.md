@@ -8,11 +8,13 @@ Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) Pyt
 
 `sfeprapy` is under continuous development and actively used in research and real engineering design problems.
 
+Legacy wiki can be found [here](https://github.com/fsepy/SfePrapy/wiki).
+
+Documentation (WIP) can be found [here](https://sfeprapy-doc.readthedocs.io/en/latest/index.html)
+
 A publication summarising the capabilities can be found [here](https://www.researchgate.net/publication/333202825_APPLICATION_OF_PYTHON_PROGRAMMING_LANGUAGE_IN_STRUCTURAL_FIRE_ENGINEERING_-_MONTE_CARLO_SIMULATION).
 
 ## Getting Started
-
-Documentation can be found in the [wiki](https://github.com/fsepy/SfePrapy/wiki).
 
 ### Installation
 
