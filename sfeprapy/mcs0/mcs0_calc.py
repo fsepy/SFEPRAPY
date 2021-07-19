@@ -15,6 +15,7 @@ from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature_max as _
 from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from scipy.interpolate import interp1d
+
 from sfeprapy import logger
 from sfeprapy.mcs.mcs import MCS
 
@@ -23,7 +24,6 @@ def _fire_travelling(**kwargs):
     if isinstance(kwargs["beam_location_length_m"], list) or isinstance(
             kwargs["beam_location_length_m"], np.ndarray
     ):
-
         kwarg_ht_ec = dict(
             fire_time=kwargs["t"],
             beam_rho=7850,
@@ -328,7 +328,7 @@ def solve_time_equivalence_iso834(
         if solver_temperature_goal < np.amin(steel_temperature):
             # critical temperature is lower than exposed steel temperature
             # this shouldn't be theoretically possible unless the given critical temperature is less than ambient temperature
-            logger.error('Unexpected outputs when solving for time equivalence. Esculate this error to developers!')
+            logger.error('Unexpected outputs when solving for time equivalence')
             solver_time_equivalence_solved = np.nan
         elif solver_temperature_goal > np.amax(steel_temperature):
             solver_time_equivalence_solved = np.inf
@@ -486,6 +486,7 @@ def teq_main(
         timber_depth: float = None,
         timber_solver_tol: float = None,
         timber_solver_ilim: float = None,
+        car_cluster_size:int = None,
         *_,
         **__,
 ) -> dict:
@@ -494,6 +495,24 @@ def teq_main(
         room_depth += room_breadth
         room_breadth = room_depth - room_breadth
         room_depth -= room_breadth
+
+    # todo: wip for car park!!!
+    if 'occupancy_type' in __ and __['occupancy_type'] == '__CAR_PARK__':
+        fire_mode = 1  # force to travelling fire only
+
+        # work out new room_depth_car based on how many cars are involved in fire
+        if car_cluster_size is not None and car_cluster_size >= 0:
+            car_cluster_size = int(car_cluster_size)+1
+            room_depth_original = float(room_depth)
+            parking_bay_width = 2.3
+            n_parking_bay_row = 2
+            average_area_per_parking_bay = 4283 / 202
+
+            room_depth = car_cluster_size * parking_bay_width / n_parking_bay_row
+            room_floor_area = car_cluster_size * average_area_per_parking_bay
+            room_breadth = room_floor_area / room_depth
+
+            beam_position_horizontal = (beam_position_horizontal / room_depth_original) * room_depth
 
     window_open_fraction = (
             window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent)
@@ -519,7 +538,8 @@ def teq_main(
 
     while True:
         timber_solver_iter_count += 1
-        # the following `if` decide whether to calculate `timber_charred_depth_i` from `timber_charring_rate` or `timber_charred_depth`
+        # the following `if` decide whether to calculate `timber_charred_depth_i` from `timber_charring_rate` or
+        # `timber_charred_depth`
         if timber_charred_depth is None:
             # calculate from timber charring rate
             if isinstance(timber_charring_rate, (float, int)):
@@ -615,12 +635,15 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None, print_stats: bool = 
                 if not os.path.exists(os.path.dirname(fp_)):
                     os.makedirs(os.path.dirname(fp_))
             except Exception as e:
-                print(e)
+                logger.error(e)
 
             # only write columns contains non-unique values
             df_ = df.copy()
             nunique = df_.apply(pd.Series.nunique)
-            df_.drop(nunique[nunique == 1].index, axis=1).to_csv(os.path.join(fp_), index=False)
+            drop_items = list(nunique[nunique == 1].index)
+            if 'fire_type' in drop_items: drop_items.remove('fire_type')
+            if 'fire_type' in drop_items: drop_items.remove('fire_type')
+            df_.drop(drop_items, axis=1).to_csv(os.path.join(fp_), index=False)
 
         threading.Thread(target=_save_, kwargs=dict(fp_=fp)).start()
 
@@ -647,7 +670,6 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None, print_stats: bool = 
                 pass
 
         list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
-        print("\n".join(list_), "\n")
 
     if print_teq_plot is True:
         try:
@@ -665,8 +687,9 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None, print_stats: bool = 
 
 
 def mcs_out_post_all_cases(df: pd.DataFrame, fp: str = None):
-    if fp is not None:
-        df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(fp, index=False)
+    # if fp is not None:
+    #     df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(fp, index=False)
+    pass
 
 
 class MCS0(MCS):
@@ -681,7 +704,6 @@ class MCS0(MCS):
         return teq_main_wrapper(*args, **kwargs)
 
     def mcs_post_per_case(self, df: pd.DataFrame, write_outputs: bool = True, *_, **__):
-
         case_name = df['case_name'].to_numpy()
         assert (case_name == case_name[0]).all()
         case_name = case_name[0]
@@ -835,7 +857,15 @@ def _test_file_input():
     mcs.run_mcs()
 
 
+def _test_run_file(fp):
+    mcs = MCS0()
+    mcs.inputs = fp
+    mcs.n_threads = 4
+    mcs.run_mcs()
+
+
 if __name__ == '__main__':
-    _test_teq_phi()
-    _test_standard_case()
-    _test_file_input()
+    # _test_teq_phi()
+    # _test_standard_case()
+    # _test_file_input()
+    _test_run_file(r'C:\Users\IanFu\Desktop\MSCP\01-analysis\T01_car_park\0-mcs0.xlsx')
