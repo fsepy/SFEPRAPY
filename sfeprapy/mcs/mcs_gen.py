@@ -9,7 +9,6 @@ from scipy.interpolate import interp1d
 
 
 def gumbel_r_(mean: float, sd: float, **_):
-
     # parameters Gumbel W&S
     alpha = 1.282 / sd
     u = mean - 0.5772 / alpha
@@ -22,7 +21,6 @@ def gumbel_r_(mean: float, sd: float, **_):
 
 
 def lognorm_(mean: float, sd: float, **_):
-
     cov = sd / mean
 
     sigma_ln = np.sqrt(np.log(1 + cov ** 2))
@@ -36,7 +34,6 @@ def lognorm_(mean: float, sd: float, **_):
 
 
 def norm_(mean: float, sd: float, **_):
-
     loc = mean
     scale = sd
 
@@ -44,7 +41,6 @@ def norm_(mean: float, sd: float, **_):
 
 
 def uniform_(ubound: float, lbound: float, **_):
-
     if lbound > ubound:
         lbound += ubound
         ubound = lbound - ubound
@@ -123,6 +119,28 @@ def random_variable_generator(dict_in: dict, num_samples: int):
         )
         samples = 1 - samples
 
+    elif dist_0 == "car_cluster_size":
+        '''
+        derived from figure 13-4
+        
+        y = - 0.0099 x + 0.88
+        int(y) = 0.88 x - 0.00495 x ** 2 + C
+        Note C is zero cause y = 0 at x = 0
+        
+        CDF(car_cluster_size) = (9/352) * (0.88 * car_cluster_size - 0.00495 * car_cluster_size ** 2)
+        Note the first factor make CDF = 1 at car cluster = 90
+        
+        car_cluster_size = 800/9 * (1 - (1-y)**0.5)
+        '''
+        y = np.linspace(0, 1, num_samples + 2)[1:-1]
+        samples = np.floor(800 / 9 * (1 - (1 - y) ** 0.5))
+
+    elif dist_0 == 'samples':
+        v = dict_in.pop('values')
+        samples = np.array([float(i.strip()) for i in v.split(',')])
+        samples = samples[np.random.randint(low=0, high=len(samples), size=num_samples)]
+        print(len(samples), samples)
+
     elif dist_0 == "constant_":
         # print(num_samples, lbound, ubound, np.average(lbound))
         samples = np.full((num_samples,), np.average([lbound, ubound]))
@@ -144,13 +162,15 @@ def random_variable_generator(dict_in: dict, num_samples: int):
     if "permanent" in dict_in:
         samples += dict_in["permanent"]
 
+    if "coefficient" in dict_in:
+        samples *= dict_in['coefficient']
+
     np.random.shuffle(samples)
 
     return samples
 
 
 def dict_unflatten(dict_in: dict) -> dict:
-
     dict_out = dict()
 
     for k in list(dict_in.keys()):

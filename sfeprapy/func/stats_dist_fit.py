@@ -114,8 +114,8 @@ def fit(
             st.kstwobign,
             st.laplace,
             st.levy,
-            st.levy_l,
-            st.levy_stable,
+            # st.levy_l,  # removed due to extended computing time
+            # st.levy_stable,  # removed due to extended computing time
             st.logistic,
             st.loggamma,
             st.loglaplace,
@@ -125,7 +125,7 @@ def fit(
             st.mielke,
             st.nakagami,
             st.ncx2,
-            st.ncf,
+            # st.ncf,  # removed due to extended computing time
             st.nct,
             st.norm,
             st.pareto,
@@ -292,7 +292,10 @@ def pdf_to_samples(
 
 
 def auto_fit(
-        data_type: int, distribution_list: Union[int, list], data: Union[str, pd.DataFrame], savefig: bool = False,
+        data_type: int,
+        distribution_list: Union[int, list],
+        data: Union[str, pd.DataFrame],
+        savefig: bool = False,
 ):
     """
     :param data_type:

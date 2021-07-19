@@ -192,8 +192,8 @@ class MCS(ABC):
         # ------------
         self.__mcs_out = pd.concat([v for v in x3.values()])
 
-        # Post process output upon completion of all cases
-        self.mcs_post_all_cases(self.__mcs_out)
+        # # Post process output upon completion of all cases
+        # self.mcs_post_all_cases(self.__mcs_out)
 
     @abstractmethod
     def mcs_post_per_case(self, *arg, **kwargs):
