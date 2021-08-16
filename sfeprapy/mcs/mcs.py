@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Callable
 
 import pandas as pd
 from tqdm import tqdm
@@ -50,7 +50,7 @@ class MCS(ABC):
         # Assign other properties
         self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
-        self.__mcs_out: pd.DataFrame = None
+        self.mcs_out: pd.DataFrame = None
 
         # Assign default properties
         self.func_mcs_gen = mcs_gen_main
@@ -98,7 +98,11 @@ class MCS(ABC):
         else:
             raise TypeError("Unknown input data type.")
 
-    def run_mcs(self, cases_to_run=None, qt_prog_signal_0=None, qt_prog_signal_1=None, *args, **kwargs):
+    def run_mcs(
+            self, cases_to_run=None, keep_results: bool = False, update_sim_progress: Callable = None,
+            update_case_progress: Callable = None, update_case_name: Callable = None,
+            *args, **kwargs
+    ):
         # ----------------------------
         # Prepare mcs parameter inputs
         # ----------------------------
@@ -148,10 +152,11 @@ class MCS(ABC):
         # ------------------------------
         x2 = dict()
         for k, v in x1.items():
-            try:
-                x2[k] = self.func_mcs_gen(v, int(v['n_simulations']))
-            except Exception as e:
-                raise ValueError(f'Failed to generate stochastic samples from user defined inputs for case {k}, {e}')
+            x2[k] = self.func_mcs_gen(v, int(v['n_simulations']))
+            # try:
+            #     x2[k] = self.func_mcs_gen(v, int(v['n_simulations']))
+            # except Exception as e:
+            #     raise ValueError(f'Failed to generate stochastic samples from user defined inputs for case {k}, {e}')
 
         # ------------------
         # Run mcs simulation
@@ -163,11 +168,12 @@ class MCS(ABC):
         # }
 
         m, p = mp.Manager(), mp.Pool(self.n_threads, maxtasksperchild=1000)
-        for k, v in x2.items():
-            if qt_prog_signal_0 is not None:
-                qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
-            if qt_prog_signal_1 is not None:
-                qt_prog_signal_1.emit(0)
+        for i, k in enumerate(x2.keys()):
+            v = x2[k]
+            if update_case_name is not None:
+                update_case_name(str(k))
+            if update_case_progress is not None:
+                update_case_progress(i / len(x2) * 100)
 
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
@@ -176,13 +182,20 @@ class MCS(ABC):
                 n_threads=self.n_threads,
                 m=m,
                 p=p,
-                qt_prog_signal_1=qt_prog_signal_1
+                update_sim_progress=update_sim_progress
             )
 
             # Post process output upon completion per case
-            if self.mcs_post_per_case:
+            if self.mcs_post_per_case is not None:
                 self.mcs_post_per_case(df=x3_, *args, **kwargs)
-            x3[k] = copy.copy(x3_)
+
+            if keep_results is True:
+                x3[k] = copy.copy(x3_)
+
+        if update_case_name is not None:
+            update_case_name('Complete')
+        if update_case_progress is not None:
+            update_case_progress(int(100))
 
         p.close()
         p.join()
@@ -190,9 +203,12 @@ class MCS(ABC):
         # ------------
         # Pack results
         # ------------
-        self.__mcs_out = pd.concat([v for v in x3.values()])
+        if keep_results is True:
+            self.mcs_out = pd.concat([v for v in x3.values()], ignore_index=True)
+        else:
+            self.mcs_out = None
 
-        # # Post process output upon completion of all cases
+        # Post process output upon completion of all cases
         # self.mcs_post_all_cases(self.__mcs_out)
 
     @abstractmethod
@@ -209,12 +225,9 @@ class MCS(ABC):
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
-    @property
-    def mcs_out(self):
-        return self.__mcs_out
-
     @staticmethod
-    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, m, p, qt_prog_signal_1=None) -> pd.DataFrame:
+    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, m, p,
+                 update_sim_progress: Callable = None) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
 
         time.sleep(0.5)  # to avoid clashes between the prints and progress bar
@@ -230,8 +243,8 @@ class MCS(ABC):
             for i in tqdm(list_mcs_in, ncols=60):
                 mcs_out.append(func(**i))
                 j += 1
-                if qt_prog_signal_1:
-                    qt_prog_signal_1.emit(int(j / n_simulations * 100))
+                if update_sim_progress is not None:
+                    update_sim_progress(int(j / n_simulations * 100))
         else:
 
             q = m.Queue()
@@ -241,14 +254,14 @@ class MCS(ABC):
                     if jobs.ready():
                         if n_simulations > pbar.n:
                             pbar.update(n_simulations - pbar.n)
-                            if qt_prog_signal_1:
-                                qt_prog_signal_1.emit(100)
+                            if update_sim_progress is not None:
+                                update_sim_progress(int(100))
                         break
                     else:
                         if q.qsize() - pbar.n > 0:
                             pbar.update(q.qsize() - pbar.n)
-                            if qt_prog_signal_1:
-                                qt_prog_signal_1.emit(int(q.qsize() / n_simulations * 100))
+                            if update_sim_progress is not None:
+                                update_sim_progress(int(q.qsize() / n_simulations * 100))
                         time.sleep(1)
             mcs_out = jobs.get()
             time.sleep(0.5)
