@@ -274,13 +274,16 @@ class MCS(ABC):
     @staticmethod
     def read_spreadsheet_input(fp: str):
         if fp.endswith(".xlsx"):
-            df_input = pd.read_excel(fp, engine='openpyxl', index_col='case_name')
+            df_input = pd.read_excel(fp, engine='openpyxl', index_col=0, header=None)
         elif fp.endswith(".xls"):
-            df_input = pd.read_excel(fp, index_col='case_name')
+            df_input = pd.read_excel(fp, index_col=0, header=None)
         elif fp.endswith(".csv"):
-            df_input = pd.read_csv(fp, index_col="case_name")
+            df_input = pd.read_csv(fp, index_col=0, header=None)
         else:
             raise ValueError(f"Unknown input file format, {os.path.basename(fp)}")
+
+        # assign case_name as column header
+        df_input.columns = df_input.loc['case_name'].values
 
         dict_input = df_input.to_dict(orient='dict')
         for k in dict_input.keys():
