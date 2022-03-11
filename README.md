@@ -63,12 +63,6 @@ sfeprapy mcs0 -p 4 example_input.csv
 
 `sfeprapy.mcs0` uses the [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html#module-multiprocessing) library to utilise full potential performance of multi-core CPUs. The `-p 4` defines 4 threads will be used in running the simulation, 1 is the default value.
 
-## Authors
-
-**Ian Fu** - *ian.fu@ofrconsultants.com*  
-**Danny Hopkin** - *danny.hopkin@ofrconsultants.com*  
-**Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
