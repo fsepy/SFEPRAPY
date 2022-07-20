@@ -1,93 +1,103 @@
-"""SfePrapy CLI Help.
-Usage:
-    sfeprapy
-    sfeprapy mcs0 run [-p=<int>] <file_name>
-    sfeprapy mcs0 template <file_name>
-    sfeprapy mcs2 run [-p=<int>] <file_name>
-    sfeprapy mcs2 template <file_name>
-    sfeprapy distfit [--data_t=<int>] [--dist_g=<int>] <file_name>
-
-Examples:
-    sfeprapy mcs0 template inputs.csv
-    sfeprapy mcs0 template inputs.xlsx
-    sfeprapy mcs0 run -p 2 inputs.csv
-    sfeprapy mcs0 figure mcs.out.csv
-
-Options:
-    -p=<int>        to define number of processes for MCS, positive integer only. 2 by default.
-    -h --help       to show this message.
-    --data_t=<int>  an integer indicating data type:
-                    0   (default) samples only, a single column data.
-                    1   PDF, two columns data containing x, y, without heading.
-                    2   CDF, two columns data containing x, y, without heading.
-    --dist_g=<int>  an integer indicating what distribution group to be used for fitting the data:
-                    0   fit to all available distributions.
-                    1   (default) fit to common distribution types.
-
-Commands:
-    mcs0 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 0.
-    mcs0 figure     produce figure from the output file <file_name>.
-    mcs0 template   save example input file to <file_name>.
-    mcs2 run        Monte Carlo Simulation to solve equivalent time exposure in ISO 834 fire, method 2.
-    mcs2 figure     produce figure from the output file <file_name>.
-    mcs2 template   save example input file to <file_name>.
-"""
-
-from docopt import docopt
-
-
 def main():
+    import argparse
     import os
 
-    arguments = docopt(__doc__)
+    parser = argparse.ArgumentParser(
+        description='SFEPRAPY - Structural Fire Engineering Probabilistic Reliability Analysis'
+    )
+    subparsers = parser.add_subparsers(dest='sub_parser')
 
-    if arguments["<file_name>"]:
-        arguments["<file_name>"] = os.path.realpath(arguments["<file_name>"])
+    p_mcs0 = subparsers.add_parser('mcs0', help='Monte Carlo simulation Type 0')
+    p_mcs0.add_argument('-r', '--run',
+                        help='run Monte Carlo simulation from input file filepath',
+                        action='store_true', )
+    p_mcs0.add_argument('-e', '--template',
+                        help='save example input file to filepath',
+                        action='store_true', )
+    p_mcs0.add_argument('-t', '--threads',
+                        help='number of threads to run the simulation, default 1',
+                        default=1,
+                        type=int)
+    p_mcs0.add_argument('filepath',
+                        help=f'Input file name (including extension).',
+                        type=str)
 
-    if arguments["mcs0"]:
-        from sfeprapy.mcs0.__main__ import main as mcs0
-        from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS0
-        from sfeprapy.mcs0 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS0
+    p_mcs2 = subparsers.add_parser('mcs2', help='Monte Carlo simulation Type 2')
+    p_mcs2.add_argument('-r', '--run',
+                        help='run Monte Carlo simulation from input file filepath',
+                        action='store_true', )
+    p_mcs2.add_argument('-e', '--template',
+                        help='save example input file to filepath',
+                        action='store_true', )
+    p_mcs2.add_argument('-t', '--threads',
+                        help='number of threads to run the simulation, default 1',
+                        default=1,
+                        type=int)
+    p_mcs2.add_argument('filepath',
+                        help=f'Input file name (including extension).',
+                        type=str)
 
-        if arguments["template"]:
-            if arguments["<file_name>"].endswith('.xlsx'):
-                EXAMPLE_INPUT_DF_MCS0.to_excel(arguments["<file_name>"])
+    p_distfit = subparsers.add_parser('distfit', help='distribution fit')
+    p_distfit.add_argument('-t', '--type',
+                           help='an integer indicating data type\n'
+                                '0   (default) samples only, a single column data.\n'
+                                '1   PDF, two columns data containing x, y, without heading.\n'
+                                '2   CDF, two columns data containing x, y, without heading.',
+                           default=0,
+                           type=int, )
+    p_distfit.add_argument('-g', '--group',
+                           help='an integer indicating what distribution group to be used for fitting the data:\n'
+                                '0   fit to all available distributions.\n'
+                                '1   (default) fit to common distribution types.\n',
+                           default=1,
+                           type=int, )
+    p_distfit.add_argument('filepath',
+                           help=f'Input file name (including extension).',
+                           type=str)
+
+    args = parser.parse_args()
+
+    if args.sub_parser == 'mcs0':
+        from sfeprapy.mcs0 import cli_main as mcs0
+        from sfeprapy.mcs0 import EXAMPLE_INPUT_CSV
+        from sfeprapy.mcs0 import EXAMPLE_INPUT_DF
+
+        if args.template:
+            if args.filepath.endswith('.xlsx'):
+                EXAMPLE_INPUT_DF.to_excel(args.filepath)
             else:
-                with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
-                    f.write(EXAMPLE_INPUT_CSV_MCS0)
+                with open(args.filepath, "w+", encoding='utf-8') as f:
+                    f.write(EXAMPLE_INPUT_CSV)
 
-        else:
-            fp_mcs_in = arguments["<file_name>"]
-            n_threads = arguments["-p"] or 1
-            mcs0(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
+        if args.run:
+            mcs0(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
+        return
 
-    elif arguments['mcs2']:
-        from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV as EXAMPLE_INPUT_CSV_MCS2
-        from sfeprapy.mcs2 import EXAMPLE_INPUT_DF as EXAMPLE_INPUT_DF_MCS2
-        if arguments['template']:
-            if arguments["<file_name>"].endswith('.xlsx'):
-                EXAMPLE_INPUT_DF_MCS2.to_excel(arguments["<file_name>"])
+    if args.sub_parser == 'mcs2':
+        from sfeprapy.mcs2 import cli_main as mcs2
+        from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV
+        from sfeprapy.mcs2 import EXAMPLE_INPUT_DF
+
+        if args.template:
+            if args.filepath.endswith('.xlsx'):
+                EXAMPLE_INPUT_DF.to_excel(args.filepath)
             else:
-                with open(arguments["<file_name>"], "w+", encoding='utf-8') as f:
-                    f.write(EXAMPLE_INPUT_CSV_MCS2)
-        else:
-            from sfeprapy.mcs2.__main__ import main as mcs2
-            fp_mcs_in = arguments["<file_name>"]
-            n_threads = arguments["-p"] or 1
-            mcs2(fp_mcs_in=fp_mcs_in, n_threads=int(n_threads))
+                with open(args.filepath, "w+", encoding='utf-8') as f:
+                    f.write(EXAMPLE_INPUT_CSV)
 
-    elif arguments["distfit"]:
+        if args.run:
+            mcs2(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
+        return
+
+    if args.sub_parser == 'distfit':
         from sfeprapy.func.stats_dist_fit import auto_fit
-
-        # Default values
-        data_type = arguments["--data_t"] or 2
-        distribution_list = arguments["--dist_g"] or 1
-
-        # Main
         auto_fit(
-            data_type=int(data_type),
-            distribution_list=int(distribution_list),
-            data=arguments["<file_name>"],
+            data_type=int(args.type),
+            distribution_list=int(args.group),
+            data=args.filepath,
         )
-    else:
-        raise ValueError(f'sfeprapy -h for help')
+        return
+
+
+if __name__ == '__main__':
+    main()
