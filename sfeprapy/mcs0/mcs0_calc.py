@@ -220,6 +220,7 @@ def evaluate_fire_temperature(
             T_0=20 + 273.15,
         )
         fire_temperature = _fire_param(**kwargs_fire_0_paramec)
+        t1, t2, t3 = None, None, None
 
     elif fire_type == 1:
         if beam_position_horizontal < 0:
@@ -239,6 +240,9 @@ def evaluate_fire_temperature(
         fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
         if beam_position_horizontal <= 0:
             raise ValueError("Beam position less or equal to 0.")
+        t1 = fire_load_density_deducted / fire_hrr_density
+        t2 = room_depth / fire_spread_speed
+        t3 = t1 + t2
 
     elif fire_type == 2:
         kwargs_fire_2_param_din = dict(
@@ -251,15 +255,21 @@ def evaluate_fire_temperature(
             b=room_wall_thermal_inertia,
             q_x_d=fire_load_density_deducted * 1e6,
             gamma_fi_Q=fire_gamma_fi_q,
+            outputs=dict(t_1=-1, t_2_x=-1, t_3_x=-1)
         )
         fire_temperature = _fire_param_ger(**kwargs_fire_2_param_din)
+        t1 = kwargs_fire_2_param_din['outputs']['t_1']
+        t2 = kwargs_fire_2_param_din['outputs']['t_2_x']
+        t3 = kwargs_fire_2_param_din['outputs']['t_3_x']
 
     else:
         fire_temperature = None
+        t1, t2, t3 = None, None, None
 
     return dict(
         fire_temperature=fire_temperature,
         beam_position_horizontal=beam_position_horizontal,
+        t1=t1, t2=t2, t3=t3,
     )
 
 
