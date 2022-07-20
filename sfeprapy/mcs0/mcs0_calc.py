@@ -133,6 +133,7 @@ def decide_fire(
         if (
                 fire_spread_entire_room_time < burn_out_time
                 and 0.125 <= (window_area / room_floor_area) <= 0.5
+                and 100 <= fire_load_density_total <= 1300
         ):
             fire_type = 2  # german parametric
         else:
