@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 import copy
+import logging
 import os
 import threading
-import warnings
 from typing import Union, Callable
 
 import numpy as np
 import pandas as pd
-from fsetools.etc.asciiplot import AsciiPlot
 from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature_max as _steel_temperature_max
 from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
-from scipy.interpolate import interp1d
+from pandas import DataFrame
 
-from sfeprapy import logger
 from sfeprapy.mcs.mcs import MCS
+
+logger = logging.getLogger('gui')
 
 
 def _fire_travelling(**kwargs):
@@ -154,7 +154,7 @@ def evaluate_fire_temperature(
         room_wall_thermal_inertia: float,
         fire_tlim: float,
         fire_type: float,
-        fire_time: Union[list, np.ndarray],
+        fire_time: np.ndarray,
         fire_nft_limit: float,
         fire_load_density: float,
         fire_combustion_efficiency: float,
@@ -212,11 +212,11 @@ def evaluate_fire_temperature(
             A_v=window_area,
             h_eq=window_height,
             q_fd=fire_load_density_deducted * 1e6,
-            lambda_=room_wall_thermal_inertia ** 2,
+            lbd=room_wall_thermal_inertia ** 2,
             rho=1,
             c=1,
             t_lim=fire_tlim,
-            temperature_initial=20 + 273.15,
+            T_0=20 + 273.15,
         )
         fire_temperature = _fire_param(**kwargs_fire_0_paramec)
 
@@ -236,20 +236,19 @@ def evaluate_fire_temperature(
             fire_nft_limit_c=fire_nft_limit - 273.15,
         )
         fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
-
         if beam_position_horizontal <= 0:
             raise ValueError("Beam position less or equal to 0.")
 
     elif fire_type == 2:
         kwargs_fire_2_param_din = dict(
-            t_array_s=fire_time,
-            A_w_m2=window_area,
-            h_w_m2=window_height,
-            A_t_m2=room_total_area,
-            A_f_m2=room_floor_area,
-            t_alpha_s=fire_t_alpha,
-            b_Jm2s05K=room_wall_thermal_inertia,
-            q_x_d_MJm2=fire_load_density_deducted,
+            t=fire_time,
+            A_w=window_area,
+            h_w=window_height,
+            A_t=room_total_area,
+            A_f=room_floor_area,
+            t_alpha=fire_t_alpha,
+            b=room_wall_thermal_inertia,
+            q_x_d=fire_load_density_deducted * 1e6,
             gamma_fi_Q=fire_gamma_fi_q,
         )
         fire_temperature = _fire_param_ger(**kwargs_fire_2_param_din)
@@ -264,14 +263,13 @@ def evaluate_fire_temperature(
 
 
 def solve_time_equivalence_iso834(
+        fire_time: np.ndarray,
         beam_cross_section_area: float,
         beam_rho: float,
         protection_k: float,
         protection_rho: float,
         protection_c: float,
         protection_protected_perimeter: float,
-        fire_time_iso834: Union[list, np.ndarray],
-        fire_temperature_iso834: Union[list, np.ndarray],
         solver_temperature_goal: float,
         solver_protection_thickness: float,
         phi_teq: float,
@@ -289,8 +287,6 @@ def solve_time_equivalence_iso834(
     :param protection_rho:                      [kg/m3], steel beam element protection material density
     :param protection_c:                        [], steel beam element protection material specific heat
     :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
-    :param fire_time_iso834:                    [s], the time (array) component of ISO 834 fire curve
-    :param fire_temperature_iso834:             [K], the temperature (array) component of ISO 834 fire curve
     :param solver_temperature_goal:             [K], steel beam element expected failure temperature
     :param solver_max_iter:                     [-], Maximum allowable iteration counts for seeking solution for time equivalence
     :param solver_thickness_ubound:             [m], protection layer thickness upper bound initial condition for solving time equivalence
@@ -312,8 +308,9 @@ def solve_time_equivalence_iso834(
     solver_d_p = solver_protection_thickness
 
     if -np.inf < solver_d_p < np.inf:
+        fire_temperature_iso834 = (345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0) + 273.15  # in [K]
         steel_temperature = _steel_temperature(
-            fire_time=fire_time_iso834,
+            fire_time=fire_time,
             fire_temperature=fire_temperature_iso834,
             beam_rho=beam_rho,
             beam_cross_section_area=beam_cross_section_area,
@@ -333,19 +330,17 @@ def solve_time_equivalence_iso834(
         elif solver_temperature_goal > np.amax(steel_temperature):
             solver_time_equivalence_solved = np.inf
         else:
-            func_teq = interp1d(steel_temperature, fire_time_iso834, kind="linear", bounds_error=False, fill_value=-1)
-            solver_time_equivalence_solved = func_teq(solver_temperature_goal)
+            # func_teq = interp1d(steel_temperature, fire_time, kind="linear", bounds_error=False, fill_value=-1)
+            # solver_time_equivalence_solved = func_teq(solver_temperature_goal)
+            solver_time_equivalence_solved = np.interp(solver_temperature_goal, steel_temperature, fire_time)
             solver_time_equivalence_solved = solver_time_equivalence_solved * phi_teq
 
     elif solver_d_p == np.inf:
         solver_time_equivalence_solved = np.inf
-
     elif solver_d_p == -np.inf:
         solver_time_equivalence_solved = -np.inf
-
     elif solver_d_p is np.nan:
         solver_time_equivalence_solved = np.nan
-
     else:
         raise ValueError(f'This error should not occur, solver_d_p = {solver_d_p}')
 
@@ -382,8 +377,6 @@ def solve_protection_thickness(
     :param protection_rho:                  [kg/m3], steel beam element protection material density
     :param protection_c:                    [], steel beam element protection material specific heat
     :param protection_protected_perimeter:  [m], steel beam element protection material perimeter
-    :param fire_time_iso834:                [s], the time (array) component of ISO 834 fire curve
-    :param fire_temperature_iso834:         [K], the temperature (array) component of ISO 834 fire curve
     :param solver_temperature_goal:         [K], steel beam element expected failure temperature
     :param solver_max_iter:                 Maximum allowable iteration counts for seeking solution for time equivalence
     :param solver_thickness_ubound:         [m], protection layer thickness upper bound initial condition for solving time equivalence
@@ -432,7 +425,7 @@ def solve_protection_thickness(
     )
 
 
-def teq_main_wrapper(args):
+def teq_main_mp_worker(args):
     try:
         kwargs, q = args
         q.put("index: {}".format(kwargs["index"]))
@@ -486,7 +479,7 @@ def teq_main(
         timber_depth: float = None,
         timber_solver_tol: float = None,
         timber_solver_ilim: float = None,
-        car_cluster_size:int = None,
+        car_cluster_size: int = None,
         *_,
         **__,
 ) -> dict:
@@ -499,10 +492,9 @@ def teq_main(
     # todo: wip for car park!!!
     if 'occupancy_type' in __ and __['occupancy_type'] == '__CAR_PARK__':
         fire_mode = 1  # force to travelling fire only
-
         # work out new room_depth_car based on how many cars are involved in fire
         if car_cluster_size is not None and car_cluster_size >= 0:
-            car_cluster_size = int(car_cluster_size)+1
+            car_cluster_size = int(car_cluster_size) + 1
             room_depth_original = float(room_depth)
             parking_bay_width = 2.3
             n_parking_bay_row = 2
@@ -525,8 +517,8 @@ def teq_main(
     fire_time = np.arange(0, fire_time_duration + fire_time_step, fire_time_step)
 
     # Calculate ISO 834 fire temperature
-    fire_time_iso834 = fire_time
-    fire_temperature_iso834 = (345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0) + 273.15  # in [K]
+    # fire_time_iso834 = fire_time
+    # fire_temperature_iso834 = (345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0) + 273.15  # in [K]
 
     inputs = copy.deepcopy(locals())
     inputs.pop('_'), inputs.pop('__')
@@ -624,8 +616,9 @@ def teq_main(
     return inputs
 
 
-def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None, print_stats: bool = True,
-                          print_teq_plot: bool = False) -> pd.DataFrame:
+def mcs_out_post_per_case(
+        df: DataFrame, fp: str = None, print_stats: bool = True, print_teq_plot: bool = False
+) -> DataFrame:
     df = df.copy()
     df = df.select_dtypes(include=['number'])
     # save outputs if work direction is provided per iteration
@@ -671,24 +664,12 @@ def mcs_out_post_per_case(df: pd.DataFrame, fp: str = None, print_stats: bool = 
 
         list_ = [f"{k:<24.24}: {v}" for k, v in dict_.items()]
 
-    if print_teq_plot is True:
-        try:
-            x = np.array(df_res['solver_time_equivalence_solved'].values / 60, dtype=float)
-            x[x == -np.inf] = 0
-            x[x == np.inf] = np.amax(x[x != np.inf])
-            y = np.linspace(0, 1, len(x), dtype=float)
-            aplot = AsciiPlot(size=(55, 15))
-            aplot.plot(x=x, y=y, xlim=(20, min([180, np.amax(x)])))
-            aplot.show()
-        except Exception as e:
-            logger.warning(f'Failed to plot time equivalence, {e}')
-
     return df
 
 
-def mcs_out_post_all_cases(df: pd.DataFrame, fp: str = None):
-    # if fp is not None:
-    #     df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(fp, index=False)
+def mcs_out_post_all_cases(df: DataFrame, fp: str = None):
+    # if dir_work is not None:
+    #     df[['case_name', 'index', 'solver_time_equivalence_solved']].to_csv(dir_work, index=False)
     pass
 
 
@@ -701,9 +682,12 @@ class MCS0(MCS):
         return teq_main(*args, **kwargs)
 
     def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
-        return teq_main_wrapper(*args, **kwargs)
+        return teq_main_mp_worker(*args, **kwargs)
 
-    def mcs_post_per_case(self, df: pd.DataFrame, write_outputs: bool = True, *_, **__):
+    def post_all(self, *args, **kwargs):
+        pass
+
+    def post_case(self, df: DataFrame, write_outputs: bool = True, *_, **__):
         case_name = df['case_name'].to_numpy()
         assert (case_name == case_name[0]).all()
         case_name = case_name[0]
@@ -718,154 +702,11 @@ class MCS0(MCS):
         else:
             return mcs_out_post_per_case(df=df, print_stats=self.__print_stats)
 
-    def mcs_post_all_cases(self, df: pd.DataFrame):
-        # DEPRECIATED 23rd Nov 2020
-        # The concept of `sfeprapy` is a pure solver and with bare minimal data processing features
-        # try:
-        #     fp = os.path.join(self.cwd, self.DEFAULT_MCS_OUTPUT_FILE_NAME)
-        # except TypeError:
-        #     fp = None
-        # return mcs_out_post_all_cases(df=df, fp=fp)
-        pass
 
-
-def _test_teq_phi():
-    warnings.filterwarnings("ignore")
-
-    fire_time_ = np.arange(0, 2 * 60 * 60, 1)
-    fire_temperature_iso834_ = 345.0 * np.log10(fire_time_ / 60. * 8.0 + 1.0) + 293.15
-
-    input_param = dict(
-        index=0,
-        case_name="Standard 1",
-        probability_weight=1.,
-        fire_time_step=1.,
-        fire_time_duration=5. * 60 * 60,
-        n_simulations=1,
-        beam_cross_section_area=0.017,
-        beam_position_vertical=2.5,
-        beam_position_horizontal=18,
-        beam_rho=7850.,
-        fire_combustion_efficiency=0.8,
-        fire_gamma_fi_q=1,
-        fire_hrr_density=0.25,
-        fire_load_density=420,
-        fire_mode=0,
-        fire_nft_limit=1050,
-        fire_spread_speed=0.01,
-        fire_t_alpha=300,
-        fire_tlim=0.333,
-        fire_temperature_iso834=fire_temperature_iso834_,
-        fire_time_iso834=fire_time_,
-        protection_c=1700.,
-        protection_k=0.2,
-        protection_protected_perimeter=2.14,
-        protection_rho=800.,
-        room_breadth=16,
-        room_depth=31.25,
-        room_height=3,
-        room_wall_thermal_inertia=720,
-        solver_temperature_goal=620 + 273.15,
-        solver_max_iter=200,
-        solver_thickness_lbound=0.0001,
-        solver_thickness_ubound=0.0500,
-        solver_tol=0.01,
-        window_height=2,
-        window_open_fraction=0.8,
-        window_width=72,
-        window_open_fraction_permanent=0,
-        phi_teq=0.1,
-        timber_charring_rate=0.7,
-        timber_exposed_area=0,
-        timber_hc=400,
-        timber_density=500,
-        timber_solver_ilim=20,
-        timber_solver_tol=1,
-    )
-
-    input_param["phi_teq"] = 1.0
-    teq_10 = teq_main(**input_param)["solver_time_equivalence_solved"]
-
-    input_param["phi_teq"] = 0.1
-    teq_01 = teq_main(**input_param)["solver_time_equivalence_solved"]
-
-    print(
-        f'Time equivalence at phi_teq=0.1: {teq_01:<8.3f}\n'
-        f'Time equivalence at phi_teq=1.0: {teq_10:<8.3f}\n'
-        f'Ratio between the above:         {teq_10 / teq_01:<8.3f}\n'
-    )
-
-    assert abs(teq_10 / teq_01 - 10) < 0.01
-
-
-def _test_standard_case():
-    import copy
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT
-    from scipy.interpolate import interp1d
-
-    # increase the number of simulations so it gives sensible results
-    mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
+def cli_main(fp_mcs_in: str, n_threads: int = 1):
+    fp_mcs_in = os.path.realpath(fp_mcs_in)
 
     mcs = MCS0()
-
-    mcs.inputs = mcs_input
-    mcs.n_threads = 1
-    mcs.run_mcs()
-    mcs_out = mcs.mcs_out
-
-    def get_time_equivalence(data, fractile: float):
-        hist, edges = np.histogram(data, bins=np.arange(0, 181, 0.5))
-        x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
-        return interp1d(y, x)(fractile)
-
-    mcs_out_standard_case_1 = mcs_out.loc[mcs_out['case_name'] == 'Standard Case 1']
-    teq = mcs_out_standard_case_1["solver_time_equivalence_solved"] / 60.0
-    teq_at_80_percentile = get_time_equivalence(teq, 0.8)
-    print(f'Time equivalence at CDF 0.8 is {teq_at_80_percentile:<6.3f} min')
-    target, target_tol = 60, 2
-    assert target - target_tol < teq_at_80_percentile < target + target_tol
-
-    mcs_out_standard_case_2 = mcs_out.loc[mcs_out['case_name'] == 'Standard Case 2 (with teq_phi)']
-    teq = mcs_out_standard_case_2["solver_time_equivalence_solved"] / 60.0
-    teq_at_80_percentile = get_time_equivalence(teq, 0.8)
-    print(f'Time equivalence at CDF 0.8 is {teq_at_80_percentile:<6.3f} min')
-    target, target_tol = 64, 2  # 64 minutes based on a test run on 2nd Oct 2020
-    assert target - target_tol < teq_at_80_percentile < target + target_tol
-
-    mcs_out_standard_case_3 = mcs_out.loc[mcs_out['case_name'] == 'Standard Case 3 (with timber)']
-    teq = mcs_out_standard_case_3["solver_time_equivalence_solved"] / 60.0
-    teq_at_80_percentile = get_time_equivalence(teq, 0.8)
-    print(f'Time equivalence at CDF 0.8 is {teq_at_80_percentile:<6.3f} min')
-    target, target_tol = 78, 3  # 80 minutes based on a test run on 18th Nov 2020
-    assert target - target_tol < teq_at_80_percentile < target + target_tol
-
-
-def _test_file_input():
-    import tempfile
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DF
-
-    # save input as .xlsx
-    temp = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
-    EXAMPLE_INPUT_DF.to_excel(temp)
-    fp = f'{temp.name}'
-    print(f"A temporary input file has been created: {fp}")  # 4
-    temp.close()  # 5
-
-    mcs = MCS0()
-    mcs.inputs = fp
-    mcs.n_threads = 2
-    mcs.run_mcs()
-
-
-def _test_run_file(fp):
-    mcs = MCS0()
-    mcs.inputs = fp
-    mcs.n_threads = 4
-    mcs.run_mcs()
-
-
-if __name__ == '__main__':
-    # _test_teq_phi()
-    # _test_standard_case()
-    # _test_file_input()
-    _test_run_file(r'C:\Users\IanFu\Desktop\MSCP\01-analysis\T01_car_park\0-mcs0.xlsx')
+    mcs.inputs = fp_mcs_in
+    mcs.n_threads = n_threads
+    mcs.run()

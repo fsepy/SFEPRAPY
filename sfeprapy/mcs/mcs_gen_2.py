@@ -140,7 +140,7 @@ class InputParser(Params2Samples):
 
     def inputs2samples(self, dist_params: dict, num_samples: int) -> pd.DataFrame:
         """Generates samples based upon prescribed distribution types.
-    
+
         :param dist_params: description of distribution function.
         :param num_samples: number of samples to be produced.
         :return df_out:

@@ -1,3 +1,6 @@
+# Monte Carlo Simulation Multiple Process Implementation
+# Yan Fu, October 2017
+
 import copy
 import multiprocessing as mp
 import os
@@ -8,7 +11,7 @@ from typing import Union, Callable
 import pandas as pd
 from tqdm import tqdm
 
-from sfeprapy.mcs.mcs_gen import main as mcs_gen_main
+from .mcs_gen import main as mcs_gen_main
 
 
 class MCS(ABC):
@@ -34,40 +37,26 @@ class MCS(ABC):
             A method to carry out deterministic calculation.
             NOTE! This method needs to be re-defined in a child class.
         `MCS.mcs_post_per_case`
-            A method to post processing results.
+            A method to post-processing results.
             NOTE! This method needs to be re-defined in a child class.
     """
     DEFAULT_TEMP_FOLDER_NAME = "mcs.out"
     DEFAULT_MCS_OUTPUT_FILE_NAME = "mcs.out.csv"
 
-    def __init__(self, n_threads: int = 1):
+    def __init__(self, n_procs: int = 1):
         # Assign user defined properties
-        if isinstance(n_threads, int) and n_threads > 0:
-            self.n_threads = n_threads
+        if isinstance(n_procs, int) and n_procs > 0:
+            self.n_threads = n_procs
         else:
-            raise ValueError('`n_threads` must be an integer greater than zero')
+            raise ValueError('`n_procs` must be an integer greater than zero')
 
         # Assign other properties
         self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
-        self.mcs_out: pd.DataFrame = None
+        self.outputs: pd.DataFrame = None
 
         # Assign default properties
         self.func_mcs_gen = mcs_gen_main
-
-    @abstractmethod
-    def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
-        """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
-        :return:
-        """
-        raise NotImplementedError('This method should be overridden by a child class')
-
-    @abstractmethod
-    def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
-        """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
-        :return:
-        """
-        raise NotImplementedError('This method should be overridden by a child class')
 
     @property
     def inputs(self) -> dict:
@@ -98,9 +87,23 @@ class MCS(ABC):
         else:
             raise TypeError("Unknown input data type.")
 
-    def run_mcs(
-            self, cases_to_run=None, keep_results: bool = False, update_sim_progress: Callable = None,
-            update_case_progress: Callable = None, update_case_name: Callable = None,
+    @abstractmethod
+    def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
+        """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
+        :return:
+        """
+        raise NotImplementedError('This method should be overridden by a child class')
+
+    @abstractmethod
+    def mcs_deterministic_calc_mp(self, *args, **kwargs) -> dict:
+        """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
+        :return:
+        """
+        raise NotImplementedError('This method should be overridden by a child class')
+
+    def run(
+            self, cases_to_run=None, keep_results: bool = False,
+            set_prog: Callable = None, set_prog_max: Callable = None, set_prog_complete: Callable = None,
             *args, **kwargs
     ):
         # ----------------------------
@@ -168,13 +171,12 @@ class MCS(ABC):
         # }
 
         m, p = mp.Manager(), mp.Pool(self.n_threads, maxtasksperchild=1000)
+        if set_prog_max:
+            set_prog_max(sum(len(i.index) for i in x2.values()))
+
+        progress_tracker = 0
         for i, k in enumerate(x2.keys()):
             v = x2[k]
-            if update_case_name is not None:
-                update_case_name(str(k))
-            if update_case_progress is not None:
-                update_case_progress(i / len(x2) * 100)
-
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
                 self.mcs_deterministic_calc_mp,
@@ -182,59 +184,54 @@ class MCS(ABC):
                 n_threads=self.n_threads,
                 m=m,
                 p=p,
-                update_sim_progress=update_sim_progress
+                set_prog=set_prog,
+                set_prog_init=progress_tracker,
             )
 
+            progress_tracker += len(v.index)
+
             # Post process output upon completion per case
-            if self.mcs_post_per_case is not None:
-                self.mcs_post_per_case(df=x3_, *args, **kwargs)
+            if self.post_case is not None:
+                self.post_case(df=x3_, *args, **kwargs)
 
             if keep_results is True:
                 x3[k] = copy.copy(x3_)
 
-        if update_case_name is not None:
-            update_case_name('Complete')
-        if update_case_progress is not None:
-            update_case_progress(int(100))
-
         p.close()
         p.join()
+        if set_prog_complete:
+            set_prog_complete(True)
 
         # ------------
         # Pack results
         # ------------
         if keep_results is True:
-            self.mcs_out = pd.concat([v for v in x3.values()], ignore_index=True)
+            self.outputs = pd.concat([v for v in x3.values()], ignore_index=True)
         else:
-            self.mcs_out = None
+            self.outputs = None
 
         # Post process output upon completion of all cases
         # self.mcs_post_all_cases(self.__mcs_out)
 
     @abstractmethod
-    def mcs_post_per_case(self, *arg, **kwargs):
+    def post_case(self, *arg, **kwargs):
         """
         This method will be called upon completion of each case
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
     @abstractmethod
-    def mcs_post_all_cases(self, *args, **kwargs):
+    def post_all(self, *args, **kwargs):
         """
         This method will be called upon completion of all cases
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
     @staticmethod
-    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, m, p,
-                 update_sim_progress: Callable = None) -> pd.DataFrame:
+    def __mcs_mp(
+            func, func_mp, x: pd.DataFrame, n_threads: int, m, p, set_prog: Callable = None, set_prog_init: int = 0
+    ) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
-
-        time.sleep(0.5)  # to avoid clashes between the prints and progress bar
-        print("{:<24.24}: {}".format("CASE", list_mcs_in[0]["case_name"]))
-        print("{:<24.24}: {}".format("NO. OF THREADS", n_threads))
-        print("{:<24.24}: {}".format("NO. OF SIMULATIONS", len(x.index)))
-        time.sleep(0.5)  # to avoid clashes between the prints and progress bar
 
         n_simulations = len(list_mcs_in)
         if n_threads == 1 or func_mp is None:
@@ -243,28 +240,28 @@ class MCS(ABC):
             for i in tqdm(list_mcs_in, ncols=60):
                 mcs_out.append(func(**i))
                 j += 1
-                if update_sim_progress is not None:
-                    update_sim_progress(int(j / n_simulations * 100))
+                if set_prog is not None:
+                    set_prog(int(j + set_prog_init))
         else:
-
             q = m.Queue()
             jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
+
             with tqdm(total=n_simulations, ncols=60) as pbar:
                 while True:
                     if jobs.ready():
                         if n_simulations > pbar.n:
                             pbar.update(n_simulations - pbar.n)
-                            if update_sim_progress is not None:
-                                update_sim_progress(int(100))
+                            if set_prog is not None:
+                                set_prog(int(n_simulations + set_prog_init))
                         break
                     else:
+                        if set_prog is not None:
+                            set_prog(int(q.qsize() + set_prog_init))
                         if q.qsize() - pbar.n > 0:
                             pbar.update(q.qsize() - pbar.n)
-                            if update_sim_progress is not None:
-                                update_sim_progress(int(q.qsize() / n_simulations * 100))
-                        time.sleep(1)
+                        time.sleep(.2)
             mcs_out = jobs.get()
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)
@@ -274,7 +271,7 @@ class MCS(ABC):
     @staticmethod
     def read_spreadsheet_input(fp: str):
         if fp.endswith(".xlsx"):
-            df_input = pd.read_excel(fp, engine='openpyxl', index_col=0, header=None)
+            df_input = pd.read_excel(fp, index_col=0, header=None, engine='openpyxl')
         elif fp.endswith(".xls"):
             df_input = pd.read_excel(fp, index_col=0, header=None)
         elif fp.endswith(".csv"):
@@ -284,6 +281,9 @@ class MCS(ABC):
 
         # assign case_name as column header
         df_input.columns = df_input.loc['case_name'].values
+
+        if len(set((df_input.columns))) != len(df_input.columns):
+            raise ValueError(f'case_name not unique')
 
         dict_input = df_input.to_dict(orient='dict')
         for k in dict_input.keys():

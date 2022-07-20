@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+import os
 
 from sfeprapy.mcs0.mcs0_calc import MCS0
 from sfeprapy.mcs0.mcs0_calc import teq_main as teq_main_mcs0
@@ -37,7 +37,8 @@ def teq_main(
     room_depth = (room_floor_area / room_breadth_depth_ratio) ** 0.5
     room_breadth = room_breadth_depth_ratio * (room_floor_area / room_breadth_depth_ratio) ** 0.5
     assert 0 < room_breadth_depth_ratio <= 1.  # ensure within (0, 1]
-    assert abs(room_depth * room_breadth - room_floor_area) < 1e-5  # ensure calculated room floor dimensions match the prescribed floor area
+    assert abs(
+        room_depth * room_breadth - room_floor_area) < 1e-5  # ensure calculated room floor dimensions match the prescribed floor area
 
     # -----------------------------------------
     # Calculate window opening width and height
@@ -76,35 +77,10 @@ class MCS2(MCS0):
         return teq_main_wrapper(*args, **kwargs)
 
 
-def _test_standard_case():
-    import copy
-    from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT
-    from scipy.interpolate import interp1d
-    import numpy as np
+def cli_main(fp_mcs_in: str, n_threads: int = 1):
+    fp_mcs_in = os.path.realpath(fp_mcs_in)
 
-    # increase the number of simulations so it gives sensible results
-    mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
-    for k in list(mcs_input.keys()):
-        mcs_input[k]['n_simulations'] = 50_000
-
-    # increase the number of threads so it runs faster
-    mcs2 = MCS2()
-    mcs2.inputs = mcs_input
-    mcs2.n_threads = 2
-    mcs2.run_mcs(cases_to_run=['Office'])
-    mcs_out = mcs2.mcs_out
-    teq = mcs_out.loc[mcs_out['case_name'] == 'Office']["solver_time_equivalence_solved"] / 60.0
-    teq = teq[~np.isnan(teq)]
-    hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.05))
-    x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
-    func_teq = interp1d(x, y)
-    for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
-        print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')
-
-    assert abs(func_teq(30) - 0.07519936) <= 5e-3
-    assert abs(func_teq(60) - 0.65458147) <= 5e-3
-    assert abs(func_teq(90) - 0.93229350) <= 5e-3
-
-
-if __name__ == '__main__':
-    _test_standard_case()
+    mcs = MCS2()
+    mcs.inputs = fp_mcs_in
+    mcs.n_threads = n_threads
+    mcs.run()
