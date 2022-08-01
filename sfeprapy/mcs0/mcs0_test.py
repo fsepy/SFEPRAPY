@@ -79,11 +79,11 @@ def test_standard_case(skip_3: bool = False):
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
-    mcs_input['Standard Case 1']['n_simulations'] = 10_000
-    mcs_input['Standard Case 2 (with teq_phi)']['n_simulations'] = 10_000
-    mcs_input['Standard Case 3 (with timber)']['n_simulations'] = 2_500
+    mcs_input['CASE_1']['n_simulations'] = 10_000
+    mcs_input['CASE_2_teq_phi']['n_simulations'] = 10_000
+    mcs_input['CASE_3_timber']['n_simulations'] = 2_500
 
-    cases_to_run = ['Standard Case 1', 'Standard Case 2 (with teq_phi)', 'Standard Case 3 (with timber)']
+    cases_to_run = ['CASE_1', 'CASE_2_teq_phi', 'CASE_3_timber']
     if skip_3:
         cases_to_run.pop(2)
 
@@ -103,11 +103,11 @@ def test_standard_case(skip_3: bool = False):
         return res
 
     # 60 minutes based on Kirby et al
-    assert abs(frac2teq(outputs, 'Standard Case 1', 0.8) - 60) <= 1
+    assert abs(frac2teq(outputs, 'CASE_1', 0.8) - 60) <= 1
     # 65 minutes based on a test run on 2nd Oct 2020
-    assert abs(frac2teq(outputs, 'Standard Case 2 (with teq_phi)', 0.8) - 65) <= 1
+    assert abs(frac2teq(outputs, 'CASE_2_teq_phi', 0.8) - 65) <= 1
     # 80 minutes based on a test run on 2nd Oct 2020
-    assert abs(frac2teq(outputs, 'Standard Case 3 (with timber)', 0.8) - 80) <= 3
+    assert abs(frac2teq(outputs, 'CASE_3_timber', 0.8) - 80) <= 3
 
 
 def test_file_input():

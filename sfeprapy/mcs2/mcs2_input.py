@@ -8,8 +8,8 @@ from sfeprapy.mcs0.mcs0_input import example_input_df, example_input_csv, exampl
 
 def __example_input_list() -> list:
     # Create base case from `sfeprapy.mcs0`
-    # only use "Standard Case 1"
-    base_case = __copy.deepcopy(EXAMPLE_INPUT_DICT_['Standard Case 1'])
+    # only use "CASE_1"
+    base_case = __copy.deepcopy(EXAMPLE_INPUT_DICT_['CASE_1'])
     # remove items which are no longer used in `sfeprapy.mcs2` (comparing to `sfeprapy.mcs0`)
     for i in ['room_breadth', 'room_depth', 'window_width', 'window_height', 'p1', 'p2', 'p3', 'p4',
               'general_room_floor_area', 'beam_position_horizontal']:

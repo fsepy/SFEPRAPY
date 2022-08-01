@@ -6,7 +6,7 @@ from sfeprapy.mcs.mcs_gen import dict_flatten as __dict_flatten
 def example_input_list() -> list:
     y = [
         dict(
-            case_name="Standard Case 1",
+            case_name="CASE_1",
             n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
@@ -54,7 +54,7 @@ def example_input_list() -> list:
             general_room_floor_area=500,
         ),
         dict(
-            case_name="Standard Case 2 (with teq_phi)",
+            case_name="CASE_2_teq_phi",
             n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
@@ -102,7 +102,7 @@ def example_input_list() -> list:
             general_room_floor_area=500,
         ),
         dict(
-            case_name="Standard Case 3 (with timber)",
+            case_name="CASE_3_timber",
             n_simulations=2500,
             fire_time_step=10,
             fire_time_duration=18000,
