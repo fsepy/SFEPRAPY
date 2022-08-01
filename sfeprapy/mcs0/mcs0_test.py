@@ -125,17 +125,3 @@ def test_file_input():
     mcs.inputs = fp
     mcs.n_threads = 2
     mcs.run()
-
-
-def test_run_file(fp):
-    mcs = MCS0()
-    mcs.inputs = fp
-    mcs.n_threads = 4
-    mcs.run()
-
-
-if __name__ == '__main__':
-    # test_teq_phi()
-    test_standard_case(True)
-    # test_file_input()
-    # test_run_file(r'C:\Users\IanFu\Desktop\MSCP\01-analysis\T01_car_park\0-mcs0.xlsx')
