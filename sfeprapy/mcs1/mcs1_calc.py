@@ -1,11 +1,16 @@
 import copy
+import logging
 import os
 from typing import Callable
 
 import numpy as np
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
 
-from ..mcs0 import MCS0, decide_fire, evaluate_fire_temperature, solve_protection_thickness, \
-    solve_time_equivalence_iso834
+from ..mcs0 import MCS0, decide_fire, evaluate_fire_temperature
+
+logger = logging.getLogger('gui')
+
+__all__ = 'MCS1', 'cli_main', 'teq_main'
 
 
 def teq_main_wrapper(args):
@@ -15,6 +20,63 @@ def teq_main_wrapper(args):
         return teq_main(**kwargs)
     except (ValueError, AttributeError):
         return teq_main(**args)
+
+
+def solve_time_equivalence_iso834(
+        fire_time: np.ndarray,
+        fire_temperature: np.ndarray,
+        beam_cross_section_area: float,
+        beam_rho: float,
+        protection_k: float,
+        protection_rho: float,
+        protection_c: float,
+        protection_protected_perimeter: float,
+        solver_protection_thickness: float,
+        phi_teq: float,
+        *_,
+        **__,
+) -> dict:
+    """
+    Calculates equivalent time exposure for a protected steel element member in more realistic fire environment (i.e. travelling fire, parameteric fires)
+    opposing to the standard fire curve ISO 834.
+
+    PARAMETERS:
+    :param beam_cross_section_area:             [m2], the steel beam element cross section area
+    :param beam_rho:                            [kg/m3], steel beam element density
+    :param protection_k:                        [], steel beam element protection material thermal conductivity
+    :param protection_rho:                      [kg/m3], steel beam element protection material density
+    :param protection_c:                        [], steel beam element protection material specific heat
+    :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
+    :param solver_temperature_goal:             [K], steel beam element expected failure temperature
+    :param solver_max_iter:                     [-], Maximum allowable iteration counts for seeking solution for time equivalence
+    :param solver_thickness_ubound:             [m], protection layer thickness upper bound initial condition for solving time equivalence
+    :param solver_thickness_lbound:             [m], protection layer thickness lower bound initial condition for solving time equivalence
+    :param solver_tol:                          [K], tolerance for solving time equivalence
+    :param solver_protection_thickness:         [m], steel section protection layer thickness
+    :param phi_teq:                             [-], model uncertainty factor
+    :return results:                            A dict containing `solver_time_equivalence_solved` which is ,[s], solved equivalent time exposure
+    EXAMPLE:
+    """
+
+    steel_temperature = _steel_temperature(
+        fire_time=fire_time,
+        fire_temperature=fire_temperature,
+        beam_rho=beam_rho,
+        beam_cross_section_area=beam_cross_section_area,
+        protection_k=protection_k,
+        protection_rho=protection_rho,
+        protection_c=protection_c,
+        protection_thickness=solver_protection_thickness,
+        protection_protected_perimeter=protection_protected_perimeter,
+    )
+    solver_temperature_goal = max(steel_temperature)
+
+    # Solve equivalent time exposure in ISO 834
+    solver_time_equivalence_solved = 1.06011 * 2.71828182845905 ** (0.00667416 * solver_temperature_goal) - 7.5
+    return dict(
+        solver_temperature_goal=solver_temperature_goal,
+        solver_time_equivalence_solved=solver_time_equivalence_solved * phi_teq
+    )
 
 
 def teq_main(
@@ -40,15 +102,16 @@ def teq_main(
         protection_k: float,
         protection_protected_perimeter: float,
         protection_rho: float,
+        protection_d_p: float,
         room_breadth: float,
         room_depth: float,
         room_height: float,
         room_wall_thermal_inertia: float,
-        solver_temperature_goal: float,
-        solver_max_iter: int,
-        solver_thickness_lbound: float,
-        solver_thickness_ubound: float,
-        solver_tol: float,
+        # solver_temperature_goal: float,
+        # solver_max_iter: int,
+        # solver_thickness_lbound: float,
+        # solver_thickness_ubound: float,
+        # solver_tol: float,
         window_height: float,
         window_open_fraction: float,
         window_width: float,
@@ -154,10 +217,10 @@ def teq_main(
         inputs.update(evaluate_fire_temperature(**inputs))
 
         # To solve protection thickness at critical temperature
-        inputs.update(solve_protection_thickness(**inputs))
+        # inputs.update(solve_protection_thickness(**inputs))
 
         # To solve time equivalence in ISO 834
-        inputs.update(solve_time_equivalence_iso834(**inputs))
+        inputs.update(solve_time_equivalence_iso834(solver_protection_thickness=protection_d_p, **inputs))
 
         # additional fuel contribution from timber
         if timber_exposed_area <= 0 or timber_exposed_area is None:  # no timber exposed
