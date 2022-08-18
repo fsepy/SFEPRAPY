@@ -10,7 +10,6 @@ import pandas as pd
 from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
-from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature_max as _steel_temperature_max
 from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
 from pandas import DataFrame
@@ -18,41 +17,6 @@ from pandas import DataFrame
 from sfeprapy.mcs.mcs import MCS
 
 logger = logging.getLogger('gui')
-
-
-def _fire_travelling(**kwargs):
-    if isinstance(kwargs["beam_location_length_m"], list) or isinstance(
-            kwargs["beam_location_length_m"], np.ndarray
-    ):
-        kwarg_ht_ec = dict(
-            fire_time=kwargs["t"],
-            beam_rho=7850,
-            beam_cross_section_area=0.017,
-            protection_k=0.2,
-            protection_rho=800,
-            protection_c=1700,
-            protection_thickness=0.005,
-            protection_protected_perimeter=2.14,
-        )
-
-        temperature_steel_list = list()
-        temperature_gas_list = fire_travelling(**kwargs)
-
-        for temperature in temperature_gas_list:
-            kwarg_ht_ec["fire_temperature"] = temperature + 273.15
-            T_a_max, t = _steel_temperature_max(**kwarg_ht_ec)
-            temperature_steel_list.append(T_a_max)
-
-        return (
-            temperature_gas_list[np.argmax(temperature_steel_list)] + 273.15,
-            kwargs["beam_location_length_m"][[np.argmax(temperature_steel_list)]][0],
-        )
-
-    elif isinstance(kwargs["beam_location_length_m"], float) or isinstance(
-            kwargs["beam_location_length_m"], int
-    ):
-
-        return fire_travelling(**kwargs) + 273.15, kwargs["beam_location_length_m"]
 
 
 def decide_fire(
@@ -223,9 +187,6 @@ def evaluate_fire_temperature(
         t1, t2, t3 = None, None, None
 
     elif fire_type == 1:
-        if beam_position_horizontal < 0:
-            beam_position_horizontal = np.linspace(0.5 * room_depth, room_depth, 7)[1:-1]
-
         kwargs_fire_1_travel = dict(
             t=fire_time,
             fire_load_density_MJm2=fire_load_density_deducted,
@@ -237,9 +198,7 @@ def evaluate_fire_temperature(
             beam_location_length_m=beam_position_horizontal,
             fire_nft_limit_c=fire_nft_limit - 273.15,
         )
-        fire_temperature, beam_position_horizontal = _fire_travelling(**kwargs_fire_1_travel)
-        if beam_position_horizontal <= 0:
-            raise ValueError("Beam position less or equal to 0.")
+        fire_temperature = fire_travelling(**kwargs_fire_1_travel) + 273.15
         t1 = fire_load_density_deducted / fire_hrr_density
         t2 = room_depth / fire_spread_speed
         t3 = t1 + t2
