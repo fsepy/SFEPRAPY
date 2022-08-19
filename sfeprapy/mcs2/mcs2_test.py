@@ -29,9 +29,12 @@ def test_standard_case():
     for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
         print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')
 
-    assert abs(func_teq(30) - 0.07519936) <= 5e-3
-    assert abs(func_teq(60) - 0.65458147) <= 5e-3
-    assert abs(func_teq(90) - 0.93229350) <= 5e-3
+    # assert abs(func_teq(30) - 0.07519936) <= 5e-3
+    # assert abs(func_teq(60) - 0.65458147) <= 5e-3
+    # assert abs(func_teq(90) - 0.93229350) <= 5e-3
+    assert abs(func_teq(30) - 0.08871437) <= 5e-3
+    assert abs(func_teq(60) - 0.65500191) <= 5e-3
+    assert abs(func_teq(90) - 0.92701250) <= 5e-3
 
 
 if __name__ == '__main__':

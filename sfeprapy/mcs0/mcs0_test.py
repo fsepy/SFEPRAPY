@@ -105,9 +105,9 @@ def test_standard_case(skip_3: bool = False):
     # 60 minutes based on Kirby et al
     assert abs(frac2teq(outputs, 'CASE_1', 0.8) - 60) <= 1
     # 63 minutes based on a test run on 16th Aug 2022
-    assert abs(frac2teq(outputs, 'CASE_2_teq_phi', 0.8) - 63) <= 1
+    assert abs(frac2teq(outputs, 'CASE_2_teq_phi', 0.8) - 64.5) <= 1
     # 78 minutes based on a test run on 16th Aug 2022
-    assert abs(frac2teq(outputs, 'CASE_3_timber', 0.8) - 78) <= 3
+    assert abs(frac2teq(outputs, 'CASE_3_timber', 0.8) - 81) <= 3
 
 
 def test_file_input():
