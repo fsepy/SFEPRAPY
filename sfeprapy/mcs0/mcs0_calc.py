@@ -199,8 +199,9 @@ def evaluate_fire_temperature(
             fire_nft_limit_c=fire_nft_limit - 273.15,
         )
         fire_temperature = fire_travelling(**kwargs_fire_1_travel) + 273.15
-        t1 = fire_load_density_deducted / fire_hrr_density
-        t2 = room_depth / fire_spread_speed
+
+        t1 = min(room_depth / fire_spread_speed, fire_load_density_deducted / fire_hrr_density)
+        t2 = max(room_depth / fire_spread_speed, fire_load_density_deducted / fire_hrr_density)
         t3 = t1 + t2
 
     elif fire_type == 2:
