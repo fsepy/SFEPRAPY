@@ -259,6 +259,9 @@ def teq_main(
         )
     )
 
+    for t_ in range(15, int(fire_time_duration / 60 + 1), 15):
+        inputs[f'T_max_t{t_:d}'] = np.max(inputs['fire_temperature'][fire_time <= t_ * 60])
+
     return inputs
 
 
