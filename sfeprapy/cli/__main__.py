@@ -22,6 +22,21 @@ def main():
                         help=f'Input file name (including extension).',
                         type=str)
 
+    p_mcs1 = subparsers.add_parser('mcs1', help='Monte Carlo simulation Type 1')
+    p_mcs1.add_argument('-r', '--run',
+                        help='run Monte Carlo simulation from input file filepath',
+                        action='store_true', )
+    p_mcs1.add_argument('-e', '--template',
+                        help='save example input file to filepath',
+                        action='store_true', )
+    p_mcs1.add_argument('-t', '--threads',
+                        help='number of threads to run the simulation, default 1',
+                        default=1,
+                        type=int)
+    p_mcs1.add_argument('filepath',
+                        help=f'Input file name (including extension).',
+                        type=str)
+
     p_mcs2 = subparsers.add_parser('mcs2', help='Monte Carlo simulation Type 2')
     p_mcs2.add_argument('-r', '--run',
                         help='run Monte Carlo simulation from input file filepath',
@@ -73,10 +88,25 @@ def main():
             mcs0(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
         return
 
+    if args.sub_parser == 'mcs1':
+        from sfeprapy.mcs1 import cli_main as mcs1
+        from sfeprapy.mcs1 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
+
+        if args.template:
+            if args.filepath.endswith('.xlsx'):
+                EXAMPLE_INPUT_DF.to_excel(args.filepath)
+            else:
+                with open(args.filepath, "w+", encoding='utf-8') as f:
+                    f.write(EXAMPLE_INPUT_CSV)
+
+        if args.run:
+            mcs1(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
+        return
+
+
     if args.sub_parser == 'mcs2':
         from sfeprapy.mcs2 import cli_main as mcs2
-        from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV
-        from sfeprapy.mcs2 import EXAMPLE_INPUT_DF
+        from sfeprapy.mcs2 import EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DF
 
         if args.template:
             if args.filepath.endswith('.xlsx'):
