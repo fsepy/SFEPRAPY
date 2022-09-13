@@ -8,49 +8,24 @@ def main():
     subparsers = parser.add_subparsers(dest='sub_parser')
 
     p_mcs0 = subparsers.add_parser('mcs0', help='Monte Carlo simulation Type 0')
-    p_mcs0.add_argument('-r', '--run',
-                        help='run Monte Carlo simulation from input file filepath',
-                        action='store_true', )
-    p_mcs0.add_argument('-e', '--template',
-                        help='save example input file to filepath',
-                        action='store_true', )
-    p_mcs0.add_argument('-t', '--threads',
-                        help='number of threads to run the simulation, default 1',
-                        default=1,
-                        type=int)
-    p_mcs0.add_argument('filepath',
-                        help=f'Input file name (including extension).',
-                        type=str)
-
     p_mcs1 = subparsers.add_parser('mcs1', help='Monte Carlo simulation Type 1')
-    p_mcs1.add_argument('-r', '--run',
-                        help='run Monte Carlo simulation from input file filepath',
-                        action='store_true', )
-    p_mcs1.add_argument('-e', '--template',
-                        help='save example input file to filepath',
-                        action='store_true', )
-    p_mcs1.add_argument('-t', '--threads',
-                        help='number of threads to run the simulation, default 1',
-                        default=1,
-                        type=int)
-    p_mcs1.add_argument('filepath',
-                        help=f'Input file name (including extension).',
-                        type=str)
-
     p_mcs2 = subparsers.add_parser('mcs2', help='Monte Carlo simulation Type 2')
-    p_mcs2.add_argument('-r', '--run',
-                        help='run Monte Carlo simulation from input file filepath',
-                        action='store_true', )
-    p_mcs2.add_argument('-e', '--template',
-                        help='save example input file to filepath',
-                        action='store_true', )
-    p_mcs2.add_argument('-t', '--threads',
-                        help='number of threads to run the simulation, default 1',
-                        default=1,
-                        type=int)
-    p_mcs2.add_argument('filepath',
-                        help=f'Input file name (including extension).',
-                        type=str)
+    for p_mcs in (p_mcs0, p_mcs1, p_mcs2):
+        p_mcs.add_argument('-r', '--run',
+                           help='run Monte Carlo simulation from input file filepath',
+                           action='store_true', )
+        p_mcs.add_argument('-e', '--template',
+                           help='save example input file to filepath',
+                           action='store_true', )
+        p_mcs.add_argument('-p', '--processor',
+                           help='number of processors to run the simulation, use no more than available logical '
+                                'processors, default 1',
+                           default=1,
+                           type=int,
+                           metavar='Integer')
+        p_mcs.add_argument('filepath',
+                           help=f'input file name (including extension).',
+                           type=str)
 
     p_distfit = subparsers.add_parser('distfit', help='distribution fit')
     p_distfit.add_argument('-t', '--type',
@@ -85,7 +60,7 @@ def main():
                     f.write(EXAMPLE_INPUT_CSV)
 
         if args.run:
-            mcs0(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
+            mcs0(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.processor))
         return
 
     if args.sub_parser == 'mcs1':
@@ -100,9 +75,8 @@ def main():
                     f.write(EXAMPLE_INPUT_CSV)
 
         if args.run:
-            mcs1(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
+            mcs1(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.processor))
         return
-
 
     if args.sub_parser == 'mcs2':
         from sfeprapy.mcs2 import cli_main as mcs2
@@ -116,7 +90,7 @@ def main():
                     f.write(EXAMPLE_INPUT_CSV)
 
         if args.run:
-            mcs2(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.threads))
+            mcs2(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.processor))
         return
 
     if args.sub_parser == 'distfit':

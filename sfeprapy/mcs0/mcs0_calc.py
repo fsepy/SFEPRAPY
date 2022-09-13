@@ -170,7 +170,7 @@ def evaluate_fire_temperature(
     room_total_area = 2 * room_floor_area + (room_breadth + room_depth) * 2 * room_height
 
     if fire_type == 0:
-        kwargs_fire_0_paramec = dict(
+        fire_temperature = _fire_param(
             t=fire_time,
             A_t=room_total_area,
             A_f=room_floor_area,
@@ -183,7 +183,6 @@ def evaluate_fire_temperature(
             t_lim=fire_tlim,
             T_0=20 + 273.15,
         )
-        fire_temperature = _fire_param(**kwargs_fire_0_paramec)
         t1, t2, t3 = None, None, None
 
     elif fire_type == 1:
@@ -205,7 +204,8 @@ def evaluate_fire_temperature(
         t3 = t1 + t2
 
     elif fire_type == 2:
-        kwargs_fire_2_param_din = dict(
+        o_ = dict(t_1=-1, t_2_x=-1, t_3_x=-1)
+        fire_temperature = _fire_param_ger(
             t=fire_time,
             A_w=window_area,
             h_w=window_height,
@@ -215,12 +215,11 @@ def evaluate_fire_temperature(
             b=room_wall_thermal_inertia,
             q_x_d=fire_load_density_deducted * 1e6,
             gamma_fi_Q=fire_gamma_fi_q,
-            outputs=dict(t_1=-1, t_2_x=-1, t_3_x=-1)
+            outputs=o_
         )
-        fire_temperature = _fire_param_ger(**kwargs_fire_2_param_din)
-        t1 = kwargs_fire_2_param_din['outputs']['t_1']
-        t2 = kwargs_fire_2_param_din['outputs']['t_2_x']
-        t3 = kwargs_fire_2_param_din['outputs']['t_3_x']
+        t1 = o_['t_1']
+        t2 = o_['t_2_x']
+        t3 = o_['t_3_x']
 
     else:
         fire_temperature = None
