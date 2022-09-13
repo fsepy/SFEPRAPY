@@ -14,6 +14,9 @@ def __example_input_list() -> list:
         'solver_thickness_ubound', 'solver_tol'
     ]:
         base_case.pop(i)
+
+    base_case['epsilon_q'] = dict(ubound=1 - 1e-9, lbound=1e-9, dist='uniform_')
+
     # create variable for dumping new inputs
     y = list()
 

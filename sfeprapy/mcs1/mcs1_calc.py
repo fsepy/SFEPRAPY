@@ -5,6 +5,7 @@ from typing import Callable
 
 import numpy as np
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
+from fsetools.lib.fse_bs_en_1993_1_2_strength_reduction_factor import k_y_theta_prob
 
 from ..mcs0 import MCS0, decide_fire, evaluate_fire_temperature
 
@@ -74,6 +75,7 @@ def solve_time_equivalence_iso834(
     # Solve equivalent time exposure in ISO 834
     solver_time_equivalence_solved = 1.06011 * 2.71828182845905 ** (0.00667416 * solver_temperature_goal) - 7.5
     return dict(
+        steel_temperature=steel_temperature,
         solver_temperature_goal=solver_temperature_goal,
         solver_time_equivalence_solved=solver_time_equivalence_solved * phi_teq
     )
@@ -116,6 +118,7 @@ def teq_main(
         window_open_fraction: float,
         window_width: float,
         window_open_fraction_permanent: float,
+        epsilon_q: float,
         phi_teq: float = 1.0,
         timber_charring_rate=None,
         timber_charred_depth=None,
@@ -259,8 +262,11 @@ def teq_main(
         )
     )
 
+    inputs[f'k_y_theta'] = k_y_theta_prob(theta_a=np.amax(inputs['steel_temperature']), epsilon_q=epsilon_q)
+
     for t_ in range(15, int(fire_time_duration / 60 + 1), 15):
-        inputs[f'T_max_t{t_:d}'] = np.max(inputs['fire_temperature'][fire_time <= t_ * 60])
+        inputs[f'T_max_t{t_:d}'] = np.max(inputs['steel_temperature'][fire_time <= t_ * 60])
+        inputs[f'k_y_theta_t{t_:d}'] = k_y_theta_prob(inputs[f'T_max_t{t_:d}'], epsilon_q=epsilon_q)
 
     return inputs
 
