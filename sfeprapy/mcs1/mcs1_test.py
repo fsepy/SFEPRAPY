@@ -59,6 +59,8 @@ def test_teq_phi():
         timber_density=500,
         timber_solver_ilim=20,
         timber_solver_tol=1,
+        epsilon_q=0.5,
+        t_k_y_theta=3600,
     )
 
     inputs["phi_teq"] = 1.0

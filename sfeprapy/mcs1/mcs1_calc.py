@@ -119,6 +119,7 @@ def teq_main(
         window_width: float,
         window_open_fraction_permanent: float,
         epsilon_q: float,
+        t_k_y_theta: int,
         phi_teq: float = 1.0,
         timber_charring_rate=None,
         timber_charred_depth=None,
@@ -264,9 +265,12 @@ def teq_main(
 
     inputs[f'k_y_theta'] = k_y_theta_prob(theta_a=np.amax(inputs['steel_temperature']), epsilon_q=epsilon_q)
 
-    for t_ in range(15, int(fire_time_duration / 60 + 1), 15):
-        inputs[f'T_max_t{t_:d}'] = np.max(inputs['steel_temperature'][fire_time <= t_ * 60])
-        inputs[f'k_y_theta_t{t_:d}'] = k_y_theta_prob(inputs[f'T_max_t{t_:d}'], epsilon_q=epsilon_q)
+    t_k_y_theta = int(t_k_y_theta)
+    for t_ in range(t_k_y_theta, int(fire_time_duration + t_k_y_theta / 2), t_k_y_theta):
+        inputs[f'T_max_t{t_ // 60:d}'] = np.max(inputs['steel_temperature'][fire_time <= t_])
+
+    for t_ in range(t_k_y_theta, int(fire_time_duration + t_k_y_theta / 2), t_k_y_theta):
+        inputs[f'k_y_theta_t{t_ // 60:d}'] = k_y_theta_prob(inputs[f'T_max_t{t_ // 60:d}'], epsilon_q=epsilon_q)
 
     return inputs
 
