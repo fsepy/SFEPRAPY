@@ -229,7 +229,8 @@ class MCS(ABC):
 
     @staticmethod
     def __mcs_mp(
-            func, func_mp, x: pd.DataFrame, n_threads: int, m, p, set_prog: Callable = None, set_prog_init: int = 0
+            func, func_mp, x: pd.DataFrame, n_threads: int, m, p, set_prog: Callable = None, set_prog_init: int = 0,
+            enable_tqdm: bool = True,
     ) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
 
@@ -237,7 +238,7 @@ class MCS(ABC):
         if n_threads == 1 or func_mp is None:
             mcs_out = list()
             j = 0
-            for i in tqdm(list_mcs_in, ncols=60):
+            for i in tqdm(list_mcs_in, ncols=60, disable=~enable_tqdm):
                 mcs_out.append(func(**i))
                 j += 1
                 if set_prog is not None:
@@ -246,7 +247,7 @@ class MCS(ABC):
             q = m.Queue()
             jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
 
-            with tqdm(total=n_simulations, ncols=60) as pbar:
+            with tqdm(total=n_simulations, ncols=60, disable=~enable_tqdm) as pbar:
                 while True:
                     if jobs.ready():
                         if n_simulations > pbar.n:
