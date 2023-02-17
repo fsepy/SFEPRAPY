@@ -215,7 +215,7 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
 
     for k, v in x.items():
 
-        if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.float):
+        if isinstance(v, float) or isinstance(v, int) or isinstance(v, float):
             dict_out[k] = np.full((num_samples,), v, dtype=float)
 
         elif isinstance(v, str):
