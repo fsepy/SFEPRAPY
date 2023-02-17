@@ -22,7 +22,7 @@ def profile_standard_case():
     mcs = MCS0()
     mcs.inputs = mcs_input
     mcs.n_threads = 1
-    mcs.run_mcs()
+    mcs.run(enable_tqdm=True)
 
 
 if __name__ == "__main__":

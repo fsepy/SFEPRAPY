@@ -91,7 +91,7 @@ def test_standard_case(skip_3: bool = False):
 
     mcs.inputs = mcs_input
     mcs.n_threads = 1
-    mcs.run(keep_results=True)
+    mcs.run(keep_results=True, enable_tqdm=True)
     outputs = mcs.outputs
 
     def frac2teq(data, case_name: str, frac: float):

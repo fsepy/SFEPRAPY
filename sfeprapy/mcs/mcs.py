@@ -104,7 +104,7 @@ class MCS(ABC):
     def run(
             self, cases_to_run=None, keep_results: bool = False,
             set_prog: Callable = None, set_prog_max: Callable = None, set_prog_complete: Callable = None,
-            *args, **kwargs
+            enable_tqdm:bool=False, *args, **kwargs
     ):
         # ----------------------------
         # Prepare mcs parameter inputs
@@ -186,6 +186,7 @@ class MCS(ABC):
                 p=p,
                 set_prog=set_prog,
                 set_prog_init=progress_tracker,
+                enable_tqdm=enable_tqdm,
             )
 
             progress_tracker += len(v.index)
