@@ -1,3 +1,6 @@
+# Monte Carlo Simulation Multiple Process Implementation
+# Yan Fu, October 2017
+
 import copy
 import multiprocessing as mp
 import os
@@ -8,7 +11,7 @@ from typing import Union, Callable
 import pandas as pd
 from tqdm import tqdm
 
-from sfeprapy.func.mcs_gen import main as mcs_gen_main
+from .mcs_gen import main as mcs_gen_main
 
 
 class MCS(ABC):
@@ -34,30 +37,55 @@ class MCS(ABC):
             A method to carry out deterministic calculation.
             NOTE! This method needs to be re-defined in a child class.
         `MCS.mcs_post_per_case`
-            A method to post processing results.
+            A method to post-processing results.
             NOTE! This method needs to be re-defined in a child class.
     """
     DEFAULT_TEMP_FOLDER_NAME = "mcs.out"
     DEFAULT_MCS_OUTPUT_FILE_NAME = "mcs.out.csv"
-    DEFAULT_CONFIG_FILE_NAME = "config.json"
-    DEFAULT_CONFIG = dict(n_threads=1)
 
-    def __init__(self):
+    def __init__(self, n_procs: int = 1):
+        # Assign user defined properties
+        if isinstance(n_procs, int) and n_procs > 0:
+            self.n_threads = n_procs
+        else:
+            raise ValueError('`n_procs` must be an integer greater than zero')
 
-        # ------------------------------
-        # instantiate internal variables
-        # ------------------------------
+        # Assign other properties
         self.cwd: str = None  # work folder path
         self.__mcs_inputs: dict = None  # input parameters
-        self.__mcs_config: dict = None  # configuration parameters
-        self.__mcs_sampler: Callable = mcs_gen_main  # stochastic variable generator function
-        self._func_mcs_calc: Callable = None  # monte carlo simulation deterministic calculation routine
-        self._func_mcs_calc_mp: Callable = None  # multiprocessing version of `MCS._mcs_calc`
-        self.__mcs_post: Callable = None
-        self.__mcs_out: pd.DataFrame = None
+        self.outputs: pd.DataFrame = None
 
-        # assign default properties
+        # Assign default properties
         self.func_mcs_gen = mcs_gen_main
+
+    @property
+    def inputs(self) -> dict:
+        return self.__mcs_inputs
+
+    @inputs.setter
+    def inputs(self, fp_df_dict: Union[str, pd.DataFrame, dict]):
+        """
+        :param fp_df_dict:
+        :return:
+        """
+        if isinstance(fp_df_dict, str):
+            '''
+            If a string is provided, regard as full spreadsheet file path.
+            Currently support *.csv, *.xls and *.xlsx
+            '''
+            if self.cwd is None:
+                self.cwd = os.path.dirname(fp_df_dict)
+            self.__mcs_inputs = self.read_spreadsheet_input(fp_df_dict)
+        elif isinstance(fp_df_dict, pd.DataFrame):
+            mcs_inputs = fp_df_dict.to_dict()
+            for k in list(mcs_inputs.keys()):
+                if 'case_name' not in mcs_inputs[k]:
+                    mcs_inputs[k]['case_name'] = k
+            self.__mcs_inputs = mcs_inputs
+        elif isinstance(fp_df_dict, dict):
+            self.__mcs_inputs = fp_df_dict
+        else:
+            raise TypeError("Unknown input data type.")
 
     @abstractmethod
     def mcs_deterministic_calc(self, *args, **kwargs) -> dict:
@@ -73,48 +101,11 @@ class MCS(ABC):
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
-    @property
-    def mcs_inputs(self) -> dict:
-        return self.__mcs_inputs
-
-    @mcs_inputs.setter
-    def mcs_inputs(self, fp_df_dict: Union[str, pd.DataFrame, dict]):
-        """
-        :param fp_df_dict:
-        :return:
-        """
-        if isinstance(fp_df_dict, str):
-            fp = fp_df_dict
-            if self.cwd is None:
-                self.cwd = os.path.dirname(fp)
-            if fp.endswith(".xlsx") or fp.endswith(".xls"):
-                self.__mcs_inputs = pd.read_excel(fp).set_index("PARAMETERS").to_dict()
-            elif fp.endswith(".csv"):
-                self.__mcs_inputs = pd.read_csv(fp).set_index("PARAMETERS").to_dict()
-            else:
-                raise ValueError("Unknown input file format.")
-        elif isinstance(fp_df_dict, pd.DataFrame):
-            self.__mcs_inputs = fp_df_dict.to_dict()
-        elif isinstance(fp_df_dict, dict):
-            self.__mcs_inputs = fp_df_dict
-        else:
-            raise TypeError("Unknown input data type.")
-
-    @property
-    def mcs_config(self) -> dict:
-        """simulation configuration"""
-        if self.__mcs_config is not None:
-            return self.__mcs_config
-        else:
-            return self.DEFAULT_CONFIG
-
-    @mcs_config.setter
-    def mcs_config(self, config):
-        self.__mcs_config = config
-        if 'cwd' in config:
-            self.cwd = config['cwd']
-
-    def run_mcs(self, qt_prog_signal_0=None, qt_prog_signal_1=None):
+    def run(
+            self, cases_to_run=None, keep_results: bool = False,
+            set_prog: Callable = None, set_prog_max: Callable = None, set_prog_complete: Callable = None,
+            enable_tqdm:bool=False, *args, **kwargs
+    ):
         # ----------------------------
         # Prepare mcs parameter inputs
         # ----------------------------
@@ -130,7 +121,13 @@ class MCS(ABC):
         #       'ubound': 200
         #    }
         # }
-        x1 = self.mcs_inputs
+        if cases_to_run is not None:
+            x1 = self.inputs
+            for k in list(x1.keys()):
+                if k not in cases_to_run:
+                    x1.pop(k)
+        else:
+            x1 = self.inputs
         for case_name in list(x1.keys()):
             for param_name in list(x1[case_name].keys()):
                 if ":" in param_name:
@@ -156,7 +153,13 @@ class MCS(ABC):
         # ------------------------------
         # Generate mcs parameter samples
         # ------------------------------
-        x2 = {k: self.func_mcs_gen(v, int(v["n_simulations"])) for k, v in x1.items()}
+        x2 = dict()
+        for k, v in x1.items():
+            x2[k] = self.func_mcs_gen(v, int(v['n_simulations']))
+            # try:
+            #     x2[k] = self.func_mcs_gen(v, int(v['n_simulations']))
+            # except Exception as e:
+            #     raise ValueError(f'Failed to generate stochastic samples from user defined inputs for case {k}, {e}')
 
         # ------------------
         # Run mcs simulation
@@ -167,96 +170,126 @@ class MCS(ABC):
         #   'case_2': df2
         # }
 
-        m, p = mp.Manager(), mp.Pool(self.mcs_config["n_threads"], maxtasksperchild=1000)
-        for k, v in x2.items():
-            if qt_prog_signal_0:
-                qt_prog_signal_0.emit(f'{len(x3) + 1}/{len(x1)} {k}')
+        m, p = mp.Manager(), mp.Pool(self.n_threads, maxtasksperchild=1000)
+        if set_prog_max:
+            set_prog_max(sum(len(i.index) for i in x2.values()))
 
+        progress_tracker = 0
+        for i, k in enumerate(x2.keys()):
+            v = x2[k]
             x3_ = self.__mcs_mp(
                 self.mcs_deterministic_calc,
                 self.mcs_deterministic_calc_mp,
                 x=v,
-                n_threads=self.mcs_config["n_threads"],
+                n_threads=self.n_threads,
                 m=m,
                 p=p,
-                qt_prog_signal_1=qt_prog_signal_1
+                set_prog=set_prog,
+                set_prog_init=progress_tracker,
+                enable_tqdm=enable_tqdm,
             )
 
+            progress_tracker += len(v.index)
+
             # Post process output upon completion per case
-            if self.mcs_post_per_case:
-                self.mcs_post_per_case(df=x3_)
-            x3[k] = copy.copy(x3_)
+            if self.post_case is not None:
+                self.post_case(df=x3_, *args, **kwargs)
+
+            if keep_results is True:
+                x3[k] = copy.copy(x3_)
 
         p.close()
         p.join()
+        if set_prog_complete:
+            set_prog_complete(True)
 
         # ------------
         # Pack results
         # ------------
-        self.__mcs_out = pd.concat([v for v in x3.values()])
+        if keep_results is True:
+            self.outputs = pd.concat([v for v in x3.values()], ignore_index=True)
+        else:
+            self.outputs = None
 
         # Post process output upon completion of all cases
-        self.mcs_post_all_cases(self.__mcs_out)
+        # self.mcs_post_all_cases(self.__mcs_out)
 
     @abstractmethod
-    def mcs_post_per_case(self, *arg, **kwargs):
+    def post_case(self, *arg, **kwargs):
         """
         This method will be called upon completion of each case
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
     @abstractmethod
-    def mcs_post_all_cases(self, *args, **kwargs):
+    def post_all(self, *args, **kwargs):
         """
         This method will be called upon completion of all cases
         """
         raise NotImplementedError('This method should be overridden by a child class')
 
-    @property
-    def mcs_out(self):
-        return self.__mcs_out
-
     @staticmethod
-    def __mcs_mp(func, func_mp, x: pd.DataFrame, n_threads: int, m, p, qt_prog_signal_1=None) -> pd.DataFrame:
+    def __mcs_mp(
+            func, func_mp, x: pd.DataFrame, n_threads: int, m, p, set_prog: Callable = None, set_prog_init: int = 0,
+            enable_tqdm: bool = True,
+    ) -> pd.DataFrame:
         list_mcs_in = x.to_dict(orient="records")
-
-        time.sleep(0.5)  # to avoid clashes between the prints and progress bar
-        print("{:<24.24}: {}".format("CASE", list_mcs_in[0]["case_name"]))
-        print("{:<24.24}: {}".format("NO. OF THREADS", n_threads))
-        print("{:<24.24}: {}".format("NO. OF SIMULATIONS", len(x.index)))
-        time.sleep(0.5)  # to avoid clashes between the prints and progress bar
 
         n_simulations = len(list_mcs_in)
         if n_threads == 1 or func_mp is None:
             mcs_out = list()
             j = 0
-            for i in tqdm(list_mcs_in, ncols=60):
+            for i in tqdm(list_mcs_in, ncols=60, disable=~enable_tqdm):
                 mcs_out.append(func(**i))
                 j += 1
-                if qt_prog_signal_1:
-                    qt_prog_signal_1.emit(int(j / n_simulations * 100))
+                if set_prog is not None:
+                    set_prog(int(j + set_prog_init))
         else:
-
             q = m.Queue()
             jobs = p.map_async(func_mp, [(dict_, q) for dict_ in list_mcs_in])
-            with tqdm(total=n_simulations, ncols=60) as pbar:
+
+            with tqdm(total=n_simulations, ncols=60, disable=~enable_tqdm) as pbar:
                 while True:
                     if jobs.ready():
                         if n_simulations > pbar.n:
                             pbar.update(n_simulations - pbar.n)
-                            if qt_prog_signal_1:
-                                qt_prog_signal_1.emit(100)
+                            if set_prog is not None:
+                                set_prog(int(n_simulations + set_prog_init))
                         break
                     else:
+                        if set_prog is not None:
+                            set_prog(int(q.qsize() + set_prog_init))
                         if q.qsize() - pbar.n > 0:
                             pbar.update(q.qsize() - pbar.n)
-                            if qt_prog_signal_1:
-                                qt_prog_signal_1.emit(int(q.qsize() / n_simulations * 100))
-                        time.sleep(1)
+                        time.sleep(.2)
             mcs_out = jobs.get()
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         # clean and convert results to dataframe and return
         df_mcs_out = pd.DataFrame(mcs_out)
         df_mcs_out.sort_values("solver_time_equivalence_solved", inplace=True)  # sort base on time equivalence
         return df_mcs_out
+
+    @staticmethod
+    def read_spreadsheet_input(fp: str):
+        if fp.endswith(".xlsx"):
+            df_input = pd.read_excel(fp, index_col=0, header=None, engine='openpyxl')
+        elif fp.endswith(".xls"):
+            df_input = pd.read_excel(fp, index_col=0, header=None)
+        elif fp.endswith(".csv"):
+            df_input = pd.read_csv(fp, index_col=0, header=None)
+        else:
+            raise ValueError(f"Unknown input file format, {os.path.basename(fp)}")
+
+        # assign case_name as column header
+        df_input.columns = df_input.loc['case_name'].values
+
+        if len(set((df_input.columns))) != len(df_input.columns):
+            raise ValueError(f'case_name not unique')
+
+        dict_input = df_input.to_dict(orient='dict')
+        for k in dict_input.keys():
+            if 'case_name' not in tuple(dict_input[k].keys()):
+                dict_input[k]['case_name'] = k
+
+        return dict_input

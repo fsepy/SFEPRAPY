@@ -44,3 +44,8 @@
 /sfeprapy/dev
 /sfeprapy_demo
 /.coverage
+/demo/media
+/demos/*.png
+/demo/fig
+/demo/mfput.log
+/demo/.ipynb_checkpoints

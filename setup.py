@@ -4,7 +4,6 @@ import os
 from codecs import open  # To use a consistent encoding
 
 import setuptools
-
 import sfeprapy
 
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.md")) as f:
@@ -18,7 +17,7 @@ except FileNotFoundError:
         requirements = f.read().splitlines()
 
 setuptools.setup(
-    name="sfeprapy",
+    name="SFEPRAPY",
     version=sfeprapy.__version__,
     description="Structural Fire Engineering - Probabilistic Reliability Assessment (Equivalent Time Exposure)",
     author="Ian Fu",
@@ -39,7 +38,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=[
         "sfeprapy",
-        "sfeprapy.dat",
+        "sfeprapy.mcs",
         "sfeprapy.mcs0",
         "sfeprapy.mcs1",
         "sfeprapy.mcs2",

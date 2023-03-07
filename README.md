@@ -1,4 +1,4 @@
-# SfePrapy
+# SFEPRAPY
 [![GitHub version](https://badge.fury.io/gh/fsepy%2Fsfeprapy.svg)](https://github.com/fsepy/SfePrapy)
 [![Build Status](https://img.shields.io/travis/fsepy/SfePrapy.svg?branch=master&label=build%20(master)&style=flat)](https://travis-ci.org/fsepy/SfePrapy)
 [![Build Status](https://img.shields.io/travis/fsepy/SfePrapy.svg?branch=dev&label=build%20(dev)&style=flat)](https://travis-ci.org/fsepy/SfePrapy)
@@ -64,12 +64,6 @@ sfeprapy mcs0 -p 4 example_input.csv
 ```
 
 `sfeprapy.mcs0` uses the [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html#module-multiprocessing) library to utilise full potential performance of multi-core CPUs. The `-p 4` defines 4 threads will be used in running the simulation, 1 is the default value.
-
-## Authors
-
-**Ian Fu** - *ian.fu@ofrconsultants.com*  
-**Danny Hopkin** - *danny.hopkin@ofrconsultants.com*  
-**Ieuan Rickard** - *ieuan.rickard@ofrconsultants.com*
 
 ## License
 

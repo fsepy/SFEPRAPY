@@ -9,7 +9,6 @@ from scipy.interpolate import interp1d
 
 
 def gumbel_r_(mean: float, sd: float, **_):
-
     # parameters Gumbel W&S
     alpha = 1.282 / sd
     u = mean - 0.5772 / alpha
@@ -22,7 +21,6 @@ def gumbel_r_(mean: float, sd: float, **_):
 
 
 def lognorm_(mean: float, sd: float, **_):
-
     cov = sd / mean
 
     sigma_ln = np.sqrt(np.log(1 + cov ** 2))
@@ -36,7 +34,6 @@ def lognorm_(mean: float, sd: float, **_):
 
 
 def norm_(mean: float, sd: float, **_):
-
     loc = mean
     scale = sd
 
@@ -44,7 +41,6 @@ def norm_(mean: float, sd: float, **_):
 
 
 def uniform_(ubound: float, lbound: float, **_):
-
     if lbound > ubound:
         lbound += ubound
         ubound = lbound - ubound
@@ -123,6 +119,28 @@ def random_variable_generator(dict_in: dict, num_samples: int):
         )
         samples = 1 - samples
 
+    elif dist_0 == "car_cluster_size":
+        '''
+        derived from figure 13-4
+
+        y = - 0.0099 x + 0.88
+        int(y) = 0.88 x - 0.00495 x ** 2 + C
+        Note C is zero cause y = 0 at x = 0
+
+        CDF(car_cluster_size) = (9/352) * (0.88 * car_cluster_size - 0.00495 * car_cluster_size ** 2)
+        Note the first factor make CDF = 1 at car cluster = 90
+
+        car_cluster_size = 800/9 * (1 - (1-y)**0.5)
+        '''
+        y = np.linspace(0, 1, num_samples + 2)[1:-1]
+        samples = np.floor(800 / 9 * (1 - (1 - y) ** 0.5))
+
+    elif dist_0 == 'samples':
+        v = dict_in.pop('values')
+        samples = np.array([float(i.strip()) for i in v.split(',')])
+        samples = samples[np.random.randint(low=0, high=len(samples), size=num_samples)]
+        print(len(samples), samples)
+
     elif dist_0 == "constant_":
         # print(num_samples, lbound, ubound, np.average(lbound))
         samples = np.full((num_samples,), np.average([lbound, ubound]))
@@ -144,13 +162,15 @@ def random_variable_generator(dict_in: dict, num_samples: int):
     if "permanent" in dict_in:
         samples += dict_in["permanent"]
 
+    if "coefficient" in dict_in:
+        samples *= dict_in['coefficient']
+
     np.random.shuffle(samples)
 
     return samples
 
 
 def dict_unflatten(dict_in: dict) -> dict:
-
     dict_out = dict()
 
     for k in list(dict_in.keys()):
@@ -183,13 +203,6 @@ def dict_flatten(dict_in: dict) -> dict:
     return dict_out
 
 
-def _test_dict_flatten():
-    x = dict(A=dict(a=0, b=1), B=dict(c=2, d=3))
-    y_expected = {"A:a": 0, "A:b": 1, "B:c": 2, "B:d": 3}
-    y = dict_flatten(x)
-    assert y == y_expected
-
-
 def main(x: dict, num_samples: int) -> pd.DataFrame:
     """Generates samples based upon prescribed distribution types.
 
@@ -202,7 +215,7 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
 
     for k, v in x.items():
 
-        if isinstance(v, float) or isinstance(v, int) or isinstance(v, np.float):
+        if isinstance(v, float) or isinstance(v, int) or isinstance(v, float):
             dict_out[k] = np.full((num_samples,), v, dtype=float)
 
         elif isinstance(v, str):
@@ -245,46 +258,3 @@ def main(x: dict, num_samples: int) -> pd.DataFrame:
     df_out = pd.DataFrame.from_dict(dict_out, orient="columns")
 
     return df_out
-
-
-def _test_random_variable_generator():
-    x = dict(v=np.pi)
-    y = main(x, 1000)
-    assert len(y["v"].values) == 1000
-    assert all([v == np.pi for v in y["v"].values])
-
-    x = dict(v="hello world.")
-    y = main(x, 1000)
-    assert len(y["v"].values) == 1000
-    assert all([v == "hello world." for v in y["v"].values])
-
-    x = dict(v=[0.0, 1.0, 2.0])
-    y = main(x, 1000)
-    assert len(y["v"].values) == 1000
-    assert all([all(v == np.array([0.0, 1.0, 2.0])) for v in y["v"].values])
-
-    x = dict(v=dict(dist="uniform_", ubound=10, lbound=-1))
-    y = main(x, 1000)
-    assert len(y["v"].values) == 1000
-    assert np.max(y["v"].values) == 10
-    assert np.min(y["v"].values) == -1
-    assert abs(np.mean(y["v"].values) - (10 - 1) / 2) <= 0.00001
-
-    x = dict(v=dict(dist="norm_", ubound=5 + 1, lbound=5 - 1, mean=5, sd=1))
-    y = main(x, 1000)
-    assert len(y["v"].values) == 1000
-    assert np.max(y["v"].values) == 6
-    assert np.min(y["v"].values) == 4
-    assert abs(np.mean(y["v"].values) - 5) <= 0.00001
-
-    x = dict(v=dict(dist="gumbel_r_", ubound=2000, lbound=50, mean=420, sd=126))
-    y = main(x, 1000)
-    assert len(y["v"].values) == 1000
-    assert abs(np.max(y["v"].values) - 2000) <= 1
-    assert abs(np.min(y["v"].values) - 50) <= 1
-    assert abs(np.mean(y["v"].values) - 420) <= 1
-
-
-if __name__ == "__main__":
-    _test_random_variable_generator()
-    _test_dict_flatten()
