@@ -16,15 +16,11 @@ def test_standard_case():
         mcs_input[k]['n_simulations'] = 50_000
 
     # increase the number of threads so it runs faster
-    mcs2 = MCS2()
-    mcs2.inputs = mcs_input
-    mcs2.n_threads = 1
-    mcs2.run(cases_to_run=['Office'], keep_results=True)
-    mcs_out = mcs2.outputs
-    teq = mcs_out.loc[mcs_out['case_name'] == 'Office']["solver_time_equivalence_solved"] / 60.0
-    teq = teq[~np.isnan(teq)]
-    hist, edges = np.histogram(teq, bins=np.arange(0, 181, 0.05))
-    x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
+    mcs2 = MCS2(2)
+    mcs2.set_inputs_dict(mcs_input)
+    mcs2.run()
+
+    x, y = mcs2['Office'].get_cdf()
     func_teq = interp1d(x, y)
     for fire_rating in [30, 45, 60, 75, 90, 105, 120]:
         print(f'{fire_rating:<8.0f}  {func_teq(fire_rating):<.8f}')

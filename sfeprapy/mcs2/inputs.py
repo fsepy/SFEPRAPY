@@ -2,8 +2,8 @@
 
 import copy as __copy
 
-from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT as EXAMPLE_INPUT_DICT_
-from sfeprapy.mcs0.mcs0_input import example_input_df, example_input_csv, example_input_dict
+from ..mcs0 import EXAMPLE_INPUT_DICT as EXAMPLE_INPUT_DICT_
+from ..mcs0.inputs import example_input_df, example_input_csv, example_input_dict
 
 
 def __example_input_list() -> list:

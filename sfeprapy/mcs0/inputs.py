@@ -1,6 +1,6 @@
 import pandas as pd
 
-from sfeprapy.mcs.mcs_gen import dict_flatten as __dict_flatten
+from ..mcs import InputParser
 
 
 def example_input_list() -> list:
@@ -47,6 +47,10 @@ def example_input_list() -> list:
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            timber_charred_depth=None,
+            timber_depth=None,
+            occupancy_type=None,
+            car_cluster_size=None,
             p1=3e-7,
             p2=0.1,
             p3=0.25,
@@ -95,6 +99,10 @@ def example_input_list() -> list:
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            timber_charred_depth=None,
+            timber_depth=None,
+            occupancy_type=None,
+            car_cluster_size=None,
             p1=3e-7,
             p2=0.1,
             p3=0.25,
@@ -143,6 +151,10 @@ def example_input_list() -> list:
             timber_density=400,  # [kg/m3]
             timber_solver_ilim=20,
             timber_solver_tol=1,
+            timber_charred_depth=None,
+            timber_depth=None,
+            occupancy_type=None,
+            car_cluster_size=None,
             p1=3e-7,
             p2=0.1,
             p3=0.25,
@@ -161,19 +173,23 @@ def example_input_dict(x: list) -> dict:
 
 
 def example_input_csv(x: list):
-    y = [__dict_flatten(v) for v in x]
+    y = [InputParser.flatten_dict(v) for v in x]
     y = pd.DataFrame(y)
     y = y.transpose()
     y.index.name = "case_name"
-    y = y.to_csv(index=True, line_terminator='\n')
+    try:
+        y = y.to_csv(index=True, lineterminator='\n')
+    except TypeError:
+        y = y.to_csv(index=True, line_terminator='\n')
     return y
 
 
 def example_input_df(x: list) -> pd.DataFrame:
+    # todo: remove pandas dependency
     y = dict()
     for d in x:
         case_name = d.pop('case_name')
-        d = __dict_flatten(d)
+        d = InputParser.flatten_dict(d)
         y[case_name] = d
     y = pd.DataFrame.from_dict(y)
     y.index.name = "case_name"

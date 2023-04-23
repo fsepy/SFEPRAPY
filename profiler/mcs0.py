@@ -4,8 +4,7 @@ import cProfile
 
 def profile_standard_case():
     import copy
-    from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT
-    from sfeprapy.mcs0.mcs0_calc import MCS0
+    from sfeprapy.mcs0 import MCS0, EXAMPLE_INPUT_DICT
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
@@ -19,10 +18,9 @@ def profile_standard_case():
         mcs_input[k]["beam_position_horizontal:lbound"] = mcs_input[k]["room_depth"] * 0.6
 
     # increase the number of threads so it runs faster
-    mcs = MCS0()
-    mcs.inputs = mcs_input
-    mcs.n_threads = 1
-    mcs.run(enable_tqdm=True)
+    mcs = MCS0(1)
+    mcs.set_inputs_dict(mcs_input)
+    mcs.run()
 
 
 if __name__ == "__main__":

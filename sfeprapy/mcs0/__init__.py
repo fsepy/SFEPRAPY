@@ -1,5 +1,82 @@
-from .mcs0_calc import (
-    decide_fire, evaluate_fire_temperature, solve_time_equivalence_iso834, solve_protection_thickness,
-    teq_main_mp_worker, teq_main, mcs_out_post_per_case, mcs_out_post_all_cases, MCS0, cli_main
+__all__ = (
+    'EXAMPLE_INPUT_DICT', 'EXAMPLE_INPUT_DF', 'EXAMPLE_INPUT_CSV',
+    'decide_fire', 'evaluate_fire_temperature', 'solve_time_equivalence_iso834', 'solve_protection_thickness',
+    'teq_main',
+    'MCS0', 'MCS0Single',
 )
-from .mcs0_input import EXAMPLE_INPUT_DICT, EXAMPLE_INPUT_DF, EXAMPLE_INPUT_CSV
+
+import os
+
+import numpy as np
+
+from .calcs import (
+    decide_fire, evaluate_fire_temperature, solve_time_equivalence_iso834, solve_protection_thickness, teq_main,
+)
+from .inputs import EXAMPLE_INPUT_DICT, EXAMPLE_INPUT_DF, EXAMPLE_INPUT_CSV
+from ..mcs import MCSSingle, MCS
+
+
+class MCS0Single(MCSSingle):
+    INPUT_KEYS = (
+        'index', 'beam_cross_section_area', 'beam_position_vertical', 'beam_position_horizontal', 'beam_rho',
+        'fire_time_duration', 'fire_time_step', 'fire_combustion_efficiency', 'fire_gamma_fi_q', 'fire_hrr_density',
+        'fire_load_density', 'fire_mode', 'fire_nft_limit', 'fire_spread_speed', 'fire_t_alpha', 'fire_tlim',
+        'protection_c', 'protection_k', 'protection_protected_perimeter', 'protection_rho', 'room_breadth',
+        'room_depth', 'room_height', 'room_wall_thermal_inertia', 'solver_temperature_goal', 'solver_max_iter',
+        'solver_thickness_lbound', 'solver_thickness_ubound', 'solver_tol', 'window_height', 'window_open_fraction',
+        'window_width', 'window_open_fraction_permanent', 'phi_teq', 'timber_charring_rate', 'timber_charred_depth',
+        'timber_hc', 'timber_density', 'timber_exposed_area', 'timber_depth', 'timber_solver_tol', 'timber_solver_ilim',
+        'occupancy_type', 'car_cluster_size'
+    )
+    OUTPUT_KEYS = (
+        'index', 'beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_nft_limit',
+        'fire_spread_speed', 'window_open_fraction', 'fire_load_density', 'fire_type', 't1', 't2', 't3',
+        'solver_steel_temperature_solved', 'solver_time_critical_temp_solved', 'solver_protection_thickness',
+        'solver_iter_count', 'solver_time_equivalence_solved', 'timber_charring_rate', 'timber_exposed_duration',
+        'timber_solver_iter_count', 'timber_fire_load', 'timber_charred_depth', 'timber_charred_mass',
+        'timber_charred_volume',
+    )
+
+    def __init__(self, name, n_simulations, sim_kwargs, save_dir):
+        super().__init__(name=name, n_simulations=n_simulations, sim_kwargs=sim_kwargs, save_dir=save_dir)
+
+    @staticmethod
+    def worker(args) -> tuple:
+        return teq_main(*args)
+
+    def get_pdf(self, bin_width: float = 0.2) -> (np.ndarray, np.ndarray, np.ndarray):
+        teq: np.ndarray = None
+        for i in range(len(self.output_keys)):
+            if self.output_keys[i] == 'solver_time_equivalence_solved':
+                teq = self.output[:, i]
+        return MCS0Single.make_pdf(teq, bin_width=bin_width)
+
+    def get_cdf(self, bin_width: float = 0.2):
+        x, y_pdf = self.get_pdf(bin_width=bin_width)
+        return x, np.cumsum(y_pdf)
+
+    @property
+    def input_keys(self) -> tuple:
+        return MCS0Single.INPUT_KEYS
+
+    @property
+    def output_keys(self) -> tuple:
+        return MCS0Single.OUTPUT_KEYS
+
+
+class MCS0(MCS):
+    def __getitem__(self, item) -> MCS0Single:
+        return self.mcs_cases[item]
+
+    @property
+    def new_mcs_case(self):
+        return MCS0Single
+
+
+def cli_main(fp_mcs_in: str, n_threads: int = 1):
+    fp_mcs_in = os.path.realpath(fp_mcs_in)
+
+    mcs = MCS0(n=n_threads)
+    mcs.set_inputs_file_path(fp_mcs_in)
+    mcs.run()
+    mcs.save_all(True)
