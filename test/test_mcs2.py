@@ -16,9 +16,9 @@ def test_standard_case():
         mcs_input[k]['n_simulations'] = 50_000
 
     # increase the number of threads so it runs faster
-    mcs2 = MCS2(2)
+    mcs2 = MCS2()
     mcs2.set_inputs_dict(mcs_input)
-    mcs2.run()
+    mcs2.run(2)
 
     x, y = mcs2['Office'].get_cdf()
     func_teq = interp1d(x, y)

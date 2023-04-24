@@ -28,9 +28,6 @@ class MCS2Single(MCS0Single):
 
 
 class MCS2(MCS0):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def new_mcs_case(self):
         return MCS2Single

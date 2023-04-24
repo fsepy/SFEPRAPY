@@ -1,21 +1,14 @@
-import warnings
-
-from sfeprapy.mcs0.mcs0_calc import *
+from sfeprapy.mcs0 import *
 
 
 def test_teq_phi():
+    import warnings
     warnings.filterwarnings("ignore")
-
-    fire_time_ = np.arange(0, 2 * 60 * 60, 1)
-    fire_temperature_iso834_ = 345.0 * np.log10(fire_time_ / 60. * 8.0 + 1.0) + 293.15
 
     input_param = dict(
         index=0,
-        case_name="Standard 1",
-        probability_weight=1.,
         fire_time_step=1.,
         fire_time_duration=5. * 60 * 60,
-        n_simulations=1,
         beam_cross_section_area=0.017,
         beam_position_vertical=2.5,
         beam_position_horizontal=18,
@@ -29,8 +22,6 @@ def test_teq_phi():
         fire_spread_speed=0.01,
         fire_t_alpha=300,
         fire_tlim=0.333,
-        fire_temperature_iso834=fire_temperature_iso834_,
-        fire_time_iso834=fire_time_,
         protection_c=1700.,
         protection_k=0.2,
         protection_protected_perimeter=2.14,
@@ -58,10 +49,10 @@ def test_teq_phi():
     )
 
     input_param["phi_teq"] = 1.0
-    teq_10 = teq_main(**input_param)["solver_time_equivalence_solved"]
+    teq_10 = teq_main(**input_param)[16]
 
     input_param["phi_teq"] = 0.1
-    teq_01 = teq_main(**input_param)["solver_time_equivalence_solved"]
+    teq_01 = teq_main(**input_param)[16]
 
     print(
         f'Time equivalence at phi_teq=0.1: {teq_01:<8.3f}\n'
@@ -72,10 +63,10 @@ def test_teq_phi():
     assert abs(teq_10 / teq_01 - 10) < 0.01
 
 
-def test_standard_case(skip_3: bool = False):
+def test_standard_case():
+    import numpy as np
     import copy
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DICT
-    from scipy.interpolate import interp1d
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
@@ -83,49 +74,61 @@ def test_standard_case(skip_3: bool = False):
     mcs_input['CASE_2_teq_phi']['n_simulations'] = 10_000
     mcs_input['CASE_3_timber']['n_simulations'] = 2_500
 
-    cases_to_run = ['CASE_1', 'CASE_2_teq_phi', 'CASE_3_timber']
-    if skip_3:
-        cases_to_run.pop(2)
-
     mcs = MCS0()
+    mcs.set_inputs_dict({
+        'CASE_1': mcs_input.pop('CASE_1'),
+        'CASE_2_teq_phi': mcs_input.pop('CASE_2_teq_phi'),
+        'CASE_3_timber': mcs_input.pop('CASE_3_timber'),
+    })
+    mcs.run()
 
-    mcs.inputs = mcs_input
-    mcs.n_threads = 1
-    mcs.run(keep_results=True, enable_tqdm=True)
-    outputs = mcs.outputs
+    # 60 minutes based on Kirby et al.
+    x, y = mcs['CASE_1'].get_cdf()
+    assert abs(np.amax(y[x < 60]) - 0.8) <= 0.5
 
-    def frac2teq(data, case_name: str, frac: float):
-        data = data.loc[outputs['case_name'] == case_name]["solver_time_equivalence_solved"] / 60.
-        hist, edges = np.histogram(data, bins=np.arange(0, 181, 0.5))
-        x, y = (edges[:-1] + edges[1:]) / 2, np.cumsum(hist / np.sum(hist))
-        res = interp1d(y, x)(frac)
-        print(res)
-        return res
+    # # 63 minutes based on a test run on 16th Aug 2022
+    x, y = mcs['CASE_2_teq_phi'].get_cdf()
+    assert abs(np.amax(y[x < 64.5]) - 0.8) <= 0.5
 
-    # 60 minutes based on Kirby et al
-    assert abs(frac2teq(outputs, 'CASE_1', 0.8) - 60) <= 1
-    # 63 minutes based on a test run on 16th Aug 2022
-    assert abs(frac2teq(outputs, 'CASE_2_teq_phi', 0.8) - 64.5) <= 1
-    # 78 minutes based on a test run on 16th Aug 2022
-    assert abs(frac2teq(outputs, 'CASE_3_timber', 0.8) - 81) <= 3
+    # # 78 minutes based on a test run on 16th Aug 2022
+    x, y = mcs['CASE_3_timber'].get_cdf()
+    assert abs(np.amax(y[x < 81]) - 0.8) <= 0.5
 
 
 def test_file_input():
     import tempfile
+    import time
+    import os
+
     from sfeprapy.mcs0 import EXAMPLE_INPUT_DF
 
     # save input as .xlsx
-    temp = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
-    EXAMPLE_INPUT_DF.to_excel(temp)
-    fp = f'{temp.name}'
-    print(f"A temporary input file has been created: {fp}")  # 4
-    temp.close()  # 5
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as dir_work:
+        dir_work = r'C:\Users\IanFu\Desktop\pra-test\mcs0'
+        print('A temporary folder has been created:', dir_work)
 
+        time.sleep(0.5)
+        fp_in = os.path.join(dir_work, 'input.xlsx')
+        EXAMPLE_INPUT_DF.to_excel(fp_in)
+        print(f"A temporary input file has been created: {fp_in}")  # 4
+        time.sleep(0.5)
+
+        mcs = MCS0()
+        mcs.set_inputs_file_path(fp_in)
+        mcs.run(2)
+        time.sleep(0.5)
+        mcs.save_all(False)
+        time.sleep(1)
+        mcs['CASE_1'].load_output_from_file(mcs.get_save_dir())
+        mcs.save_all(True)
+        time.sleep(0.5)
+
+
+def test():
     mcs = MCS0()
-    mcs.inputs = fp
-    mcs.n_threads = 2
-    mcs.run()
-
+    mcs.load
 
 if __name__ == '__main__':
+    test_teq_phi()
     test_standard_case()
+    test_file_input()
