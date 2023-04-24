@@ -350,13 +350,25 @@ class MCSSingle(ABC):
         if archive:
             # in a zip file
             with zipfile.ZipFile(dir_save, 'a', compression=zipfile.ZIP_DEFLATED) as f_zip:
-                f_zip.writestr(f'{self.__name}', content.read(), compress_type=zipfile.ZIP_DEFLATED)
+                f_zip.writestr(f'{self.__name}.csv', content.read(), compress_type=zipfile.ZIP_DEFLATED)
             return
         else:
             # in a folder
             with open(os.path.join(dir_save, f'{self.__name}.csv'), 'wb+') as f:
                 shutil.copyfileobj(content, f)
             return
+
+    def load_output_from_file(self, fp: str):
+        fp = os.path.realpath(fp)
+
+        if zipfile.is_zipfile(fp):
+            with zipfile.ZipFile(fp, 'r') as f_zip:
+                self.__output = np.frombuffer(f_zip.read(f'{self.__name}.csv'), delimiter=',', skip_header=1, )
+        else:
+            fp = os.path.join(fp, f'{self.__name}.csv')
+            self.__output = np.genfromtxt(fp, delimiter=',', skip_header=1, )
+
+        assert (self.__n_sim, len(self.output_keys)) == tuple(self.__output.shape)
 
 
 class MCS(ABC):
@@ -387,18 +399,14 @@ class MCS(ABC):
 
     # DEFAULT_SAVE_FOLDER_NAME = "{}.pra"  #
 
-    def __init__(self, n: int = 1):
-        # Assign user defined properties
-        if not (isinstance(n, int) and n > 0):
-            raise ValueError('`n_procs` must be an integer greater than zero')
-
+    def __init__(self):
         self.__in_fp: str = ''
         self.__in_dict: Optional[dict] = None  # input parameters
-        self.__mp_pool = mp.Pool(n, maxtasksperchild=10000)
+        self.__mp_pool: Optional[np.Pool] = None
         self.mcs_cases: Dict[str, MCSSingle] = dict()
 
     def get_save_dir(self):
-        return os.path.join(os.path.dirname(self.__in_fp), f'{os.path.splitext(os.path.basename(self.__in_fp))[0]}.pra')
+        return os.path.join(os.path.dirname(self.__in_fp), f'{os.path.splitext(os.path.basename(self.__in_fp))[0]}.out')
 
     def get_inputs_dict(self):
         return self.__in_dict
@@ -471,26 +479,39 @@ class MCS(ABC):
     def new_mcs_case(self) -> MCSSingle:
         raise NotImplementedError()
 
-    def run(self, set_progress: Optional[Callable] = None, progress_0: int = 0):
+    def run(self, n_proc: int = 1, set_progress: Optional[Callable] = None, progress_0: int = 0):
+        if self.__mp_pool is None:
+            self.__mp_pool: Optional[np.Pool] = mp.Pool(n_proc, maxtasksperchild=10000)
+
         # run simulation
         for k, v in self.mcs_cases.items():
             v.run(self.__mp_pool, set_progress=set_progress, progress_0=progress_0)
 
     def save_all(self, archive: bool = True):
-        # clean
+        # clean existing files
+        try:
+            os.remove(self.get_save_dir())
+        except:
+            pass
+        try:
+            shutil.rmtree(self.get_save_dir())
+        except:
+            pass
+
+        # create empty folder or zip
         if archive:
-            try:
-                shutil.rmtree(self.get_save_dir())
-            except FileNotFoundError:
-                pass
-            finally:
-                with open(self.get_save_dir(), 'wb+') as f:
-                    f.write(b'PK\x05\x06\x00l\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+            with open(self.get_save_dir(), 'wb+') as f:
+                f.write(b'PK\x05\x06\x00l\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
         else:
             os.makedirs(self.get_save_dir())
 
-        # write
+        # write results
         for k, v in self.mcs_cases.items():
             v.save_csv(archive=archive)
-
         return
+
+    def load_from_file(self, fp_in: str, fp_out: str = None):
+        self.__in_fp: str = os.path.realpath(fp_in)
+        self.set_inputs_file_path(fp_in)  # input parameters
+        for name, mcs_case in self.mcs_cases.items():
+            mcs_case.load_output_from_file(self.__in_fp)
