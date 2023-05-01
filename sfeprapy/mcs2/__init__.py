@@ -17,6 +17,16 @@ class MCS2Single(MCS0Single):
         'timber_charring_rate', 'timber_charred_depth', 'timber_hc', 'timber_density', 'timber_exposed_area',
         'timber_depth', 'timber_solver_tol', 'timber_solver_ilim', 'occupancy_type', 'car_cluster_size',
     )
+    OUTPUT_KEYS = (
+        'index', 'beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_nft_limit',
+        'fire_spread_speed', 'window_open_fraction', 'fire_load_density', 'fire_type', 't1', 't2', 't3',
+        'solver_steel_temperature_solved', 'solver_time_critical_temp_solved', 'solver_protection_thickness',
+        'solver_iter_count', 'solver_time_equivalence_solved', 'timber_charring_rate', 'timber_exposed_duration',
+        'timber_solver_iter_count', 'timber_fire_load', 'timber_charred_depth', 'timber_charred_mass',
+        'timber_charred_volume',
+
+        'room_depth','room_breadth','window_height','window_width', 'beam_position_vertical',
+    )
 
     @staticmethod
     def worker(args) -> tuple:
@@ -25,6 +35,10 @@ class MCS2Single(MCS0Single):
     @property
     def input_keys(self) -> tuple:
         return MCS2Single.INPUT_KEYS
+
+    @property
+    def output_keys(self) -> tuple:
+        return MCS2Single.OUTPUT_KEYS
 
 
 class MCS2(MCS0):
