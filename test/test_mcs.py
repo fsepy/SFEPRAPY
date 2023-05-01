@@ -56,7 +56,6 @@ def test_input_parser_sampling():
     ), n=1000).to_dict()
 
 
-
 if __name__ == '__main__':
     test_input_parser_flatten()
     test_input_parser_unflatten()

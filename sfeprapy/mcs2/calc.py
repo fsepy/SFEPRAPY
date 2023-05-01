@@ -77,7 +77,7 @@ def teq_main(
     # Calculate beam vertical location
     # --------------------------------
     beam_position_vertical = min(beam_position_vertical, room_height)
-    beam_position_horizontal=room_depth * beam_position_horizontal_ratio
+    beam_position_horizontal = room_depth * beam_position_horizontal_ratio
 
     return (*teq_main_mcs0(
         index=index,
@@ -124,4 +124,6 @@ def teq_main(
         timber_solver_ilim=timber_solver_ilim,
         occupancy_type=occupancy_type,
         car_cluster_size=car_cluster_size,
-    ),)
+    ),
+            room_depth, room_breadth, window_height, window_width, beam_position_vertical
+            )
