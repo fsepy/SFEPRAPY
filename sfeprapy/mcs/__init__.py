@@ -8,8 +8,7 @@ import shutil
 import zipfile
 from abc import ABC, abstractmethod
 from io import StringIO
-from typing import Callable, Optional, Dict
-from typing import Union
+from typing import Callable, Optional, Dict, Union
 
 import numpy as np
 import scipy.stats as stats
@@ -324,7 +323,7 @@ class MCSSingle(ABC):
 
     @staticmethod
     def make_cdf(data: np.ndarray, bin_width: float = 0.2):
-        x, y_pdf = MCSSingle.get_pdf(data=data, bin_width=bin_width)
+        x, y_pdf = MCSSingle.make_pdf(data=data, bin_width=bin_width)
         return x, np.cumsum(y_pdf)
 
     def save_csv(self, dir_save: Optional[str] = None, archive: bool = True):
@@ -479,15 +478,21 @@ class MCS(ABC):
     def new_mcs_case(self) -> MCSSingle:
         raise NotImplementedError()
 
-    def run(self, n_proc: int = 1, set_progress: Optional[Callable] = None, progress_0: int = 0):
+    def run(self, n_proc: int = 1, set_progress: Optional[Callable] = None, progress_0: int = 0,
+            save: bool = False, save_archive: bool = False):
         if self.__mp_pool is None:
             self.__mp_pool: Optional[np.Pool] = mp.Pool(n_proc, maxtasksperchild=10000)
+
+        if save:
+            self.save_init(archive=save_archive)
 
         # run simulation
         for k, v in self.mcs_cases.items():
             v.run(self.__mp_pool, set_progress=set_progress, progress_0=progress_0)
+            if save:
+                v.save_csv(archive=save_archive)
 
-    def save_all(self, archive: bool = True):
+    def save_init(self, archive: bool):
         # clean existing files
         try:
             os.remove(self.get_save_dir())
@@ -504,6 +509,9 @@ class MCS(ABC):
                 f.write(b'PK\x05\x06\x00l\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
         else:
             os.makedirs(self.get_save_dir())
+
+    def save_all(self, archive: bool = True):
+        self.save_init(archive=archive)
 
         # write results
         for k, v in self.mcs_cases.items():
