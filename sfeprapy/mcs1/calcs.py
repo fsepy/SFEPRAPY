@@ -32,7 +32,7 @@ def solve_time_equivalence_iso834(
     opposing to the standard fire curve ISO 834.
 
     PARAMETERS:
-    :param beam_cross_section_area:             [m2], the steel beam element cross section area
+    :param beam_cross_section_area:             [m2], the steel beam element cross-section area
     :param beam_rho:                            [kg/m3], steel beam element density
     :param protection_k:                        [], steel beam element protection material thermal conductivity
     :param protection_rho:                      [kg/m3], steel beam element protection material density
@@ -142,7 +142,7 @@ def teq_main(
     window_open_fraction = (
             window_open_fraction * (1 - window_open_fraction_permanent) + window_open_fraction_permanent)
 
-    # Fix ventilation opening size so it doesn't exceed wall area
+    # Fix ventilation opening size, so it doesn't exceed wall area
     if window_height > room_height:
         window_height = room_height
 
