@@ -76,7 +76,7 @@ class MCS0(MCS):
 def cli_main(fp_mcs_in: str, n_threads: int = 1):
     fp_mcs_in = os.path.realpath(fp_mcs_in)
 
-    mcs = MCS0(n=n_threads)
+    mcs = MCS0()
     mcs.set_inputs_file_path(fp_mcs_in)
-    mcs.run()
+    mcs.run(n_proc=n_threads)
     mcs.save_all(True)

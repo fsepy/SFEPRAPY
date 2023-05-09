@@ -25,7 +25,7 @@ class MCS2Single(MCS0Single):
         'timber_solver_iter_count', 'timber_fire_load', 'timber_charred_depth', 'timber_charred_mass',
         'timber_charred_volume',
 
-        'room_depth','room_breadth','window_height','window_width', 'beam_position_vertical',
+        'room_depth', 'room_breadth', 'window_height', 'window_width', 'beam_position_vertical',
     )
 
     @staticmethod
