@@ -1,5 +1,5 @@
 __all__ = (
-    'EXAMPLE_INPUT_DICT', 'EXAMPLE_INPUT_DF', 'EXAMPLE_INPUT_CSV',
+    'EXAMPLE_INPUT',
     'decide_fire', 'evaluate_fire_temperature', 'solve_time_equivalence_iso834', 'solve_protection_thickness',
     'teq_main',
     'MCS0', 'MCS0Single',
@@ -12,7 +12,7 @@ import numpy as np
 from .calcs import (
     decide_fire, evaluate_fire_temperature, solve_time_equivalence_iso834, solve_protection_thickness, teq_main,
 )
-from .inputs import EXAMPLE_INPUT_DICT, EXAMPLE_INPUT_DF, EXAMPLE_INPUT_CSV
+from .inputs import EXAMPLE_INPUT
 from ..mcs import MCSSingle, MCS
 
 

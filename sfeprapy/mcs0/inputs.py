@@ -1,8 +1,3 @@
-import pandas as pd
-
-from ..mcs import InputParser
-
-
 def example_input_list() -> list:
     y = [
         dict(
@@ -172,34 +167,7 @@ def example_input_dict(x: list) -> dict:
     return y
 
 
-def example_input_csv(x: list):
-    y = [InputParser.flatten_dict(v) for v in x]
-    y = pd.DataFrame(y)
-    y = y.transpose()
-    y.index.name = "case_name"
-    try:
-        y = y.to_csv(index=True, lineterminator='\n')
-    except TypeError:
-        y = y.to_csv(index=True, line_terminator='\n')
-    return y
-
-
-def example_input_df(x: list) -> pd.DataFrame:
-    # todo: remove pandas dependency
-    y = dict()
-    for d in x:
-        case_name = d.pop('case_name')
-        d = InputParser.flatten_dict(d)
-        y[case_name] = d
-    y = pd.DataFrame.from_dict(y)
-    y.index.name = "case_name"
-    return y
-
-
-EXAMPLE_INPUT_DICT = example_input_dict(x=example_input_list())
-EXAMPLE_INPUT_CSV = example_input_csv(x=example_input_list())
-EXAMPLE_INPUT_DF = example_input_df(x=example_input_list())
+EXAMPLE_INPUT = example_input_dict(x=example_input_list())
 
 if __name__ == "__main__":
-    print(EXAMPLE_INPUT_DICT, "\n")
-    print(EXAMPLE_INPUT_CSV, "\n")
+    print(EXAMPLE_INPUT, "\n")

@@ -1,15 +1,14 @@
 import copy
 
-import numpy as np
 from scipy.interpolate import interp1d
 
-from sfeprapy.mcs2 import EXAMPLE_INPUT_DICT
+from sfeprapy.mcs2 import EXAMPLE_INPUT
 from sfeprapy.mcs2 import MCS2
 
 
 def test_standard_case():
     # increase the number of simulations so it gives sensible results
-    mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
+    mcs_input = copy.deepcopy(EXAMPLE_INPUT)
     mcs_input.pop('Residential')
     mcs_input.pop('Retail')
     for k in list(mcs_input.keys()):
@@ -34,4 +33,8 @@ def test_standard_case():
 
 
 if __name__ == '__main__':
-    test_standard_case()
+    # test_standard_case()
+
+    mcs = MCS2()
+    mcs.set_inputs_file_path(r'C:\Users\IanFu\Desktop\pra-test\mcs2\test.xlsx')
+    mcs.run(4, save=True, save_archive=False)

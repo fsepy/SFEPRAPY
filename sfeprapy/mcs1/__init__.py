@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from .calcs import teq_main
-from .inputs import EXAMPLE_INPUT_DICT, EXAMPLE_INPUT_DF, EXAMPLE_INPUT_CSV
+from .inputs import EXAMPLE_INPUT
 from ..mcs import MCSSingle
 from ..mcs0 import MCS0
 

@@ -4,10 +4,10 @@ import cProfile
 
 def profile_standard_case():
     import copy
-    from sfeprapy.mcs0 import MCS0, EXAMPLE_INPUT_DICT
+    from sfeprapy.mcs0 import MCS0, EXAMPLE_INPUT
 
     # increase the number of simulations so it gives sensible results
-    mcs_input = copy.deepcopy(EXAMPLE_INPUT_DICT)
+    mcs_input = copy.deepcopy(EXAMPLE_INPUT)
     for k in list(mcs_input.keys()):
         mcs_input[k]["phi_teq"] = 1
         mcs_input[k]["n_simulations"] = 1000

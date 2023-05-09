@@ -2,8 +2,8 @@
 
 import copy as __copy
 
-from ..mcs0 import EXAMPLE_INPUT_DICT as EXAMPLE_INPUT_DICT_
-from ..mcs0.inputs import example_input_df, example_input_csv, example_input_dict
+from ..mcs0 import EXAMPLE_INPUT as EXAMPLE_INPUT_DICT_
+from ..mcs0.inputs import example_input_dict
 
 
 def __example_input_list() -> list:
@@ -65,13 +65,9 @@ def __example_input_list() -> list:
     return y
 
 
-EXAMPLE_INPUT_DICT = example_input_dict(__example_input_list())
-EXAMPLE_INPUT_CSV = example_input_csv(__example_input_list())
-EXAMPLE_INPUT_DF = example_input_df(__example_input_list())
+EXAMPLE_INPUT = example_input_dict(__example_input_list())
 
 if __name__ == "__main__":
     import pprint
 
-    pprint.pprint(EXAMPLE_INPUT_DICT)
-    pprint.pprint(EXAMPLE_INPUT_CSV)
-    pprint.pprint(EXAMPLE_INPUT_DF)
+    pprint.pprint(EXAMPLE_INPUT)

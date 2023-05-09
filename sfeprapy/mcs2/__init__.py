@@ -1,7 +1,7 @@
 import os
 
 from .calc import teq_main
-from .inputs import EXAMPLE_INPUT_DF, EXAMPLE_INPUT_CSV, EXAMPLE_INPUT_DICT
+from .inputs import EXAMPLE_INPUT
 from ..mcs0 import MCS0, MCS0Single
 
 
