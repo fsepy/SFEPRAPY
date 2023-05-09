@@ -93,14 +93,15 @@ def main():
             mcs2(fp_mcs_in=os.path.realpath(args.filepath), n_threads=int(args.processor))
         return
 
-    if args.sub_parser == 'distfit':
-        from sfeprapy.func.stats_dist_fit import auto_fit
-        auto_fit(
-            data_type=int(args.type),
-            distribution_list=int(args.group),
-            data=args.filepath,
-        )
-        return
+    # DEPRECIATED 9th May 2023
+    # if args.sub_parser == 'distfit':
+    #     from sfeprapy.func.stats_dist_fit import auto_fit
+    #     auto_fit(
+    #         data_type=int(args.type),
+    #         distribution_list=int(args.group),
+    #         data=args.filepath,
+    #     )
+    #     return
 
 
 if __name__ == '__main__':

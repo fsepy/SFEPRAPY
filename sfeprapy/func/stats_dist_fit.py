@@ -3,6 +3,8 @@
 # -*- coding: utf-8 -*-
 # Date: 07/03/2019
 
+# DEPRECIATED 9th May 2023
+
 import os
 import warnings
 from typing import Union
