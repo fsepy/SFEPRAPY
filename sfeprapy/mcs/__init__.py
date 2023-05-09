@@ -1,6 +1,7 @@
 # Monte Carlo Simulation Multiple Process Implementation
 # Yan Fu, October 2017
 
+import concurrent.futures
 import io
 import multiprocessing as mp
 import os
@@ -245,10 +246,10 @@ class MCSSingle(ABC):
     def __init__(self, name: str, n_simulations: int, sim_kwargs: dict, save_dir: Optional[str] = None):
         assert n_simulations > 0
 
-        self.__name: str = name  # case name
-        self.__n_sim: int = n_simulations  # number of simulation
-        self.__input = InputParser(sim_kwargs, n_simulations)
-        self.__save_dir: Optional[str] = save_dir
+        self.name: str = name  # case name
+        self.n_sim: int = n_simulations  # number of simulation
+        self.input = InputParser(sim_kwargs, n_simulations)
+        self.save_dir: Optional[str] = save_dir
 
         # {'var1': [0, ...], 'var2': [2, 3, ...], ...}
         self.__output: Optional[np.ndarray] = None  # {'res1': [...], 'res2': [...], ...}
@@ -263,18 +264,19 @@ class MCSSingle(ABC):
         raise NotImplementedError('This method should be overridden by a child class')
 
     def run(self, p: mp.Pool, set_progress: Optional[Callable] = None, progress_0: int = 0):
-        kwargs = self.__input.to_dict()
+        kwargs = self.input.to_dict()
         args = list(zip(*[kwargs[k] for k in self.input_keys]))
         output = list()
+
+        futures = {p.submit(self.worker, arg) for arg in zip(*[kwargs[k] for k in self.input_keys])}
+
         if set_progress is not None:
-            i = 0
-            for _ in p.imap(self.worker, args):
-                output.append(_)
-                i += 1
+            for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
+                output.append(future.result())
                 set_progress(progress_0 + i)
         else:
-            for _ in p.imap(self.worker, args):
-                output.append(_)
+            for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
+                output.append(future.result())
 
         self.__output = np.array(output)
 
@@ -330,7 +332,7 @@ class MCSSingle(ABC):
         """Saves simulation output as a csv file, either in a folder (if `dir_name` is a folder) or in a zip file (if
         `dir_name` is a zip file path). `dir_name` should be cleaned properly before passing into this method."""
         if dir_save is None:
-            dir_save = self.__save_dir
+            dir_save = self.save_dir
         assert dir_save
         assert os.path.exists(dir_save)
         assert self.__output is not None
@@ -349,11 +351,11 @@ class MCSSingle(ABC):
         if archive:
             # in a zip file
             with zipfile.ZipFile(dir_save, 'a', compression=zipfile.ZIP_DEFLATED) as f_zip:
-                f_zip.writestr(f'{self.__name}.csv', content.read(), compress_type=zipfile.ZIP_DEFLATED)
+                f_zip.writestr(f'{self.name}.csv', content.read(), compress_type=zipfile.ZIP_DEFLATED)
             return
         else:
             # in a folder
-            with open(os.path.join(dir_save, f'{self.__name}.csv'), 'wb+') as f:
+            with open(os.path.join(dir_save, f'{self.name}.csv'), 'wb+') as f:
                 shutil.copyfileobj(content, f)
             return
 
@@ -362,12 +364,12 @@ class MCSSingle(ABC):
 
         if zipfile.is_zipfile(fp):
             with zipfile.ZipFile(fp, 'r') as f_zip:
-                self.__output = np.frombuffer(f_zip.read(f'{self.__name}.csv'), delimiter=',', skip_header=1, )
+                self.__output = np.frombuffer(f_zip.read(f'{self.name}.csv'), delimiter=',', skip_header=1, )
         else:
-            fp = os.path.join(fp, f'{self.__name}.csv')
+            fp = os.path.join(fp, f'{self.name}.csv')
             self.__output = np.genfromtxt(fp, delimiter=',', skip_header=1, )
 
-        assert (self.__n_sim, len(self.output_keys)) == tuple(self.__output.shape)
+        assert (self.n_sim, len(self.output_keys)) == tuple(self.__output.shape)
 
 
 class MCS(ABC):
@@ -478,19 +480,22 @@ class MCS(ABC):
     def new_mcs_case(self) -> MCSSingle:
         raise NotImplementedError()
 
-    def run(self, n_proc: int = 1, set_progress: Optional[Callable] = None, progress_0: int = 0,
+    def run(self, n_proc: int = 1, set_progress: Optional[Callable] = None, set_progress_max: Optional[Callable] = None,
             save: bool = False, save_archive: bool = False):
-        if self.__mp_pool is None:
-            self.__mp_pool: Optional[np.Pool] = mp.Pool(n_proc, maxtasksperchild=10000)
+
+        if set_progress_max is not None:
+            set_progress_max(sum([v.n_sim for k, v in self.mcs_cases.items()]))
 
         if save:
             self.save_init(archive=save_archive)
 
-        # run simulation
-        for k, v in self.mcs_cases.items():
-            v.run(self.__mp_pool, set_progress=set_progress, progress_0=progress_0)
-            if save:
-                v.save_csv(archive=save_archive)
+        progress_0 = None
+        with concurrent.futures.ProcessPoolExecutor(max_workers=n_proc) as executor:
+            for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
+                progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
+                mcs_case.run(executor, set_progress=set_progress, progress_0=progress_0)
+                if save:
+                    mcs_case.save_csv(archive=save_archive)
 
     def save_init(self, archive: bool):
         # clean existing files
