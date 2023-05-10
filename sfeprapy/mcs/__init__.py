@@ -312,7 +312,6 @@ class MCSSingle(ABC):
         # [s] -> [min]
         data /= 60.
 
-        print(np.amax(data), np.amin(data))
         assert np.nanmax(data) < 300.
         assert np.nanmin(data) > 0.
 
@@ -449,7 +448,7 @@ class MCS(ABC):
             from xlrd import open_workbook
 
             # Get the first worksheet
-            worksheet = open_workbook(r'C:\Users\IanFu\Desktop\pra-test\mcs0\mcs0.xls').sheet_by_index(0)
+            worksheet = open_workbook(fp).sheet_by_index(0)
 
             # Extract the headers from the first row
             headers = [worksheet.cell_value(0, col) for col in range(worksheet.ncols)][1:]
