@@ -364,7 +364,8 @@ class MCSSingle(ABC):
 
         if zipfile.is_zipfile(fp):
             with zipfile.ZipFile(fp, 'r') as f_zip:
-                self.__output = np.frombuffer(f_zip.read(f'{self.name}.csv'), delimiter=',', skip_header=1, )
+                with f_zip.open(f'{self.name}.csv') as f:
+                    self.__output = np.genfromtxt(io.TextIOWrapper(f), delimiter=',', skip_header=1, )
         else:
             fp = os.path.join(fp, f'{self.name}.csv')
             self.__output = np.genfromtxt(fp, delimiter=',', skip_header=1, )
@@ -527,4 +528,4 @@ class MCS(ABC):
         self.__in_fp: str = os.path.realpath(fp_in)
         self.set_inputs_file_path(fp_in)  # input parameters
         for name, mcs_case in self.mcs_cases.items():
-            mcs_case.load_output_from_file(self.__in_fp)
+            mcs_case.load_output_from_file(fp_out)
