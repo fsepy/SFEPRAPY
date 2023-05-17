@@ -8,6 +8,7 @@ import os
 import shutil
 import zipfile
 from abc import ABC, abstractmethod
+from inspect import getfullargspec
 from io import StringIO
 from typing import Callable, Optional, Dict, Union
 
@@ -255,20 +256,53 @@ class MCSSingle(ABC):
         self.__output: Optional[np.ndarray] = None  # {'res1': [...], 'res2': [...], ...}
 
     @property
-    @abstractmethod
-    def input_keys(self) -> tuple:
+    def input_keys(self) -> tuple[tuple, tuple]:
         """Placeholder method. The input value names from the Monte Carlo Simulation deterministic calculation
         routine.
-        :return:
+        :return:    (args, n_args) where `args` is a list of argument names and `n_args` is the number of compulsory
+                    arguments
         """
-        raise NotImplementedError('This method should be overridden by a child class')
+        _ = getfullargspec(self.worker)
+        return tuple(_.args), _.defaults
 
     def run(self, p: mp.Pool, set_progress: Optional[Callable] = None, progress_0: int = 0):
-        kwargs = self.input.to_dict()
-        args = list(zip(*[kwargs[k] for k in self.input_keys]))
         output = list()
 
-        futures = {p.submit(self.worker, arg) for arg in zip(*[kwargs[k] for k in self.input_keys])}
+        # ======================
+        # prepare input iterable
+        # ======================
+        kwargs_from_input = self.input.to_dict()
+        keys_from_worker, defaults_from_worker = self.input_keys
+        n_keys_from_worker = len(keys_from_worker) - (0 if defaults_from_worker is None else len(defaults_from_worker))
+        keys_from_worker_required = keys_from_worker[:n_keys_from_worker]
+        keys_from_worker_optional = keys_from_worker[n_keys_from_worker:]
+
+        # check if all the required arguments are provided
+        missing_args = list()
+        for k in keys_from_worker_required:
+            if k not in keys_from_worker:
+                missing_args.append(k)
+
+        if len(missing_args) > 0:
+            raise ValueError(f'Missing arguments: {missing_args}.')
+
+        nested_args = list()
+        for k in keys_from_worker_required:
+            if k not in kwargs_from_input:
+                missing_args.append(k)
+                continue
+            nested_args.append(kwargs_from_input[k])
+
+        if len(missing_args) > 0:
+            raise ValueError(f'Missing required arguments: {missing_args}.')
+
+        for i, k in enumerate(keys_from_worker_optional):
+            if k in keys_from_worker:
+                nested_args.append(kwargs_from_input[k])
+            else:
+                nested_args.append(defaults_from_worker[i])
+
+        futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
 
         if set_progress is not None:
             for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
@@ -280,9 +314,9 @@ class MCSSingle(ABC):
 
         self.__output = np.array(output)
 
-    @staticmethod
+    @property
     @abstractmethod
-    def worker(args) -> dict:
+    def worker(self) -> Callable:
         """Placeholder method. The Monte Carlo Simulation deterministic calculation routine.
         :return:
         """

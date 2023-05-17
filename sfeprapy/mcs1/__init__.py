@@ -14,16 +14,6 @@ from ..mcs0 import MCS0
 
 
 class MCS1Single(MCSSingle):
-    INPUT_KEYS = (
-        'index', 'beam_cross_section_area', 'beam_position_vertical', 'beam_position_horizontal', 'beam_rho',
-        'fire_time_duration', 'fire_time_step', 'fire_combustion_efficiency', 'fire_gamma_fi_q', 'fire_hrr_density',
-        'fire_load_density', 'fire_mode', 'fire_nft_limit', 'fire_spread_speed', 'fire_t_alpha', 'fire_tlim',
-        'protection_c', 'protection_k', 'protection_protected_perimeter', 'protection_rho', 'protection_d_p',
-        'room_breadth', 'room_depth', 'room_height', 'room_wall_thermal_inertia', 'window_height',
-        'window_open_fraction', 'window_width', 'window_open_fraction_permanent', 'epsilon_q', 't_k_y_theta', 'phi_teq',
-        'timber_charring_rate', 'timber_charred_depth', 'timber_hc', 'timber_density', 'timber_exposed_area',
-        'timber_depth', 'timber_solver_tol', 'timber_solver_ilim', 'occupancy_type', 'car_cluster_size'
-    )
     OUTPUT_KEYS = (
         'index', 'beam_position_horizontal', 'fire_combustion_efficiency', 'fire_hrr_density', 'fire_nft_limit',
         'fire_spread_speed', 'window_open_fraction', 'epsilon_q', 'fire_load_density', 'fire_type', 't1', 't2', 't3',
@@ -35,9 +25,9 @@ class MCS1Single(MCSSingle):
     def __init__(self, name, n_simulations, sim_kwargs, save_dir):
         super().__init__(name=name, n_simulations=n_simulations, sim_kwargs=sim_kwargs, save_dir=save_dir)
 
-    @staticmethod
-    def worker(args) -> tuple:
-        return teq_main(*args)
+    @property
+    def worker(self):
+        return teq_main
 
     def get_pdf(self, bin_width: float = 0.2) -> (np.ndarray, np.ndarray, np.ndarray):
         teq: np.ndarray = None
@@ -51,10 +41,6 @@ class MCS1Single(MCSSingle):
         x, y_pdf = self.get_pdf(bin_width=bin_width)
 
         return x, np.cumsum(y_pdf)
-
-    @property
-    def input_keys(self) -> tuple:
-        return MCS1Single.INPUT_KEYS
 
     @property
     def output_keys(self) -> tuple:
