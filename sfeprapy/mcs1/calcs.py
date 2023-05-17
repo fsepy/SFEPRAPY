@@ -115,7 +115,7 @@ def teq_main(
         timber_solver_ilim: float = np.nan,
         occupancy_type: str = np.nan,
         car_cluster_size: int = np.nan,
-) -> dict:
+) -> tuple:
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
     if room_depth < room_breadth:
         room_depth += room_breadth
