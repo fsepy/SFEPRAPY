@@ -514,11 +514,34 @@ class MCS(ABC):
     def new_mcs_case(self) -> MCSSingle:
         raise NotImplementedError()
 
-    def run(self, n_proc: int = 1, set_progress: Optional[Callable] = None, set_progress_max: Optional[Callable] = None,
-            save: bool = False, save_archive: bool = False):
+    def run(
+            self,
+            n_proc: int = 1,
+            set_progress: Optional[Callable] = None,
+            set_progress_max: Optional[Callable] = None,
+            save: bool = False,
+            save_archive: bool = False,
+            cases_to_run: Optional[list] = None,
+    ):
+        # check if all `cases_to_run` exist in `self.mcs_cases`
+        if cases_to_run:
+            undefined_case_name_by_user = list()
+            for case_name in cases_to_run:
+                if case_name not in self.mcs_cases:
+                    undefined_case_name_by_user.append(case_name)
+            if undefined_case_name_by_user:
+                raise ValueError(
+                    f'The following case are specified to run but they do not exist: {undefined_case_name_by_user}. '
+                    f'Available case names: {self.mcs_cases.keys()}.'
+                )
+            else:
+                del undefined_case_name_by_user
 
         if set_progress_max is not None:
-            set_progress_max(sum([v.n_sim for k, v in self.mcs_cases.items()]))
+            if cases_to_run:
+                set_progress_max(sum([v.n_sim if k in cases_to_run else 0 for k, v in self.mcs_cases.items()]))
+            else:
+                set_progress_max(sum([v.n_sim for k, v in self.mcs_cases.items()]))
 
         if save:
             self.save_init(archive=save_archive)
@@ -526,6 +549,8 @@ class MCS(ABC):
         progress_0 = None
         with concurrent.futures.ProcessPoolExecutor(max_workers=n_proc) as executor:
             for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
+                if cases_to_run and mcs_case_name not in cases_to_run:
+                    continue
                 progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
                 mcs_case.run(executor, set_progress=set_progress, progress_0=progress_0)
                 if save:
