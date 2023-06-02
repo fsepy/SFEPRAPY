@@ -46,6 +46,13 @@ def test_input_parser_sampling():
     assert abs(np.min(y["v"]) - 50) <= 1
     assert abs(np.mean(y["v"]) - 420) <= 1
 
+    y = InputParser(dict(v=dict(dist="discrete_", values='1,2,3,4', weights='0.1,0.2,0.3,0.4')), 999).to_dict()
+    assert len(y["v"]) == 999
+    assert (len(y['v'][y['v'] == 1.]) - round(0.1 * 999)) <= 1.
+    assert (len(y['v'][y['v'] == 2.]) - round(0.2 * 999)) <= 1.
+    assert (len(y['v'][y['v'] == 3.]) - round(0.3 * 999)) <= 1.
+    assert (len(y['v'][y['v'] == 4.]) - round(0.4 * 999)) <= 1.
+
     InputParser(dict(
         string="hello world",
         number=10.,

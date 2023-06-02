@@ -183,14 +183,38 @@ class InputParser:
 
         :param dist_params: Distribution inputs, required keys are distribution dependent, should be aligned with inputs
                             required in the scipy.stats. Additional compulsory keys are:
-                                `dist`: str, distribution type;
-                                `ubound`: float, upper bound of the sampled values; and
-                                `lbound`: float, lower bound of the sampled values.
+                                `dist`: str, distribution type.
         :param num_samples: Number of samples to be generated.
         :param randomise:   Whether to randomise the sampled values.
         :return samples:    Sampled values based upon `dist` in the range [`lbound`, `ubound`] with `num_samples` number
                             of values.
         """
+        if dist_params['dist'] == 'discrete_':
+            v_ = [float(i.strip()) for i in dist_params['values'].split(',')]
+            w_ = [float(i.strip()) for i in dist_params['weights'].split(',')]
+            assert len(v_) == len(w_), f'Length of values ({len(v_)}) and weights ({len(v_)}) do not match.'
+            assert sum(w_) == 1., f'Sum of all weights should be unity, got {sum(w_)}.'
+            w_ = [int(round(i * num_samples)) for i in w_]
+            if (sum_sampled := sum(w_)) < num_samples:
+                for i in np.random.choice(np.arange(len(w_)), size=sum_sampled - num_samples):
+                    w_[i] += 1
+            elif sum_sampled > num_samples:
+                for i in np.random.choice(np.arange(len(w_)), size=sum_sampled - num_samples):
+                    w_[i] -= 1
+            w_ = np.cumsum(w_)
+            assert w_[-1] == num_samples, f'Total weight length does not match `num_samples`.'
+            samples = np.empty((num_samples,), dtype=float)
+            for i, v__ in enumerate((v_)):
+                if i == 0:
+                    samples[0:w_[i]] = v__
+                else:
+                    samples[w_[i - 1]:w_[i]] = v__
+
+            if randomise:
+                np.random.shuffle(samples)
+
+            return samples
+
         if dist_params['dist'] == 'constant_':
             return np.full((num_samples,), (dist_params['lbound'] + dist_params['ubound']) / 2, dtype=float)
 
