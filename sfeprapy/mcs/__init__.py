@@ -10,11 +10,13 @@ import zipfile
 from abc import ABC, abstractmethod
 from inspect import getfullargspec
 from io import StringIO
-from typing import Callable, Optional, Dict, Union
+from typing import Callable, Optional, Dict, Union, Any
 
 import numpy as np
 import scipy.stats as stats
 from scipy.interpolate import interp1d
+
+from sfeprapy.func.xlsx import dict_to_xlsx
 
 
 class TrueToScipy:
@@ -101,7 +103,7 @@ class InputParser:
                     try:
                         dict_out[k] = InputParser._sampling(v, n)
                     except KeyError:
-                        raise (f"Missing parameters in input variable {k}.")
+                        raise KeyError(f"Missing parameters in input variable {k}.")
                 elif "ramp" in v:
                     s_ = StringIO(v["ramp"])
                     d_ = np.loadtxt(s_, delimiter=',')
@@ -122,6 +124,9 @@ class InputParser:
         dict_out["index"] = np.arange(0, n, 1)
         return dict_out
 
+    def to_xlsx(self, fp: str):
+        dict_to_xlsx({i: InputParser.flatten_dict(v) for i, v in self.to_dict().items()}, fp)
+
     @staticmethod
     def unflatten_dict(dict_in: dict) -> dict:
         """Invert flatten_dict.
@@ -131,21 +136,29 @@ class InputParser:
         """
         dict_out = dict()
 
-        for k in list(dict_in.keys()):
-            if ":" in k:
-                k1, k2 = k.split(":")
-
-                if k1 in dict_out:
-                    dict_out[k1][k2] = dict_in[k]
-                else:
-                    dict_out[k1] = {k2: dict_in[k]}
-            else:
-                dict_out[k] = dict_in[k]
+        for k, v in dict_in.items():
+            InputParser.__unflatten_dict(k, v, dict_out)
 
         return dict_out
 
     @staticmethod
+    def __unflatten_dict(k: str, v: Any, dict_out: dict):
+        if ":" in k:
+            k1, *k2 = k.split(':')
+            if k1 not in dict_out:
+                dict_out[k1] = dict()
+            InputParser.__unflatten_dict(':'.join(k2), v, dict_out[k1])
+        else:
+            dict_out[k] = v
+
+    @staticmethod
     def flatten_dict(dict_in: dict) -> dict:
+        dict_out = dict()
+        InputParser.__flatten_dict(dict_in, dict_out)
+        return dict_out
+
+    @staticmethod
+    def __flatten_dict(dict_in: dict, dict_out: dict, history: str = None):
         """Converts two levels dict to single level dict. Example input and output see _test_dict_flatten.
         >>> dict_in = {
         >>>             'a': 1,
@@ -165,17 +178,18 @@ class InputParser:
         :param dict_in:     Any two levels (or less) dict.
         :return dict_out:   Single level dict.
         """
-
-        dict_out = dict()
-
-        for k in list(dict_in.keys()):
-            if isinstance(dict_in[k], dict):
-                for kk, vv in dict_in[k].items():
-                    dict_out[f"{k}:{kk}"] = vv
+        for k, v in dict_in.items():
+            if isinstance(v, dict):
+                InputParser.__flatten_dict(v, dict_out=dict_out, history=k if history is None else f'{history}:{k}')
             else:
-                dict_out[k] = dict_in[k]
-
-        return dict_out
+                dict_out[f'{k}' if history is None else f'{history}:{k}'] = v
+        # for k in list(dict_in.keys()):
+        #     if isinstance(dict_in[k], dict):
+        #         for kk, vv in dict_in[k].items():
+        #             dict_out[f"{k}:{kk}"] = vv
+        #     else:
+        #         dict_out[k] = dict_in[k]
+        # return dict_out
 
     @staticmethod
     def _sampling(dist_params: dict, num_samples: int, randomise: bool = True) -> Union[float, np.ndarray]:
@@ -190,10 +204,19 @@ class InputParser:
                             of values.
         """
         if dist_params['dist'] == 'discrete_':
-            v_ = [float(i.strip()) for i in dist_params['values'].split(',')]
-            w_ = [float(i.strip()) for i in dist_params['weights'].split(',')]
+            v_ = dist_params['values']
+            if isinstance(v_, str):
+                assert ',' in v_, f'`discrete_ distribution `values` parameter is not a list separated by comma.'
+                v_ = [float(i.strip()) for i in v_.split(',')]
+
+            w_ = dist_params['weights']
+            if isinstance(w_, str):
+                assert ',' in w_, f'`discrete_`:`weights` is not a list of numbers separated by comma.'
+                w_ = [float(i.strip()) for i in w_.split(',')]
+
             assert len(v_) == len(w_), f'Length of values ({len(v_)}) and weights ({len(v_)}) do not match.'
             assert sum(w_) == 1., f'Sum of all weights should be unity, got {sum(w_)}.'
+
             w_ = [int(round(i * num_samples)) for i in w_]
             if (sum_sampled := sum(w_)) < num_samples:
                 for i in np.random.choice(np.arange(len(w_)), size=sum_sampled - num_samples):
@@ -219,11 +242,12 @@ class InputParser:
             return np.full((num_samples,), (dist_params['lbound'] + dist_params['ubound']) / 2, dtype=float)
 
         # sample CDF points (y-axis value)
-        def generate_cfd_q(dist, dist_params_scipy, lbound, ubound):
+        def generate_cfd_q(dist, dist_params_scipy, lbound, ubound, num_samples_=None):
+            num_samples_ = num_samples if num_samples_ is None else num_samples_
             cfd_q_ = np.linspace(
                 getattr(stats, dist).cdf(x=lbound, **dist_params_scipy),
                 getattr(stats, dist).cdf(x=ubound, **dist_params_scipy),
-                num_samples,
+                num_samples_,
             )
             samples_ = getattr(stats, dist).ppf(q=cfd_q_, **dist_params_scipy)
             return samples_
@@ -239,6 +263,36 @@ class InputParser:
                     ubound=dist_params['ubound']
                 )
                 samples = 1 - samples
+            elif dist_params['dist'] == 'br187_fuel_load_density_':
+                dist_params_list = list()
+                dist_params_list.append(
+                    dict(dist='gumbel_r_', lbound=dist_params['lbound'], ubound=dist_params['ubound'], mean=780,
+                         sd=234))
+                dist_params_list.append(
+                    dict(dist='gumbel_r_', lbound=dist_params['lbound'], ubound=dist_params['ubound'], mean=420,
+                         sd=126))
+                samples_ = list()
+                for dist_params in dist_params_list:
+                    dist_params_scipy = getattr(TrueToScipy, dist_params['dist'])(**dist_params)
+                    samples__ = generate_cfd_q(
+                        dist=dist_params['dist'].rstrip('_'), dist_params_scipy=dist_params_scipy,
+                        lbound=dist_params['lbound'], ubound=dist_params['ubound']
+                    )
+                    samples_.append(samples__)
+                samples = np.random.choice(np.append(*samples_), num_samples, replace=False)
+            elif dist_params['dist'] == 'br187_hrr_density_':
+                dist_params_list = list()
+                dist_params_list.append(dict(dist='uniform_', lbound=0.32, ubound=0.57))
+                dist_params_list.append(dict(dist='uniform_', lbound=0.15, ubound=0.65))
+                samples_ = list()
+                for dist_params in dist_params_list:
+                    dist_params_scipy = getattr(TrueToScipy, dist_params['dist'])(**dist_params)
+                    samples__ = generate_cfd_q(
+                        dist=dist_params['dist'].rstrip('_'), dist_params_scipy=dist_params_scipy,
+                        lbound=dist_params['lbound'], ubound=dist_params['ubound']
+                    )
+                    samples_.append(samples__)
+                samples = np.random.choice(np.append(*samples_), num_samples, replace=False)
             else:
                 dist_params_scipy = getattr(TrueToScipy, dist_params['dist'])(**dist_params)
                 samples = generate_cfd_q(
