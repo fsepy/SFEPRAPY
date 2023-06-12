@@ -5,6 +5,15 @@ def test_input_parser_flatten():
     x = dict(A=dict(a=0, b=1), B=dict(c=2, d=3))
     y_expected = {"A:a": 0, "A:b": 1, "B:c": 2, "B:d": 3}
     y = InputParser.flatten_dict(x)
+    print(y)
+    assert y == y_expected
+
+
+def test_input_parser_flatten_v2():
+    x = dict(A=dict(a=0, b=1), B=dict(c=2, d=dict(e=3, f=4)))
+    y_expected = {"A:a": 0, "A:b": 1, "B:c": 2, "B:d:e": 3, "B:d:f": 4}
+    y = InputParser.flatten_dict(x)
+    print(y)
     assert y == y_expected
 
 
@@ -12,7 +21,14 @@ def test_input_parser_unflatten():
     x = {"A:a": 0, "A:b": 1, "B:c": 2, "B:d": 3}
     y_expected = dict(A=dict(a=0, b=1), B=dict(c=2, d=3))
     y = InputParser.unflatten_dict(x)
-    assert y == y_expected
+    assert y == y_expected, f'{y}!={y_expected}'
+
+
+def test_input_parser_unflatten_v2():
+    x = {"A:a": 0, "A:b": 1, "B:a": 2, "B:b": 3, "C:a": 4, "C:b:a": 5, "C:b:b": 6}
+    y_expected = dict(A=dict(a=0, b=1), B=dict(a=2, b=3), C=dict(a=4, b=dict(a=5, b=6)))
+    y = InputParser.unflatten_dict(x)
+    assert y == y_expected, f'{y}!={y_expected}'
 
 
 def test_input_parser_sampling():
@@ -65,5 +81,7 @@ def test_input_parser_sampling():
 
 if __name__ == '__main__':
     test_input_parser_flatten()
+    test_input_parser_flatten_v2()
     test_input_parser_unflatten()
+    test_input_parser_unflatten_v2()
     test_input_parser_sampling()
