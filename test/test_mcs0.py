@@ -68,6 +68,7 @@ def test_standard_case():
     import numpy as np
     import copy
     from sfeprapy.mcs0 import EXAMPLE_INPUT
+    from tqdm import tqdm
 
     # increase the number of simulations so it gives sensible results
     mcs_input = copy.deepcopy(EXAMPLE_INPUT)
@@ -81,7 +82,9 @@ def test_standard_case():
         'CASE_2_teq_phi': mcs_input.pop('CASE_2_teq_phi'),
         'CASE_3_timber': mcs_input.pop('CASE_3_timber'),
     })
-    mcs.run()
+    pbar = tqdm(total=sum(i.n_sim for i in mcs.mcs_cases.values()))
+    mcs.run(n_proc=1, set_progress=lambda _: pbar.update(1), save=True)
+    pbar.close()
 
     # 60 minutes based on Kirby et al.
     x, y = mcs['CASE_1'].get_cdf()
@@ -125,7 +128,70 @@ def test_file_input():
         time.sleep(0.5)
 
 
+def test_performance():
+    from os import path
+    from sfeprapy.mcs0 import EXAMPLE_INPUT
+    from sfeprapy.func.xlsx import dict_to_xlsx
+    from tqdm import tqdm
+    import time
+    # increase the number of simulations so it gives sensible results
+    mcs_input = {
+        'CASE_1': EXAMPLE_INPUT['CASE_1'].copy(),
+        'CASE_2': EXAMPLE_INPUT['CASE_1'].copy(),
+        'CASE_3': EXAMPLE_INPUT['CASE_1'].copy(),
+        'CASE_4': EXAMPLE_INPUT['CASE_1'].copy(),
+        # 'CASE_5': EXAMPLE_INPUT['CASE_1'].copy(),
+        # 'CASE_6': EXAMPLE_INPUT['CASE_1'].copy(),
+        # 'CASE_7': EXAMPLE_INPUT['CASE_1'].copy(),
+        # 'CASE_8': EXAMPLE_INPUT['CASE_1'].copy(),
+    }
+    mcs_input['CASE_1']['n_simulations'] = 5000
+
+    times = list()
+
+    # with tempfile.TemporaryDirectory() as dir_work:
+    #     fp_input = path.join(dir_work, 'test.xlsx')
+    #     dict_to_xlsx({k: InputParser.flatten_dict(v) for k, v in mcs_input.items()}, fp_input)
+    #
+    #     for i in range(1, 10, 1):
+    #         t0 = time.time()
+    #         mcs = MCS0()
+    #         mcs.set_inputs_file_path(fp_input)
+    #         pbar = tqdm(total=sum([i.n_sim for i in mcs.mcs_cases.values()]), desc=f'{i:03d}')
+    #         mcs.run(n_proc=i, set_progress=lambda x: pbar.update(1))
+    #         pbar.close()
+    #         times.append(time.time() - t0)
+
+    dir_work = r'C:\Users\IanFu\Desktop\New folder (2)'
+    fp_input = path.join(dir_work, 'test.xlsx')
+    dict_to_xlsx({k: InputParser.flatten_dict(v) for k, v in mcs_input.items()}, fp_input)
+
+    i = 10
+    t0 = time.time()
+    mcs = MCS0()
+    mcs.set_inputs_file_path(fp_input)
+    pbar = tqdm(desc=f'{i:03d}')
+    mcs.run(
+        n_proc=i,
+        save=True,
+        set_progress=lambda x: pbar.update(1),
+        set_progress_max=lambda x: setattr(pbar, 'total', x)
+    )
+    pbar.close()
+    times.append(time.time() - t0)
+
+    # print(times)
+    # p = asciiplot.AsciiPlot()
+    # p.plot(range(1, len(times) + 1, 1), times)
+    # p.show()
+
+
 if __name__ == '__main__':
-    test_teq_phi()
-    test_standard_case()
-    test_file_input()
+    # test_teq_phi()
+    # test_standard_case()
+    # test_file_input()
+    test_performance()
+
+    # p = asciiplot.AsciiPlot()
+    # p.plot(range(10), range(10))
+    # p.show()
