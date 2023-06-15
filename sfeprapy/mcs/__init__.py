@@ -1,13 +1,13 @@
 # Monte Carlo Simulation Multiple Process Implementation
 # Yan Fu, October 2017
 
-import concurrent.futures
 import io
 import multiprocessing as mp
 import os
 import shutil
 import zipfile
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from inspect import getfullargspec
 from io import StringIO
 from typing import Callable, Optional, Dict, Union, Any
@@ -343,9 +343,8 @@ class MCSSingle(ABC):
         _ = getfullargspec(self.worker)
         return tuple(_.args), _.defaults
 
-    def run(self, p: mp.Pool, set_progress: Optional[Callable] = None, progress_0: int = 0):
-        output = list()
-
+    def run(self, p: mp.Pool = None, set_progress: Optional[Callable] = None, progress_0: int = 0, save: bool = False,
+            save_archive: bool = False):
         # ======================
         # prepare input iterable
         # ======================
@@ -380,17 +379,32 @@ class MCSSingle(ABC):
             else:
                 nested_args.append(defaults_from_worker[i])
 
-        futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
-
-        if set_progress is not None:
-            for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
-                output.append(future.result())
-                set_progress(progress_0 + i)
+        # ===============
+        # start processes
+        # ===============
+        output = list()
+        if p is None:
+            if set_progress is not None:
+                for i, arg in enumerate(zip(*nested_args)):
+                    output.append(self.worker(*arg))
+                    set_progress(progress_0 + i)
+            else:
+                for arg in zip(*nested_args):
+                    output.append(self.worker(*arg))
         else:
-            for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
-                output.append(future.result())
+            futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
+            if set_progress is not None:
+                for i, future in enumerate(as_completed(futures), start=1):
+                    output.append(future.result())
+                    set_progress(progress_0 + i)
+            else:
+                for i, future in enumerate(as_completed(futures), start=1):
+                    output.append(future.result())
 
         self.__output = np.array(output)
+
+        if save:
+            self.save_csv(dir_save=None, archive=save_archive)
 
     @property
     @abstractmethod
@@ -445,7 +459,7 @@ class MCSSingle(ABC):
         if dir_save is None:
             dir_save = self.save_dir
         assert dir_save
-        assert os.path.exists(dir_save)
+        assert os.path.exists(dir_save), f'Directory does not exist {dir_save}'
         assert self.__output is not None
 
         # create byte object representing the save data/results
@@ -590,7 +604,7 @@ class MCS(ABC):
     @property
     @abstractmethod
     def new_mcs_case(self) -> MCSSingle:
-        raise NotImplementedError()
+        raise NotImplementedError('This method should be implemented by the child class.')
 
     def run(
             self,
@@ -615,24 +629,70 @@ class MCS(ABC):
             else:
                 del undefined_case_name_by_user
 
-        if set_progress_max is not None:
-            if cases_to_run:
-                set_progress_max(sum([v.n_sim if k in cases_to_run else 0 for k, v in self.mcs_cases.items()]))
-            else:
-                set_progress_max(sum([v.n_sim for k, v in self.mcs_cases.items()]))
+        if cases_to_run:
+            n_case = sum([1 if k in cases_to_run else 0 for k, v in self.mcs_cases.items()])
+            n_sim = sum([v.n_sim if k in cases_to_run else 0 for k, v in self.mcs_cases.items()])
+        else:
+            n_case = sum([1 for k, v in self.mcs_cases.items()])
+            n_sim = sum([v.n_sim for k, v in self.mcs_cases.items()])
+
+        # concurrency strategy
+        # terminology:
+        #   simulation iteration: simply a single simulation iteration, e.g., calling a function and get results
+        #   simulation case: describes a monte carlo simulation case, consists of a defined number of simulation
+        #   iterations.
+        #
+        # specific to the application of this class, many simulation cases may present and each simulation case consists
+        # many simulation iteratoins to be run. multiprocessing is utilised to speed up the computation performance
+        # given modern CPUs are supplied with multiple logical processors. However, multiprocessing can be applied in
+        # different ways in terms which level of the loops to chip in. Below is an example of the loop pattern:
+        #
+        #   for each_case in mcs_cases:
+        #           pass  # task 1: prepare/sampling inputs for `each_case`...
+        #       for each_iteration in each_case:
+        #           pass  # task 2: computation happen here...
+        #       pass # task 3: save output to disk...
+        #
+        # task 1 and 2 are CPU bound and task 3 is I/O bound.
+        #
+        # strategy 1:
+        #   each case get allocated to a process. the benefit is clear as all the tasks are non-blocking to other cases.
+        #   however, the computational time will be dictated by the case that takes the longest time. this strategy
+        #   would be beneficial when the E/W (executions and number of available workers ratio) is significant.
+        # strategy 2:
+        #   each computation/execution get allocated to a process. following strategy 1, this is
+        # CPU-bounded task as the only I/O task would be after each simulation case
+        concurrency_strategy: int = 0
 
         if save:
             self.save_init(archive=save_archive)
 
+        try:
+            set_progress_max(n_sim)
+        except TypeError:
+            pass
+
         progress_0 = None
-        with concurrent.futures.ProcessPoolExecutor(max_workers=n_proc) as executor:
-            for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
-                if cases_to_run and mcs_case_name not in cases_to_run:
-                    continue
-                progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
-                mcs_case.run(executor, set_progress=set_progress, progress_0=progress_0)
-                if save:
-                    mcs_case.save_csv(archive=save_archive)
+        if n_proc > 3:
+            with ProcessPoolExecutor(max_workers=n_proc) as p_executor:
+                # futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
+                futures = {
+                    p_executor.submit(mcs.run, save=True, save_archive=save_archive)
+                    for mcs in self.mcs_cases.values()
+                }
+                if set_progress is not None:
+                    for i, future in enumerate(as_completed(futures), start=1):
+                        set_progress(0 + i)
+        else:
+            with ThreadPoolExecutor(max_workers=2) as t_executor:
+                with ProcessPoolExecutor(max_workers=n_proc) as p_executor:
+                    for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
+                        if cases_to_run and mcs_case_name not in cases_to_run:
+                            continue
+                        progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
+                        mcs_case.run(p_executor, set_progress=set_progress, progress_0=progress_0)
+                        if save:
+                            t_executor.submit(mcs_case.save_csv, None, save_archive)
 
     def save_init(self, archive: bool):
         # clean existing files
