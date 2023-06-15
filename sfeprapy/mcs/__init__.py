@@ -629,6 +629,90 @@ class MCS(ABC):
             else:
                 del undefined_case_name_by_user
 
+        '''Concurrency Strategy
+        
+        Procedure description:
+        
+            1.  Go through each simulation case and to the following.
+                1.1 Task 1: Prepare arguments for simulation iterations.
+                1.2 Go through each simulation iteration in the simulation case, for each simulation iteration do the 
+                    following.
+                    1.2.1   Task 2: Perform the computation.
+                1.3 Write output to disk.
+        
+        Terminology:
+        
+            1.  Simulation iteration: This refers to a single run of the simulation. The computation-intensive task (task 
+                2) happens here. 
+            2.  Simulation case: This refers to a set of simulation iterations. It involves multiple iterations of 
+                task 2 but also includes the preparation/sampling of inputs (task 1) and the output saving operation 
+                (task 3).
+            3.  The E/W ratio, which reflects the balance of computational workloads across available processing units. 
+            4.  The overhead cost (O), which involves the expenses associated with managing multiple processes. 
+            5.  The blocking cost (B), which reflects the performance impact of I/O bound operations blocking CPU-bound 
+                tasks.
+        
+        In the application of this class, many simulation cases are typically present. Each simulation case consists 
+        of multiple simulation iterations. To improve computation performance, multiprocessing is used to leverage 
+        the multi-core nature of modern CPUs. There are two possible strategies to apply multiprocessing, 
+        based on the level of parallelism:
+        
+        Strategy 1: Case-level Parallelism
+        
+            In this strategy, each simulation case is allocated to a separate process. This strategy is beneficial 
+            when the ratio of executions (simulation iterations) to available workers (E/W) is significant. It can 
+            efficiently utilise CPU resources when execution times within each case are roughly equal. However, 
+            if there's significant variation in execution times within each case, some CPU cores might be 
+            underutilized if they finish their tasks much earlier than others.
+        
+        Strategy 2: Iteration-level Parallelism
+        
+            In this strategy, each simulation iteration is allocated to a separate process. This can provide a more 
+            balanced workload across processes, especially when there's high variability in the execution times of 
+            iterations. However, there's additional overhead involved in managing more processes, and the main 
+            process could become a bottleneck if it's blocked by I/O operations.
+        
+        Things to Consider:
+        
+            Workload Distribution and Balance: Workload balance is a critical aspect in multiprocessing. A skewed 
+            workload can lead to idle CPU resources when some processes finish much earlier than others. For better 
+            load balancing, dynamic task scheduling strategies might be required and this is done through the
+            `ProcessPoolExecutor` but may raise cost in strategy 1.
+        
+            Overhead of Multiprocessing: While multiprocessing can speed up computation, it also introduces overhead 
+            when perform `submit()` in `ProcessPoolExecutor`. 
+            It's crucial to ensure that the gain from multiprocessing outweighs the overhead costs. Otherwise, 
+            the overall performance might be worse than a single-process implementation.
+        
+            I/O Bound Operations: Task 3 (saving output to disk) is I/O bound and could potentially block CPU-bound 
+            tasks. Consider moving the I/O operations to a separate process, or use asynchronous I/O if possible, 
+            to prevent blocking the CPU-bound tasks.
+        
+            Execution Time Variation: The estimation of E/W seems to be based on the assumption that each execution 
+            takes roughly the same amount of time. If the execution times vary significantly, this estimation might 
+            not accurately reflect the workload.
+        
+        Strategy Selection:
+                
+        To assist in this decision-making process, it can be useful to represent these factors in a cost function, 
+        where the total cost is the sum of the E/W ratio, overhead cost, and blocking cost:
+        
+        Cost = E/W + O + B
+        
+        The strategy with the lowest computed cost could be selected as the optimal strategy for a given situation. 
+        However, keep in mind that quantifying costs like O and B can be challenging, and they may vary depending on 
+        factors such as hardware characteristics, operating system behavior, and the specific nature of the tasks.
+        
+        As a temporary measure, an E/W ratio threshold of 1.5 is currently being used as the sole determinant of the 
+        strategy, with the understanding that this approach may not fully capture the complexities of the costs 
+        involved. Further research and testing are required to refine the cost function and its use in strategy 
+        selection.
+        
+        Moreover, it can be beneficial to experiment with different strategies and configurations, as well as to 
+        perform benchmark tests under a variety of conditions, to find the optimal solution for your particular 
+        scenario. Remember that this cost function and threshold might not be optimal for all scenarios and may need 
+        to be adjusted based on empirical data.'''
+
         if cases_to_run:
             n_case = sum([1 if k in cases_to_run else 0 for k, v in self.mcs_cases.items()])
             n_sim = sum([v.n_sim if k in cases_to_run else 0 for k, v in self.mcs_cases.items()])
@@ -636,54 +720,32 @@ class MCS(ABC):
             n_case = sum([1 for k, v in self.mcs_cases.items()])
             n_sim = sum([v.n_sim for k, v in self.mcs_cases.items()])
 
-        # concurrency strategy
-        # terminology:
-        #   simulation iteration: simply a single simulation iteration, e.g., calling a function and get results
-        #   simulation case: describes a monte carlo simulation case, consists of a defined number of simulation
-        #   iterations.
-        #
-        # specific to the application of this class, many simulation cases may present and each simulation case consists
-        # many simulation iteratoins to be run. multiprocessing is utilised to speed up the computation performance
-        # given modern CPUs are supplied with multiple logical processors. However, multiprocessing can be applied in
-        # different ways in terms which level of the loops to chip in. Below is an example of the loop pattern:
-        #
-        #   for each_case in mcs_cases:
-        #           pass  # task 1: prepare/sampling inputs for `each_case`...
-        #       for each_iteration in each_case:
-        #           pass  # task 2: computation happen here...
-        #       pass # task 3: save output to disk...
-        #
-        # task 1 and 2 are CPU bound and task 3 is I/O bound.
-        #
-        # strategy 1:
-        #   each case get allocated to a process. the benefit is clear as all the tasks are non-blocking to other cases.
-        #   however, the computational time will be dictated by the case that takes the longest time. this strategy
-        #   would be beneficial when the E/W (executions and number of available workers ratio) is significant.
-        # strategy 2:
-        #   each computation/execution get allocated to a process. following strategy 1, this is
-        # CPU-bounded task as the only I/O task would be after each simulation case
-        concurrency_strategy: int = 0
+        if n_proc > 4:
+            concurrency_strategy = 1
+        else:
+            concurrency_strategy = 2
 
         if save:
             self.save_init(archive=save_archive)
 
         try:
-            set_progress_max(n_sim)
+            if concurrency_strategy == 1:
+                set_progress_max(n_case)
+            elif concurrency_strategy == 2:
+                set_progress_max(n_sim)
         except TypeError:
             pass
 
         progress_0 = None
-        if n_proc > 3:
-            with ProcessPoolExecutor(max_workers=n_proc) as p_executor:
-                # futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
+        if concurrency_strategy == 1:
+            with ProcessPoolExecutor(max_workers=min(n_proc, n_case)) as p_executor:
                 futures = {
-                    p_executor.submit(mcs.run, save=True, save_archive=save_archive)
-                    for mcs in self.mcs_cases.values()
+                    p_executor.submit(mcs.run, save=save, save_archive=save_archive) for mcs in self.mcs_cases.values()
                 }
                 if set_progress is not None:
                     for i, future in enumerate(as_completed(futures), start=1):
                         set_progress(0 + i)
-        else:
+        elif concurrency_strategy == 2:
             with ThreadPoolExecutor(max_workers=2) as t_executor:
                 with ProcessPoolExecutor(max_workers=n_proc) as p_executor:
                     for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
@@ -693,6 +755,8 @@ class MCS(ABC):
                         mcs_case.run(p_executor, set_progress=set_progress, progress_0=progress_0)
                         if save:
                             t_executor.submit(mcs_case.save_csv, None, save_archive)
+        else:
+            raise NotImplementedError(f'Unknown `concurrency_strategy` {concurrency_strategy}.')
 
     def save_init(self, archive: bool):
         # clean existing files
