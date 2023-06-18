@@ -359,25 +359,16 @@ class MCSSingle(ABC):
         for k in keys_from_worker_required:
             if k not in keys_from_worker:
                 missing_args.append(k)
-
         if len(missing_args) > 0:
             raise ValueError(f'Missing arguments: {missing_args}.')
 
-        nested_args = list()
-        for k in keys_from_worker_required:
-            if k not in kwargs_from_input:
-                missing_args.append(k)
-                continue
-            nested_args.append(kwargs_from_input[k])
-
-        if len(missing_args) > 0:
-            raise ValueError(f'Missing required arguments: {missing_args}.')
+        nested_args = list(kwargs_from_input[k] for k in keys_from_worker_required)
 
         for i, k in enumerate(keys_from_worker_optional):
-            if k in keys_from_worker:
+            if k in kwargs_from_input:
                 nested_args.append(kwargs_from_input[k])
             else:
-                nested_args.append(defaults_from_worker[i])
+                nested_args.append((defaults_from_worker[i] for __ in range(self.n_sim)))
 
         # ===============
         # start processes
@@ -406,6 +397,8 @@ class MCSSingle(ABC):
         if save:
             self.save_csv(dir_save=None, archive=save_archive)
 
+        return self.__output
+
     @property
     @abstractmethod
     def worker(self) -> Callable:
@@ -426,6 +419,10 @@ class MCSSingle(ABC):
     @property
     def output(self):
         return self.__output
+
+    @output.setter
+    def output(self, d: np.ndarray):
+        self.__output = d
 
     @staticmethod
     def make_pdf(data: np.ndarray, bin_width: float = 0.2) -> (np.ndarray, np.ndarray, np.ndarray):
@@ -614,6 +611,7 @@ class MCS(ABC):
             save: bool = False,
             save_archive: bool = False,
             cases_to_run: Optional[list] = None,
+            concurrency_strategy: Optional[int] = 0,
     ):
         # check if all `cases_to_run` exist in `self.mcs_cases`
         if cases_to_run:
@@ -720,32 +718,43 @@ class MCS(ABC):
             n_case = sum([1 for k, v in self.mcs_cases.items()])
             n_sim = sum([v.n_sim for k, v in self.mcs_cases.items()])
 
-        if n_proc > 4:
-            concurrency_strategy = 1
-        else:
-            concurrency_strategy = 2
+        if concurrency_strategy == 0:
+            if n_proc > 4 and n_proc < n_case:
+                concurrency_strategy = 1
+            else:
+                concurrency_strategy = 2
 
         if save:
             self.save_init(archive=save_archive)
 
-        try:
-            if concurrency_strategy == 1:
-                set_progress_max(n_case)
-            elif concurrency_strategy == 2:
-                set_progress_max(n_sim)
-        except TypeError:
-            pass
-
         progress_0 = None
         if concurrency_strategy == 1:
+            try:
+                set_progress_max(n_case)
+            except TypeError:
+                pass
+
+            output = dict()
             with ProcessPoolExecutor(max_workers=min(n_proc, n_case)) as p_executor:
                 futures = {
                     p_executor.submit(mcs.run, save=save, save_archive=save_archive) for mcs in self.mcs_cases.values()
                 }
                 if set_progress is not None:
                     for i, future in enumerate(as_completed(futures), start=1):
-                        set_progress(0 + i)
+                        output[i] = future.result()
+                        set_progress(i)
+                else:
+                    for i, future in enumerate(as_completed(futures), start=1):
+                        output[i] = future.result()
+            for i, mcs in enumerate(self.mcs_cases.values(), start=1):
+                mcs.output = output[i]
+
         elif concurrency_strategy == 2:
+            try:
+                set_progress_max(n_sim)
+            except TypeError:
+                pass
+
             with ThreadPoolExecutor(max_workers=2) as t_executor:
                 with ProcessPoolExecutor(max_workers=n_proc) as p_executor:
                     for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
