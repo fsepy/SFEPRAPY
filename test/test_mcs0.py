@@ -49,8 +49,8 @@ def test_standard_case():
     mcs = MCS0()
     mcs.set_inputs_dict({'CASE_1': mcs_input.pop('CASE_1'), 'CASE_2_teq_phi': mcs_input.pop('CASE_2_teq_phi'),
                          'CASE_3_timber': mcs_input.pop('CASE_3_timber'), })
-    pbar = tqdm(total=sum(i.n_sim for i in mcs.mcs_cases.values()))
-    mcs.run(n_proc=1, set_progress=lambda _: pbar.update(1), save=True)
+    pbar = tqdm()
+    mcs.run(1, set_progress=lambda _: pbar.update(1), set_progress_max=lambda _: setattr(pbar, 'total', _), save=True)
     pbar.close()
 
     # 60 minutes based on Kirby et al.
@@ -137,6 +137,6 @@ def test_performance():
 
 if __name__ == '__main__':
     # test_teq_phi()
-    # test_standard_case()
+    test_standard_case()
     # test_file_input()
-    test_performance()
+    # test_performance()
