@@ -135,8 +135,43 @@ def test_performance():
     p.show()
 
 
+def multiprocessing_strategy_research():
+    from os import path
+    from sfeprapy.mcs0 import EXAMPLE_INPUT
+    from sfeprapy.func.xlsx import dict_to_xlsx
+    from itertools import product
+    import time
+
+    mps = [1, 2]
+    n_cases = list(range(0, 25, 4))[1:]
+    n_sims = [1000, 2000, 3000]
+    n_workers = [1, 2, 3, 4, 5, 6]
+
+    res = list()
+    iters = list(product(mps, n_cases, n_sims, n_workers))
+    print(len(iters))
+    for a, b, c, d in iters:
+        EXAMPLE_INPUT_ = EXAMPLE_INPUT['CASE_1'].copy()
+        EXAMPLE_INPUT_['n_simulations'] = c
+        mcs_input = {f'CASE_{i}': EXAMPLE_INPUT_ for i in range(b)}
+
+        import tempfile
+        times = list()
+        with tempfile.TemporaryDirectory() as dir_work:
+            fp_input = path.join(dir_work, 'test.xlsx')
+            dict_to_xlsx({k: InputParser.flatten_dict(v) for k, v in mcs_input.items()}, fp_input)
+
+            t0 = time.time()
+            mcs = MCS0()
+            mcs.set_inputs_file_path(fp_input)
+            mcs.run(d, save=True, save_archive=True, concurrency_strategy=a)
+            times.append(time.time() - t0)
+        res.append((a, b, c, d, times[-1]))
+        print(f'{res[-1]}')
+
+    for i in res:
+        print(i)
+
+
 if __name__ == '__main__':
-    # test_teq_phi()
-    test_standard_case()
-    # test_file_input()
-    # test_performance()
+    pass
