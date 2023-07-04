@@ -3,6 +3,7 @@ from typing import Union
 
 import numpy as np
 
+__all__ = 'Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic', 'Uniform'
 
 class DistFunc(ABC):
     def __init__(self, mu: float, sigma: float):
@@ -90,9 +91,6 @@ def test_erfinv():
 
 
 class Gumbel(DistFunc):
-    EULER = 0.57721566490153286060  # Euler-Mascheroni constant
-    PI = 3.141592653589793
-
     @staticmethod
     def _pdf(x, mean, stddev):
         mu, sigma = Gumbel._convert_params(mean, stddev)
@@ -112,23 +110,28 @@ class Gumbel(DistFunc):
 
     @staticmethod
     def _convert_params(mean, stddev):
-        sigma = stddev * np.sqrt(6) / Gumbel.PI
-        mu = mean - Gumbel.EULER * sigma
+        sigma = stddev * np.sqrt(6) / np.pi
+        mu = mean - 0.57721566490153286060 * sigma
         return mu, sigma
 
     @staticmethod
     def test():
-        assert_func(Gumbel(420, 126).cdf(200), 0.00514, tol=1e-3)
-        assert_func(Gumbel(420, 126).cdf(400), 0.50247, tol=1e-3)
-        assert_func(Gumbel(420, 126).cdf(500), 0.77982, tol=1e-3)
-        assert_func(Gumbel(420, 126).cdf(600), 0.91405, tol=1e-3)
-        assert_func(Gumbel(420, 126).cdf(800), 0.98833, tol=1e-3)
-
-        assert_func(Gumbel(420, 126).ppf(.2), 316.54)
-        assert_func(Gumbel(420, 126).ppf(.4), 371.88)
-        assert_func(Gumbel(420, 126).ppf(.5), 399.30)
-        assert_func(Gumbel(420, 126).ppf(.6), 429.28)
-        assert_func(Gumbel(420, 126).ppf(.8), 510.65)
+        d = Gumbel(420, 126)
+        assert_func(d.pdf(316.541), 0.00327648, tol=1e-3)
+        assert_func(d.pdf(365.069), 0.00374402, tol=1e-3)
+        assert_func(d.pdf(413.596), 0.00335019, tol=1e-3)
+        assert_func(d.pdf(462.123), 0.00258223, tol=1e-3)
+        assert_func(d.pdf(510.650), 0.00181710, tol=1e-3)
+        assert_func(d.cdf(316.541), 0.20000, tol=1e-3)
+        assert_func(d.cdf(365.069), 0.37453, tol=1e-3)
+        assert_func(d.cdf(413.596), 0.54921, tol=1e-3)
+        assert_func(d.cdf(462.123), 0.69372, tol=1e-3)
+        assert_func(d.cdf(510.650), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 316.541)
+        assert_func(d.ppf(0.37453), 365.069)
+        assert_func(d.ppf(0.54921), 413.596)
+        assert_func(d.ppf(0.69372), 462.123)
+        assert_func(d.ppf(0.80000), 510.650)
 
 
 if __name__ == '__main__':
@@ -150,17 +153,22 @@ class Normal(DistFunc):
 
     @staticmethod
     def test():
-        assert_func(Normal(420, 126).cdf(200), 0.04040, tol=1e-3)
-        assert_func(Normal(420, 126).cdf(400), 0.43694, tol=1e-3)
-        assert_func(Normal(420, 126).cdf(500), 0.73726, tol=1e-3)
-        assert_func(Normal(420, 126).cdf(600), 0.92344, tol=1e-3)
-        assert_func(Normal(420, 126).cdf(800), 0.99872, tol=1e-3)
-
-        assert_func(Normal(420, 126).ppf(.2), 313.96)
-        assert_func(Normal(420, 126).ppf(.4), 388.08)
-        assert_func(Normal(420, 126).ppf(.5), 420.00)
-        assert_func(Normal(420, 126).ppf(.6), 451.92)
-        assert_func(Normal(420, 126).ppf(.8), 526.04)
+        d = Normal(420, 126)
+        assert_func(d.pdf(313.956), 0.00222192, tol=1e-3)
+        assert_func(d.pdf(366.978), 0.00289792, tol=1e-3)
+        assert_func(d.pdf(420.000), 0.00316621, tol=1e-3)
+        assert_func(d.pdf(473.022), 0.00289792, tol=1e-3)
+        assert_func(d.pdf(526.044), 0.00222192, tol=1e-3)
+        assert_func(d.cdf(313.956), 0.20000, tol=1e-3)
+        assert_func(d.cdf(366.978), 0.33695, tol=1e-3)
+        assert_func(d.cdf(420.000), 0.50000, tol=1e-3)
+        assert_func(d.cdf(473.022), 0.66305, tol=1e-3)
+        assert_func(d.cdf(526.044), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 313.956)
+        assert_func(d.ppf(0.33695), 366.978)
+        assert_func(d.ppf(0.50000), 420.000)
+        assert_func(d.ppf(0.66305), 473.022)
+        assert_func(d.ppf(0.80000), 526.044)
 
 
 if __name__ == '__main__':
@@ -265,11 +273,11 @@ class Arcsine(DistFunc):
     @staticmethod
     def test():
         d = Arcsine(420, 126)
-        assert_func(d.pdf(275.841), 0.00303911, tol=1e-3)
+        assert_func(d.pdf(275.84), 0.00303911, tol=1e-3)
         assert_func(d.pdf(347.92), 0.00195328, tol=1e-3)
-        assert_func(d.pdf(420), 0.00178634, tol=1e-3)
+        assert_func(d.pdf(420.00), 0.00178634, tol=1e-3)
         assert_func(d.pdf(492.08), 0.00195328, tol=1e-3)
-        assert_func(d.pdf(564.159), 0.00303911, tol=1e-3)
+        assert_func(d.pdf(564.16), 0.00303911, tol=1e-3)
         assert_func(d.cdf(250), 0.09689, tol=1e-3)
         assert_func(d.cdf(300), 0.26482, tol=1e-3)
         assert_func(d.cdf(400), 0.46420, tol=1e-3)
@@ -427,45 +435,6 @@ if __name__ == '__main__':
     HalfCauchy.test()
 
 
-class Laplace(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Laplace distribution
-        z = np.abs((x - mu) / sigma)
-        return np.exp(-z) / (2 * sigma)
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Laplace distribution
-        z = (x - mu) / sigma
-        return np.where(z < 0, 0.5 * np.exp(z), 1 - 0.5 * np.exp(-z))
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Laplace distribution
-        q = p - 0.5
-        return mu - np.sign(q) * sigma * np.log(1 - 2 * np.abs(q))
-
-
-class Levy(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Levy distribution
-        z = (x - mu) / sigma
-        return np.sqrt(2 / (np.pi * sigma ** 2)) * np.exp(-1 / (2 * sigma ** 2 * z)) / np.abs(z) ** (3 / 2)
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Levy distribution
-        z = (x - mu) / sigma
-        return 1 - np.exp(-1 / (2 * sigma ** 2 * z))
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Levy distribution
-        return mu + sigma / np.sqrt(-2 * np.log(1 - p))
-
-
 class Logistic(DistFunc):
     @staticmethod
     def _pdf(x, mu, sigma):
@@ -515,146 +484,49 @@ if __name__ == '__main__':
     Logistic.test()
 
 
-class Maxwell(DistFunc):
+class Uniform(DistFunc):
     @staticmethod
-    def _pdf(x, mu, sigma):
-        # Rescale and shift x
-        x = (x - mu) / sigma
-
-        # Probability Density Function
-        return np.sqrt(2 / np.pi) * (x ** 2) * np.exp(-x ** 2 / 2)
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Rescale and shift x
-        x = (x - mu) / sigma
-
-        # Cumulative Distribution Function
-        return erf(x / np.sqrt(2)) - np.sqrt(2 / np.pi) * x * np.exp(-x ** 2 / 2)
+    def _pdf(x, mean, std):
+        """Probability density function"""
+        a = mean - np.sqrt(3) * std
+        b = mean + np.sqrt(3) * std
+        return np.where((x >= a) & (x <= b), 1 / (b - a), 0)
 
     @staticmethod
-    def _ppf(q, mu, sigma, tol=1e-6, max_iter=1000):
-        # Function to solve
-        f = lambda x: Maxwell._cdf(x, mu, sigma) - q
+    def _cdf(x, mean, std):
+        """Cumulative distribution function"""
+        a = mean - np.sqrt(3) * std
+        b = mean + np.sqrt(3) * std
+        return np.where(x < a, 0, np.where(x > b, 1, (x - a) / (b - a)))
 
-        # Bisection method
-        left, right = 0, 10
-        for _ in range(max_iter):
-            mid = (left + right) / 2
-            if f(mid) > 0:  # mid is too high
-                right = mid
-            else:  # mid is too low
-                left = mid
-            if abs(f(mid)) < tol:
-                return mid
-
-        raise ValueError("Did not converge")
+    @staticmethod
+    def _ppf(p, mean, std):
+        """Percent-point function (Inverse of cdf)"""
+        # Ensure p is in [0, 1]
+        p = np.clip(p, 0, 1)
+        a = mean - np.sqrt(3) * std
+        b = mean + np.sqrt(3) * std
+        return a + p * (b - a)
 
     @staticmethod
     def test():
-        # assert_func(Maxwell(420, 126).cdf(200), 0.01868, tol=1e-4)
-        # assert_func(Maxwell(420, 126).cdf(400), 0.47134, tol=1e-4)
-        # assert_func(Maxwell(420, 126).cdf(420), 0.53305, tol=1e-4)
-        # assert_func(Maxwell(420, 126).cdf(600), 0.91200, tol=1e-4)
-        # assert_func(Maxwell(420, 126).cdf(800), 0.99568, tol=1e-4)
-        # assert_func(Maxwell(420, 126).ppf(.2), 309.02)
-        # assert_func(Maxwell(420, 126).ppf(.4), 377.23)
-        # assert_func(Maxwell(420, 126).ppf(.5), 409.22)
-        # assert_func(Maxwell(420, 126).ppf(.6), 442.58)
-        # assert_func(Maxwell(420, 126).ppf(.8), 524.53)
-        pass  # todo
+        d = Uniform(420, 126)
+        assert_func(d.pdf(289.057), 0.00229107, tol=1e-3)
+        assert_func(d.pdf(354.528), 0.00229107, tol=1e-3)
+        assert_func(d.pdf(420.000), 0.00229107, tol=1e-3)
+        assert_func(d.pdf(485.472), 0.00229107, tol=1e-3)
+        assert_func(d.pdf(550.943), 0.00229107, tol=1e-3)
+        assert_func(d.cdf(289.057), 0.20000, tol=1e-3)
+        assert_func(d.cdf(354.528), 0.35000, tol=1e-3)
+        assert_func(d.cdf(420.000), 0.50000, tol=1e-3)
+        assert_func(d.cdf(485.472), 0.65000, tol=1e-3)
+        assert_func(d.cdf(550.943), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 289.057)
+        assert_func(d.ppf(0.35000), 354.528)
+        assert_func(d.ppf(0.50000), 420.000)
+        assert_func(d.ppf(0.65000), 485.472)
+        assert_func(d.ppf(0.80000), 550.943)
 
 
 if __name__ == '__main__':
-    Maxwell.test()
-
-
-class Rayleigh(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Rayleigh distribution
-        z = (x - mu) / sigma
-        return (z / sigma ** 2) * np.exp(-0.5 * (z ** 2))
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Rayleigh distribution
-        z = (x - mu) / sigma
-        return 1 - np.exp(-0.5 * (z ** 2))
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Rayleigh distribution
-        return mu + sigma * np.sqrt(-2 * np.log(1 - p))
-
-
-class Semicircular(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Semicircular distribution
-        z = (x - mu) / sigma
-        pdf = np.zeros_like(z)
-        pdf[np.abs(z) <= 1] = (2 / np.pi) * np.sqrt(1 - z[np.abs(z) <= 1] ** 2)
-        return pdf / sigma
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Semicircular distribution
-        z = (x - mu) / sigma
-        cdf = np.zeros_like(z)
-        cdf[np.abs(z) <= 1] = (1 / np.pi) * (
-                np.arcsin(z[np.abs(z) <= 1]) + (z[np.abs(z) <= 1] * np.sqrt(1 - z[np.abs(z) <= 1] ** 2)))
-        return cdf
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Semicircular distribution
-        ppf = np.zeros_like(p)
-        ppf[(p >= 0) & (p <= 0.5)] = mu + sigma * np.sin(2 * np.pi * p[(p >= 0) & (p <= 0.5)])
-        ppf[p > 0.5] = mu + sigma * np.sin(2 * np.pi * (p[p > 0.5] - 1))
-        return ppf
-
-
-class Uniform(DistFunc):
-    @staticmethod
-    def _pdf(x, a, b):
-        # Calculate the probability density function (PDF) of the Uniform distribution
-        pdf = np.zeros_like(x)
-        pdf[(x >= a) & (x <= b)] = 1 / (b - a)
-        return pdf
-
-    @staticmethod
-    def _cdf(x, a, b):
-        # Calculate the cumulative distribution function (CDF) of the Uniform distribution
-        cdf = np.zeros_like(x)
-        cdf[x >= b] = 1
-        cdf[(x >= a) & (x < b)] = (x[(x >= a) & (x < b)] - a) / (b - a)
-        return cdf
-
-    @staticmethod
-    def _ppf(p, a, b):
-        # Calculate the percent point function (PPF) of the Uniform distribution
-        ppf = np.zeros_like(p)
-        ppf[p >= 1] = b
-        ppf[p < 1] = a + (b - a) * p[p < 1]
-        return ppf
-
-
-class Wald(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Wald distribution
-        pdf = np.sqrt(2 * np.pi) * (x ** 3 / (mu ** 3 * sigma ** 5)) * np.exp(-0.5 * ((x - mu) / (mu * sigma)) ** 2)
-        return pdf
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Wald distribution
-        cdf = 0.5 * (1 + np.erf((np.sqrt(x / mu) - 1) / (np.sqrt(2) * sigma)))
-        return cdf
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Wald distribution
-        ppf = mu * (1 + (mu / sigma) ** 2 * erfinv(2 * p - 1)) ** 2 / (1 - (mu / sigma) ** 2 * erfinv(2 * p - 1))
-        return ppf
+    Uniform.test()

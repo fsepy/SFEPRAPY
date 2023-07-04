@@ -13,8 +13,6 @@ from io import StringIO
 from typing import Callable, Optional, Dict, Union, Any
 
 import numpy as np
-import scipy.stats as stats
-from scipy.interpolate import interp1d
 
 from sfeprapy.func.xlsx import dict_to_xlsx
 
