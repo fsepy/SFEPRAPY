@@ -34,6 +34,10 @@ class DistFunc(ABC):
         raise NotImplementedError
 
 
+def assert_func(r_, a_, tol=1e-1):
+    assert abs(r_ - a_) < tol, ValueError(f'{r_} != {a_}')
+
+
 def erf(x):
     # constants
     a1 = 0.254829592
@@ -114,11 +118,15 @@ class Gumbel(DistFunc):
 
     @staticmethod
     def test():
-        def assert_func(r_, a_):
-            assert abs(r_ - a_) < 1e-1, ValueError(f'{r_} != {a_}')
+        assert_func(Gumbel(420, 126).cdf(200), 0.00514, tol=1e-3)
+        assert_func(Gumbel(420, 126).cdf(400), 0.50247, tol=1e-3)
+        assert_func(Gumbel(420, 126).cdf(500), 0.77982, tol=1e-3)
+        assert_func(Gumbel(420, 126).cdf(600), 0.91405, tol=1e-3)
+        assert_func(Gumbel(420, 126).cdf(800), 0.98833, tol=1e-3)
 
         assert_func(Gumbel(420, 126).ppf(.2), 316.54)
         assert_func(Gumbel(420, 126).ppf(.4), 371.88)
+        assert_func(Gumbel(420, 126).ppf(.5), 399.30)
         assert_func(Gumbel(420, 126).ppf(.6), 429.28)
         assert_func(Gumbel(420, 126).ppf(.8), 510.65)
 
@@ -142,8 +150,11 @@ class Normal(DistFunc):
 
     @staticmethod
     def test():
-        def assert_func(r_, a_):
-            assert abs(r_ - a_) < 1e-1, ValueError(f'{r_} != {a_}')
+        assert_func(Normal(420, 126).cdf(200), 0.04040, tol=1e-3)
+        assert_func(Normal(420, 126).cdf(400), 0.43694, tol=1e-3)
+        assert_func(Normal(420, 126).cdf(500), 0.73726, tol=1e-3)
+        assert_func(Normal(420, 126).cdf(600), 0.92344, tol=1e-3)
+        assert_func(Normal(420, 126).cdf(800), 0.99872, tol=1e-3)
 
         assert_func(Normal(420, 126).ppf(.2), 313.96)
         assert_func(Normal(420, 126).ppf(.4), 388.08)
@@ -188,53 +199,91 @@ class Lognormal(DistFunc):
 
     @staticmethod
     def test():
-        def assert_func(r_, a_):
-            assert abs(r_ - a_) < 1e-1, ValueError(f'{r_} != {a_}')
-
         assert_func(Lognormal(420, 126).ppf(.2), 314.22)
         assert_func(Lognormal(420, 126).ppf(.4), 373.45)
         assert_func(Lognormal(420, 126).ppf(.5), 402.29)
         assert_func(Lognormal(420, 126).ppf(.6), 433.35)
         assert_func(Lognormal(420, 126).ppf(.8), 515.03)
 
+        assert_func(Lognormal(420, 126).cdf(200), 0.00864, tol=1e-3)
+        assert_func(Lognormal(420, 126).cdf(400), 0.49225, tol=1e-3)
+        assert_func(Lognormal(420, 126).cdf(500), 0.77056, tol=1e-3)
+        assert_func(Lognormal(420, 126).cdf(600), 0.91337, tol=1e-3)
+        assert_func(Lognormal(420, 126).cdf(800), 0.99040, tol=1e-3)
+
 
 if __name__ == '__main__':
     Lognormal.test()
 
 
-class Anglit(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        return np.where((x >= mu - np.pi * sigma / 4) & (x <= mu + np.pi * sigma / 4),
-                        1 / (np.pi * sigma) * (1 + np.cos((x - mu) / sigma)), 0)
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        return np.where((x >= mu - np.pi * sigma / 4) & (x <= mu + np.pi * sigma / 4),
-                        2 / np.pi * (x - mu) / sigma + np.sin((x - mu) / sigma) / (np.pi * sigma) + 0.5, 0)
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        return np.where((p >= 0) & (p <= 1), mu + sigma * np.arcsin(2 * np.pi * p - 1), 0)
-
-
 class Arcsine(DistFunc):
     @staticmethod
     def _pdf(x, mean, std_dev):
-        return np.where((x > mean - std_dev) & (x < mean + std_dev),
-                        1 / (np.pi * std_dev * np.sqrt((x - mean) * (1 - x + mean))), 0)
+        # Calculate a and b from the mean and standard deviation
+        a = mean - np.sqrt(2) * std_dev
+        b = mean + np.sqrt(2) * std_dev
+
+        # Ensure that x is within the range [a, b]
+        # if x < a or x > b:
+        #     raise ValueError("x must be within the range [a, b]")
+
+        # Compute the PDF of the arcsine distribution
+        pdf_value = 1 / (np.pi * np.sqrt((x - a) * (b - x)))
+
+        return pdf_value
 
     @staticmethod
     def _cdf(x, mean, std_dev):
-        return np.where(
-            (x >= mean - std_dev) & (x <= mean + std_dev),
-            2 / np.pi * np.arcsin(np.sqrt((x - mean) / (2 * std_dev) + 0.5)),
-            0
-        )
+        # Calculate a and b from the mean and standard deviation
+        a = mean - np.sqrt(2) * std_dev
+        b = mean + np.sqrt(2) * std_dev
+
+        # Ensure that x is within the range [a, b]
+        # if x < a or x > b:
+        #     raise ValueError("x must be within the range [a, b]")
+
+        # Standardize x
+        x_std = (x - a) / (b - a)
+
+        # Compute the CDF of the standardized arcsine distribution
+        cdf_value = (2 / np.pi) * np.arcsin(np.sqrt(x_std))
+
+        # CDF of the generalized arcsine distribution
+        return cdf_value
 
     @staticmethod
     def _ppf(p, mean, std_dev):
-        return np.where((p >= 0) & (p <= 1), mean + std_dev * np.sin(np.pi * p / 2) ** 2, 0)
+        # Calculate a and b from the mean and standard deviation
+        a = mean - np.sqrt(2) * std_dev
+        b = mean + np.sqrt(2) * std_dev
+
+        # Compute the PPF of the arcsine distribution
+        ppf_value = a + (b - a) * (np.sin(np.pi * p / 2)) ** 2
+
+        return ppf_value
+
+    @staticmethod
+    def test():
+        d = Arcsine(420, 126)
+        assert_func(d.pdf(275.841), 0.00303911, tol=1e-3)
+        assert_func(d.pdf(347.92), 0.00195328, tol=1e-3)
+        assert_func(d.pdf(420), 0.00178634, tol=1e-3)
+        assert_func(d.pdf(492.08), 0.00195328, tol=1e-3)
+        assert_func(d.pdf(564.159), 0.00303911, tol=1e-3)
+        assert_func(d.cdf(250), 0.09689, tol=1e-3)
+        assert_func(d.cdf(300), 0.26482, tol=1e-3)
+        assert_func(d.cdf(400), 0.46420, tol=1e-3)
+        assert_func(d.cdf(500), 0.64820, tol=1e-3)
+        assert_func(d.cdf(550), 0.76027, tol=1e-3)
+        assert_func(d.ppf(0.09689), 250)
+        assert_func(d.ppf(0.26482), 300)
+        assert_func(d.ppf(0.46420), 400)
+        assert_func(d.ppf(0.64820), 500)
+        assert_func(d.ppf(0.76027), 550)
+
+
+if __name__ == '__main__':
+    Arcsine.test()
 
 
 class Cauchy(DistFunc):
@@ -250,99 +299,132 @@ class Cauchy(DistFunc):
     def _ppf(p, mu, sigma):
         return mu + sigma * np.tan(np.pi * (p - 0.5))
 
+    @staticmethod
+    def test():
+        d = Cauchy(420, 126)
+        assert_func(d.pdf(246.576), 0.00087280, tol=1e-3)
+        assert_func(d.pdf(333.288), 0.00171434, tol=1e-3)
+        assert_func(d.pdf(420.000), 0.00252627, tol=1e-3)
+        assert_func(d.pdf(506.712), 0.00171434, tol=1e-3)
+        assert_func(d.pdf(593.424), 0.00087280, tol=1e-3)
+        assert_func(d.cdf(246.576), 0.20000, tol=1e-3)
+        assert_func(d.cdf(333.288), 0.30814, tol=1e-3)
+        assert_func(d.cdf(420.000), 0.50000, tol=1e-3)
+        assert_func(d.cdf(506.712), 0.69186, tol=1e-3)
+        assert_func(d.cdf(593.424), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 246.576)
+        assert_func(d.ppf(0.30814), 333.288)
+        assert_func(d.ppf(0.50000), 420.000)
+        assert_func(d.ppf(0.69186), 506.712)
+        assert_func(d.ppf(0.80000), 593.424)
 
-class Cosine(DistFunc):
+
+if __name__ == '__main__':
+    Cauchy.test()
+
+
+class HyperbolicSecant(DistFunc):
     @staticmethod
     def _pdf(x, mu, sigma):
-        return np.where((x >= mu - np.pi * sigma / 2) & (x <= mu + np.pi * sigma / 2),
-                        1 / (np.pi * sigma) * (np.cos((x - mu) / sigma) + 1) / 2, 0)
+        return (1 / (2 * sigma)) * (1 / np.cosh(np.pi / 2 * ((x - mu) / sigma)))
 
     @staticmethod
     def _cdf(x, mu, sigma):
-        return np.where((x >= mu - np.pi * sigma / 2) & (x <= mu + np.pi * sigma / 2),
-                        (x - mu) / (np.pi * sigma) + np.sin((x - mu) / sigma) / (np.pi * sigma) + 0.5, 0)
+        return (2 / np.pi) * np.arctan(np.exp(np.pi / 2 * ((x - mu) / sigma)))
 
     @staticmethod
     def _ppf(p, mu, sigma):
-        return np.where((p >= 0) & (p <= 1), mu + sigma * np.arccos(1 - 2 * p), 0)
+        # Check for valid input
+        if p <= 0 or p >= 1:
+            raise ValueError("p must be in (0, 1)")
 
+        # Define the function we want to find the root of
+        def f(x):
+            return HyperbolicSecant._cdf(x, mu, sigma) - p
 
-class HyperbolicSecantDistribution(DistFunc):
+        # Initial boundaries for bisection method
+        lower, upper = mu - 10 * sigma, mu + 10 * sigma
+
+        # Bisection method
+        while upper - lower > 1e-6:  # 1e-6 is the desired accuracy
+            midpoint = (upper + lower) / 2
+            if f(midpoint) > 0:  # If the function at the midpoint is > 0, the root must be in the left interval
+                upper = midpoint
+            else:  # Otherwise, the root must be in the right interval
+                lower = midpoint
+
+        return (upper + lower) / 2
+
     @staticmethod
-    def _pdf(x, mu, sigma):
-        return 1 / (np.pi * sigma * np.cosh((x - mu) / sigma))
+    def test():
+        d = HyperbolicSecant(420, 126)
 
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        return 0.5 + 0.5 * np.tanh((x - mu) / (2 * sigma))
+        assert_func(d.pdf(329.825), 0.00233248, tol=1e-3)
+        assert_func(d.pdf(374.913), 0.00341451, tol=1e-3)
+        assert_func(d.pdf(420.000), 0.00396825, tol=1e-3)
+        assert_func(d.pdf(465.087), 0.00341451, tol=1e-3)
+        assert_func(d.pdf(510.175), 0.00233248, tol=1e-3)
+        assert_func(d.cdf(329.825), 0.20000, tol=1e-3)
+        assert_func(d.cdf(374.913), 0.32982, tol=1e-3)
+        assert_func(d.cdf(420.000), 0.50000, tol=1e-3)
+        assert_func(d.cdf(465.087), 0.67018, tol=1e-3)
+        assert_func(d.cdf(510.175), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 329.825)
+        assert_func(d.ppf(0.32982), 374.913)
+        assert_func(d.ppf(0.50000), 420.000)
+        assert_func(d.ppf(0.67018), 465.087)
+        assert_func(d.ppf(0.80000), 510.175)
 
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        return mu + 2 * sigma * np.arctanh(2 * p - 1)
+
+if __name__ == '__main__':
+    HyperbolicSecant.test()
 
 
 class HalfCauchy(DistFunc):
 
     @staticmethod
     def _pdf(x, mu, sigma):
-        """
-        Returns the value of the probability density function for half-Cauchy distribution.
-        """
-        return 1 / (np.pi * sigma * (1 + ((x - mu) / sigma) ** 2))
+        if x < mu:
+            return 0
+        else:
+            return (2 / (np.pi * sigma)) / (1 + ((x - mu) / sigma) ** 2)
 
     @staticmethod
     def _cdf(x, mean, std_dev):
-        """
-        Returns the value of the cumulative distribution function for half-Cauchy distribution.
-        """
-        return 2 / np.pi * np.arctan((x - mean) / std_dev)
+        if x < mean:
+            return 0
+        else:
+            return 2 / np.pi * np.arctan((x - mean) / std_dev)
 
     @staticmethod
     def _ppf(q, mean, std_dev):
         """
         Returns the value of the percent point function (also called inverse cumulative function) for half-Cauchy distribution.
         """
-        return mean + std_dev * np.tan(np.pi * (q - 0.5))
-
-
-class HalfNormal(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Half Normal distribution
-        x = (x - mu) / sigma
-        return np.exp(-0.5 * (x ** 2)) / (np.sqrt(2 * np.pi) * sigma)
+        return mean + std_dev * np.tan(np.pi / 2 * q)
 
     @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Half Normal distribution
-        x = (x - mu) / sigma
-        return 0.5 * (1 + np.erf(x / np.sqrt(2)))
+    def test():
+        d = HalfCauchy(420, 126)
+        assert_func(d.pdf(460.940), 0.004570060, tol=1e-3)
+        assert_func(d.pdf(547.652), 0.002493360, tol=1e-3)
+        assert_func(d.pdf(634.364), 0.001297380, tol=1e-3)
+        assert_func(d.pdf(721.076), 0.000753023, tol=1e-3)
+        assert_func(d.pdf(807.788), 0.000482474, tol=1e-3)
+        assert_func(d.cdf(460.940), 0.20000, tol=1e-3)
+        assert_func(d.cdf(547.652), 0.50415, tol=1e-3)
+        assert_func(d.cdf(634.364), 0.66171, tol=1e-3)
+        assert_func(d.cdf(721.076), 0.74767, tol=1e-3)
+        assert_func(d.cdf(807.788), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 460.940)
+        assert_func(d.ppf(0.50415), 547.652)
+        assert_func(d.ppf(0.66171), 634.364)
+        assert_func(d.ppf(0.74767), 721.076)
+        assert_func(d.ppf(0.80000), 807.788)
 
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Half Normal distribution
-        x = np.sqrt(2) * sigma * np.erfinv(2 * p - 1)
-        return mu + x
 
-
-class HalfLogistic(DistFunc):
-    @staticmethod
-    def _pdf(x, mu, sigma):
-        # Calculate the probability density function (PDF) of the Half Logistic distribution
-        z = (x - mu) / sigma
-        return np.exp(-z) / (sigma * (1 + np.exp(-z)) ** 2)
-
-    @staticmethod
-    def _cdf(x, mu, sigma):
-        # Calculate the cumulative distribution function (CDF) of the Half Logistic distribution
-        z = (x - mu) / sigma
-        return 1 / (1 + np.exp(-z))
-
-    @staticmethod
-    def _ppf(p, mu, sigma):
-        # Calculate the percent point function (PPF) of the Half Logistic distribution
-        z = np.log(p / (1 - p))
-        return mu + sigma * z
+if __name__ == '__main__':
+    HalfCauchy.test()
 
 
 class Laplace(DistFunc):
@@ -411,14 +493,22 @@ class Logistic(DistFunc):
 
     @staticmethod
     def test():
-        def assert_func(r_, a_):
-            assert abs(r_ - a_) < 1e-1, ValueError(f'{r_} != {a_}')
-
-        assert_func(Logistic(420, 126).ppf(.2), 323.70)
-        assert_func(Logistic(420, 126).ppf(.4), 391.83)
-        assert_func(Logistic(420, 126).ppf(.5), 420.00)
-        assert_func(Logistic(420, 126).ppf(.6), 448.17)
-        assert_func(Logistic(420, 126).ppf(.8), 516.30)
+        d = Logistic(420, 126)
+        assert_func(d.pdf(323.698), 0.00230324, tol=1e-3)
+        assert_func(d.pdf(371.849), 0.00319894, tol=1e-3)
+        assert_func(d.pdf(420.000), 0.00359881, tol=1e-3)
+        assert_func(d.pdf(468.151), 0.00319894, tol=1e-3)
+        assert_func(d.pdf(516.302), 0.00230324, tol=1e-3)
+        assert_func(d.cdf(323.698), 0.20000, tol=1e-3)
+        assert_func(d.cdf(371.849), 0.33333, tol=1e-3)
+        assert_func(d.cdf(420.000), 0.50000, tol=1e-3)
+        assert_func(d.cdf(468.151), 0.66667, tol=1e-3)
+        assert_func(d.cdf(516.302), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 323.698)
+        assert_func(d.ppf(0.33333), 371.849)
+        assert_func(d.ppf(0.50000), 420.000)
+        assert_func(d.ppf(0.66667), 468.151)
+        assert_func(d.ppf(0.80000), 516.302)
 
 
 if __name__ == '__main__':
@@ -432,7 +522,7 @@ class Maxwell(DistFunc):
         x = (x - mu) / sigma
 
         # Probability Density Function
-        return np.sqrt(2/np.pi) * (x**2) * np.exp(-x**2 / 2)
+        return np.sqrt(2 / np.pi) * (x ** 2) * np.exp(-x ** 2 / 2)
 
     @staticmethod
     def _cdf(x, mu, sigma):
@@ -462,22 +552,17 @@ class Maxwell(DistFunc):
 
     @staticmethod
     def test():
-        print(Maxwell(420, 126).cdf(np.array([200,400,500,600,800])))
-
-        def assert_func(r_, a_, tol=1e-1):
-            assert abs(r_ - a_) < tol, ValueError(f'{r_} != {a_}')
-
         # assert_func(Maxwell(420, 126).cdf(200), 0.01868, tol=1e-4)
         # assert_func(Maxwell(420, 126).cdf(400), 0.47134, tol=1e-4)
         # assert_func(Maxwell(420, 126).cdf(420), 0.53305, tol=1e-4)
         # assert_func(Maxwell(420, 126).cdf(600), 0.91200, tol=1e-4)
         # assert_func(Maxwell(420, 126).cdf(800), 0.99568, tol=1e-4)
-
         # assert_func(Maxwell(420, 126).ppf(.2), 309.02)
         # assert_func(Maxwell(420, 126).ppf(.4), 377.23)
         # assert_func(Maxwell(420, 126).ppf(.5), 409.22)
         # assert_func(Maxwell(420, 126).ppf(.6), 442.58)
         # assert_func(Maxwell(420, 126).ppf(.8), 524.53)
+        pass  # todo
 
 
 if __name__ == '__main__':
