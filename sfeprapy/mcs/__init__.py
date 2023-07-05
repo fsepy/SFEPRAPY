@@ -115,7 +115,7 @@ class InputParser:
                             return np.interp(x, t_, v_)
                     dict_out[k] = np.full((n,), f_interp)
                 else:
-                    raise ValueError("Unknown input data type for {}.".format(k))
+                    raise ValueError(f"Unknown input data type for {k}. {v}.")
             elif v is None:
                 dict_out[k] = np.full((n,), np.nan, dtype=float)
             else:
@@ -187,8 +187,29 @@ class InputParser:
     @staticmethod
     def _sampling(dist_params: dict, num_samples: int, randomise: bool = True) -> Union[float, np.ndarray]:
         """A reimplementation of _sampling_scipy but without scipy"""
-        dist_name = ''.join(dist_params.pop('dist').replace('_', ' ').strip().title())
-        dist_name = 'Normal' if dist_name == 'Norm' else dist_name
+        dist_name = ''.join(dist_params.pop('dist').replace('_', ' ').strip().title().split())
+        if dist_name == 'Norm':
+            dist_name = 'Normal'
+        elif dist_name == 'GumbelR':
+            dist_name = 'Gumbel'
+        elif dist_name == 'Uniform':
+            if (
+                    'lbound' in dist_params and 'ubound' in dist_params and
+                    'mean' not in dist_params and 'sd' not in dist_params
+            ):
+                a = dist_params.pop('lbound')
+                b = dist_params.pop('ubound')
+                mean = (a + b) / 2
+                sd = (b - a) / (2 * np.sqrt(3))
+                dist_params['mean'] = mean
+                dist_params['sd'] = sd
+        elif dist_name == 'LognormMod':
+            dist_name = 'LognormalMod'
+        elif dist_name == 'Lognorm':
+            dist_name = 'Lognormal'
+        elif dist_name == 'Constant':
+            if 'ubound' in dist_params and 'lbound' in dist_params:
+                dist_params['value'] = (dist_params.pop('lbound') + dist_params.pop('ubound')) / 2.
 
         dist_cls: Type[dists.DistFunc] = getattr(dists, dist_name)
         dist_obj: dists.DistFunc = dist_cls(**dist_params)

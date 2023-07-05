@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
+from inspect import getfullargspec
 from typing import Union
 
 import numpy as np
-from inspect import getfullargspec
 
-__all__ = 'Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic', 'Uniform', \
-    'DistFunc', 'Constant', 'LognormalMod'
+from sfeprapy.func.erf import erf, erfinv
+
+__all__ = ('Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic',
+           'Uniform', 'DistFunc', 'Constant', 'LognormalMod', 'Discrete')
 
 
 class DistFunc(ABC):
@@ -53,7 +55,7 @@ class DistFunc(ABC):
             lim_1 = self.cdf(lim_1)
 
         if lim_2 is None:
-            lim_2 = 1-padding
+            lim_2 = 1 - padding
         else:
             lim_2 = self.cdf(lim_2)
 
@@ -82,26 +84,6 @@ def assert_func(r_, a_, tol=1e-1):
     assert abs(r_ - a_) < tol, ValueError(f'{r_} != {a_}')
 
 
-def erf(x):
-    # constants
-    a1 = 0.254829592
-    a2 = -0.284496736
-    a3 = 1.421413741
-    a4 = -1.453152027
-    a5 = 1.061405429
-    p = 0.3275911
-
-    # Save the sign of x
-    sign = np.where(x < 0, -1, 1)
-    x = np.abs(x)
-
-    # A&S formula 7.1.26
-    t = 1.0 / (1.0 + p * x)
-    y = (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t
-
-    return sign * (1 - y * np.exp(-x * x))
-
-
 def test_erf():
     from scipy.special import erf as erf_
 
@@ -110,18 +92,6 @@ def test_erf():
     b = erf(i)
     for _ in range(len(i)):
         print(f'{a[_]:7.5f}  {b[_]:7.5f}')
-
-
-def erfinv(y):
-    # Initial guess for the Newton-Raphson method
-    x = np.where(y < 0, -1.0, np.where(y == 0, 0.0, 1.0))
-
-    # Iterate until the result is accurate enough
-    n = 0
-    while np.max(np.abs(y - erf(x))) > 1e-5 and n < 10:
-        x = x - (erf(x) - y) / (2 / np.sqrt(np.pi) * np.exp(-x ** 2))
-        n += 1
-    return x
 
 
 def test_erfinv():
@@ -134,7 +104,7 @@ def test_erfinv():
 
 
 class Constant(DistFunc):
-    def __init__(self, value: Union[int, float]):
+    def __init__(self, value: Union[int, float], *_, **__):
         self.value = value
         super().__init__(value)
 
@@ -172,7 +142,9 @@ class Discrete(DistFunc):
 
     def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
         samples = self._sampling(n, *self.args, **self.kwargs)
-        return np.random.shuffle(samples) if shuffle else samples
+        if shuffle:
+            np.random.shuffle(samples)
+        return samples
 
     @staticmethod
     def _sampling(n, values, weights):
@@ -383,23 +355,53 @@ if __name__ == '__main__':
 
 # br187_fuel_load_density_
 # br187_hrr_density_
+class Br187FuelLoadDensity(DistFunc):
+    @staticmethod
+    def _pdf(*_, **__):
+        pass
+
+    @staticmethod
+    def _cdf(*_, **__):
+        pass
+
+    @staticmethod
+    def _ppf(*_, **__):
+        pass
+
+    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
+        samples_1 = Gumbel(mean=780, sd=234).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
+        samples_2 = Gumbel(mean=420, sd=420).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
+        samples = np.random.choice(np.append((samples_1, samples_2)), n, replace=False)
+        return samples
 
 
-class LognormalMod(DistFunc):
+class Br187HrrDensity(DistFunc):
+    @staticmethod
+    def _pdf(*_, **__):
+        pass
+
+    @staticmethod
+    def _cdf(*_, **__):
+        pass
+
+    @staticmethod
+    def _ppf(*_, **__):
+        pass
+
+    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
+        a, b = 0.32, 0.57
+        mean, sd = (a + b) / 2, (b - a) / (2 * np.sqrt(3))
+        samples_1 = Uniform(mean=mean, sd=sd).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
+        a, b = 0.15, 0.65
+        mean, sd = (a + b) / 2, (b - a) / (2 * np.sqrt(3))
+        samples_2 = Uniform(mean=mean, sd=sd).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
+        samples = np.random.choice(np.append((samples_1, samples_2)), n, replace=False)
+        return samples
+
+
+class LognormalMod(Lognormal):
     def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
         return 1 - super().sampling(n=n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
-
-    @staticmethod
-    def _pdf():
-        raise ValueError('PDF not implemented for LognormalMod')
-
-    @staticmethod
-    def _cdf():
-        raise ValueError('CDF not implemented for LognormalMod')
-
-    @staticmethod
-    def _ppf():
-        raise ValueError('PPF not implemented for LognormalMod')
 
 
 class Arcsine(DistFunc):
