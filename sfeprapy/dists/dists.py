@@ -2,36 +2,79 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
+from inspect import getfullargspec
 
-__all__ = 'Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic', 'Uniform'
+__all__ = 'Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic', 'Uniform', \
+    'DistFunc', 'Constant', 'LognormalMod'
+
 
 class DistFunc(ABC):
-    def __init__(self, mu: float, sigma: float):
-        self.mu = mu
-        self.sigma = sigma
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        if 'lbound' in kwargs and 'lim_1' not in kwargs:
+            kwargs['lim_1'] = kwargs.pop('lbound')
+        if 'ubound' in kwargs and 'lim_2' not in kwargs:
+            kwargs['lim_2'] = kwargs.pop('ubound')
 
     def pdf(self, x: Union[int, float, np.ndarray]):
-        return self._pdf(x, self.mu, self.sigma)
+        args = list()
+        for i, name in enumerate(getfullargspec(self._pdf).args[1:]):
+            if name in self.kwargs:
+                args.append(self.kwargs[name])
+            else:
+                args.append(self.args[i])
+        return self._pdf(x, *args)
 
     def cdf(self, x: Union[int, float, np.ndarray]):
-        return self._cdf(x, self.mu, self.sigma)
+        args = list()
+        for i, name in enumerate(getfullargspec(self._cdf).args[1:]):
+            if name in self.kwargs:
+                args.append(self.kwargs[name])
+            else:
+                args.append(self.args[i])
+        return self._cdf(x, *args)
 
     def ppf(self, p: Union[int, float, np.ndarray]):
-        return self._ppf(p, self.mu, self.sigma)
+        args = list()
+        for i, name in enumerate(getfullargspec(self._ppf).args[1:]):
+            if name in self.kwargs:
+                args.append(self.kwargs[name])
+            else:
+                args.append(self.args[i])
+        return self._ppf(p, *args)
+
+    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
+        padding = 1. / n
+
+        if lim_1 is None:
+            lim_1 = padding
+        else:
+            lim_1 = self.cdf(lim_1)
+
+        if lim_2 is None:
+            lim_2 = 1-padding
+        else:
+            lim_2 = self.cdf(lim_2)
+
+        samples = self.ppf(np.linspace(lim_1, lim_2, n))
+        if shuffle:
+            np.random.shuffle(samples)
+        return samples
 
     @staticmethod
     @abstractmethod
-    def _pdf(x: Union[int, float, np.ndarray], mu: float, sigma: float) -> Union[int, float, np.ndarray]:
+    def _pdf(x: Union[int, float, np.ndarray], *args, **kwargs) -> Union[int, float, np.ndarray]:
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def _cdf(x: Union[int, float, np.ndarray], mu: float, sigma: float) -> Union[int, float, np.ndarray]:
+    def _cdf(x: Union[int, float, np.ndarray], *args, **kwargs) -> Union[int, float, np.ndarray]:
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def _ppf(p: Union[int, float, np.ndarray], mu: float, sigma: float) -> Union[int, float, np.ndarray]:
+    def _ppf(p: Union[int, float, np.ndarray], *args, **kwargs) -> Union[int, float, np.ndarray]:
         raise NotImplementedError
 
 
@@ -90,29 +133,138 @@ def test_erfinv():
         print(f'{a[_]:7.5f}  {b[_]:7.5f}')
 
 
-class Gumbel(DistFunc):
-    @staticmethod
-    def _pdf(x, mean, stddev):
-        mu, sigma = Gumbel._convert_params(mean, stddev)
-        z = (x - mu) / sigma
-        return (1 / sigma) * np.exp(-(z + np.exp(-z)))
+class Constant(DistFunc):
+    def __init__(self, value: Union[int, float]):
+        self.value = value
+        super().__init__(value)
+
+    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
+        return np.full((n,), self.value, )
 
     @staticmethod
-    def _cdf(x, mean, stddev):
-        mu, sigma = Gumbel._convert_params(mean, stddev)
-        z = (x - mu) / sigma
+    def _pdf():
+        raise ValueError('PDF not available to Constant DistFunc')
+
+    @staticmethod
+    def _cdf():
+        raise ValueError('CDF not available to Constant DistFunc')
+
+    @staticmethod
+    def _ppf():
+        raise ValueError('PPF not available to Constant DistFunc')
+
+
+class Discrete(DistFunc):
+    def __init__(self, values, weights):
+        if isinstance(values, str):
+            assert ',' in values, f'`discrete_ distribution `values` parameter is not a list separated by comma.'
+            values = [float(i.strip()) for i in values.split(',')]
+
+        if isinstance(weights, str):
+            assert ',' in weights, f'`discrete_`:`weights` is not a list of numbers separated by comma.'
+            weights = [float(i.strip()) for i in weights.split(',')]
+
+        assert len(values) == len(
+            weights), f'Length of values ({len(values)}) and weights ({len(values)}) do not match.'
+        assert sum(weights) == 1., f'Sum of all weights should be unity, got {sum(weights)}.'
+
+        super().__init__(values, weights)
+
+    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
+        samples = self._sampling(n, *self.args, **self.kwargs)
+        return np.random.shuffle(samples) if shuffle else samples
+
+    @staticmethod
+    def _sampling(n, values, weights):
+        weights = [int(round(i * n)) for i in weights]
+        if (sum_sampled := sum(weights)) < n:
+            for i in np.random.choice(np.arange(len(weights)), size=sum_sampled - n):
+                weights[i] += 1
+        elif sum_sampled > n:
+            for i in np.random.choice(np.arange(len(weights)), size=sum_sampled - n):
+                weights[i] -= 1
+        weights = np.cumsum(weights)
+        assert weights[-1] == n, f'Total weight length does not match `num_samples`.'
+        samples = np.empty((n,), dtype=float)
+        for i, v__ in enumerate((values)):
+            if i == 0:
+                samples[0:weights[i]] = v__
+            else:
+                samples[weights[i - 1]:weights[i]] = v__
+        return samples
+
+    @staticmethod
+    def _pdf(x, v, w):
+        v = np.asarray(v)
+        w = np.asarray(w)
+
+        if np.sum(w) != 1.0:
+            w = w / np.sum(w)
+
+        pdf_dict = dict(zip(v, w))
+
+        # Check if x exists in v and return corresponding w
+        return pdf_dict.get(x, 0)
+
+    @staticmethod
+    def _cdf(x, v, w):
+        v = np.asarray(v)
+        w = np.asarray(w)
+
+        if np.sum(w) != 1.0:
+            w = w / np.sum(w)
+
+        cdf_dict = dict(zip(v, np.cumsum(w)))
+
+        # If x is not in v, return 1 for values larger than max(v) and 0 for values smaller than min(v)
+        if x not in cdf_dict:
+            if x < min(v):
+                return 0
+            elif x > max(v):
+                return 1
+
+        return cdf_dict[x]
+
+    @staticmethod
+    def _ppf(x, v, w):
+        v = np.asarray(v)
+        w = np.asarray(w)
+
+        if np.sum(w) != 1.0:
+            w = w / np.sum(w)
+
+        cdf = np.cumsum(w)
+
+        # If x is not between 0 and 1, return None
+        if x < 0 or x > 1:
+            return None
+
+        return v[np.argwhere(cdf >= x)[0][0]]
+
+
+class Gumbel(DistFunc):
+    @staticmethod
+    def _pdf(x, mean, sd):
+        mean, sd = Gumbel._convert_params(mean, sd)
+        z = (x - mean) / sd
+        return (1 / sd) * np.exp(-(z + np.exp(-z)))
+
+    @staticmethod
+    def _cdf(x, mean, sd):
+        mean, sd = Gumbel._convert_params(mean, sd)
+        z = (x - mean) / sd
         return np.exp(-np.exp(-z))
 
     @staticmethod
-    def _ppf(q, mean, stddev):
-        mu, sigma = Gumbel._convert_params(mean, stddev)
-        return mu - sigma * np.log(-np.log(q))
+    def _ppf(q, mean, sd):
+        mean, sd = Gumbel._convert_params(mean, sd)
+        return mean - sd * np.log(-np.log(q))
 
     @staticmethod
-    def _convert_params(mean, stddev):
-        sigma = stddev * np.sqrt(6) / np.pi
-        mu = mean - 0.57721566490153286060 * sigma
-        return mu, sigma
+    def _convert_params(mean, sd):
+        sd = sd * np.sqrt(6) / np.pi
+        mean = mean - 0.57721566490153286060 * sd
+        return mean, sd
 
     @staticmethod
     def test():
@@ -140,16 +292,16 @@ if __name__ == '__main__':
 
 class Normal(DistFunc):
     @staticmethod
-    def _pdf(x, mu, sigma):
-        return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+    def _pdf(x, mean, sd):
+        return (1 / (sd * np.sqrt(2 * np.pi))) * np.exp(-((x - mean) ** 2) / (2 * sd ** 2))
 
     @staticmethod
-    def _cdf(x, mu, sigma):
-        return 0.5 * (1 + erf((x - mu) / (np.sqrt(2) * sigma)))
+    def _cdf(x, mean, sd):
+        return 0.5 * (1 + erf((x - mean) / (np.sqrt(2) * sd)))
 
     @staticmethod
-    def _ppf(p, mu, sigma):
-        return mu + sigma * np.sqrt(2) * erfinv(2 * p - 1)
+    def _ppf(p, mean, sd):
+        return mean + sd * np.sqrt(2) * erfinv(2 * p - 1)
 
     @staticmethod
     def test():
@@ -179,57 +331,83 @@ class Lognormal(DistFunc):
     SQRT_2PI = np.sqrt(2 * np.pi)
 
     @staticmethod
-    def _pdf(x, M, S):
-        # Convert M and S to mu and sigma of the underlying normal distribution
-        mu = np.log(M ** 2 / np.sqrt(M ** 2 + S ** 2))
-        sigma = np.sqrt(np.log(1 + S ** 2 / M ** 2))
+    def _pdf(x, mean, sd):
+        # Convert M and S to mean and sd of the underlying normal distribution
+        mu = np.log(mean ** 2 / np.sqrt(mean ** 2 + sd ** 2))
+        sigma = np.sqrt(np.log(1 + sd ** 2 / mean ** 2))
 
         # Probability Density Function
         return (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-(np.log(x) - mu) ** 2 / (2 * sigma ** 2))
 
     @staticmethod
-    def _cdf(x, M, S):
-        # Convert M and S to mu and sigma of the underlying normal distribution
-        mu = np.log(M ** 2 / np.sqrt(M ** 2 + S ** 2))
-        sigma = np.sqrt(np.log(1 + S ** 2 / M ** 2))
+    def _cdf(x, mean, sd):
+        # Convert M and S to mean and sd of the underlying normal distribution
+        mu = np.log(mean ** 2 / np.sqrt(mean ** 2 + sd ** 2))
+        sigma = np.sqrt(np.log(1 + sd ** 2 / mean ** 2))
 
         # Cumulative Distribution Function
         return 0.5 + 0.5 * erf((np.log(x) - mu) / (sigma * np.sqrt(2)))
 
     @staticmethod
-    def _ppf(q, M, S):
-        # Convert M and S to mu and sigma of the underlying normal distribution
-        mu = np.log(M ** 2 / np.sqrt(M ** 2 + S ** 2))
-        sigma = np.sqrt(np.log(1 + S ** 2 / M ** 2))
+    def _ppf(q, mean, sd):
+        # Convert M and S to mean and sd of the underlying normal distribution
+        mu = np.log(mean ** 2 / np.sqrt(mean ** 2 + sd ** 2))
+        sigma = np.sqrt(np.log(1 + sd ** 2 / mean ** 2))
 
         # Percent Point Function (Quantile Function)
         return np.exp(mu + sigma * np.sqrt(2) * erfinv(2 * q - 1))
 
     @staticmethod
     def test():
-        assert_func(Lognormal(420, 126).ppf(.2), 314.22)
-        assert_func(Lognormal(420, 126).ppf(.4), 373.45)
-        assert_func(Lognormal(420, 126).ppf(.5), 402.29)
-        assert_func(Lognormal(420, 126).ppf(.6), 433.35)
-        assert_func(Lognormal(420, 126).ppf(.8), 515.03)
-
-        assert_func(Lognormal(420, 126).cdf(200), 0.00864, tol=1e-3)
-        assert_func(Lognormal(420, 126).cdf(400), 0.49225, tol=1e-3)
-        assert_func(Lognormal(420, 126).cdf(500), 0.77056, tol=1e-3)
-        assert_func(Lognormal(420, 126).cdf(600), 0.91337, tol=1e-3)
-        assert_func(Lognormal(420, 126).cdf(800), 0.99040, tol=1e-3)
+        d = Lognormal(420, 126)
+        assert_func(d.pdf(314.222), 0.00303505, tol=1e-3)
+        assert_func(d.pdf(364.425), 0.00352359, tol=1e-3)
+        assert_func(d.pdf(414.628), 0.00326027, tol=1e-3)
+        assert_func(d.pdf(464.831), 0.00259000, tol=1e-3)
+        assert_func(d.pdf(515.034), 0.00185168, tol=1e-3)
+        assert_func(d.cdf(314.222), 0.20000, tol=1e-3)
+        assert_func(d.cdf(364.425), 0.36817, tol=1e-3)
+        assert_func(d.cdf(414.628), 0.54099, tol=1e-3)
+        assert_func(d.cdf(464.831), 0.68873, tol=1e-3)
+        assert_func(d.cdf(515.034), 0.80000, tol=1e-3)
+        assert_func(d.ppf(0.20000), 314.222)
+        assert_func(d.ppf(0.36817), 364.425)
+        assert_func(d.ppf(0.54099), 414.628)
+        assert_func(d.ppf(0.68873), 464.831)
+        assert_func(d.ppf(0.80000), 515.034)
 
 
 if __name__ == '__main__':
     Lognormal.test()
 
 
+# br187_fuel_load_density_
+# br187_hrr_density_
+
+
+class LognormalMod(DistFunc):
+    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
+        return 1 - super().sampling(n=n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
+
+    @staticmethod
+    def _pdf():
+        raise ValueError('PDF not implemented for LognormalMod')
+
+    @staticmethod
+    def _cdf():
+        raise ValueError('CDF not implemented for LognormalMod')
+
+    @staticmethod
+    def _ppf():
+        raise ValueError('PPF not implemented for LognormalMod')
+
+
 class Arcsine(DistFunc):
     @staticmethod
-    def _pdf(x, mean, std_dev):
+    def _pdf(x, mean, sd):
         # Calculate a and b from the mean and standard deviation
-        a = mean - np.sqrt(2) * std_dev
-        b = mean + np.sqrt(2) * std_dev
+        a = mean - np.sqrt(2) * sd
+        b = mean + np.sqrt(2) * sd
 
         # Ensure that x is within the range [a, b]
         # if x < a or x > b:
@@ -241,10 +419,10 @@ class Arcsine(DistFunc):
         return pdf_value
 
     @staticmethod
-    def _cdf(x, mean, std_dev):
+    def _cdf(x, mean, sd):
         # Calculate a and b from the mean and standard deviation
-        a = mean - np.sqrt(2) * std_dev
-        b = mean + np.sqrt(2) * std_dev
+        a = mean - np.sqrt(2) * sd
+        b = mean + np.sqrt(2) * sd
 
         # Ensure that x is within the range [a, b]
         # if x < a or x > b:
@@ -260,10 +438,10 @@ class Arcsine(DistFunc):
         return cdf_value
 
     @staticmethod
-    def _ppf(p, mean, std_dev):
+    def _ppf(p, mean, sd):
         # Calculate a and b from the mean and standard deviation
-        a = mean - np.sqrt(2) * std_dev
-        b = mean + np.sqrt(2) * std_dev
+        a = mean - np.sqrt(2) * sd
+        b = mean + np.sqrt(2) * sd
 
         # Compute the PPF of the arcsine distribution
         ppf_value = a + (b - a) * (np.sin(np.pi * p / 2)) ** 2
@@ -296,16 +474,16 @@ if __name__ == '__main__':
 
 class Cauchy(DistFunc):
     @staticmethod
-    def _pdf(x, mu, sigma):
-        return 1 / (np.pi * sigma * (1 + ((x - mu) / sigma) ** 2))
+    def _pdf(x, mean, sd):
+        return 1 / (np.pi * sd * (1 + ((x - mean) / sd) ** 2))
 
     @staticmethod
-    def _cdf(x, mu, sigma):
-        return 1 / np.pi * np.arctan((x - mu) / sigma) + 0.5
+    def _cdf(x, mean, sd):
+        return 1 / np.pi * np.arctan((x - mean) / sd) + 0.5
 
     @staticmethod
-    def _ppf(p, mu, sigma):
-        return mu + sigma * np.tan(np.pi * (p - 0.5))
+    def _ppf(p, mean, sd):
+        return mean + sd * np.tan(np.pi * (p - 0.5))
 
     @staticmethod
     def test():
@@ -333,25 +511,25 @@ if __name__ == '__main__':
 
 class HyperbolicSecant(DistFunc):
     @staticmethod
-    def _pdf(x, mu, sigma):
-        return (1 / (2 * sigma)) * (1 / np.cosh(np.pi / 2 * ((x - mu) / sigma)))
+    def _pdf(x, sd, mean):
+        return (1 / (2 * mean)) * (1 / np.cosh(np.pi / 2 * ((x - sd) / mean)))
 
     @staticmethod
-    def _cdf(x, mu, sigma):
-        return (2 / np.pi) * np.arctan(np.exp(np.pi / 2 * ((x - mu) / sigma)))
+    def _cdf(x, sd, mean):
+        return (2 / np.pi) * np.arctan(np.exp(np.pi / 2 * ((x - sd) / mean)))
 
     @staticmethod
-    def _ppf(p, mu, sigma):
+    def _ppf(p, sd, mean):
         # Check for valid input
         if p <= 0 or p >= 1:
             raise ValueError("p must be in (0, 1)")
 
         # Define the function we want to find the root of
         def f(x):
-            return HyperbolicSecant._cdf(x, mu, sigma) - p
+            return HyperbolicSecant._cdf(x, sd, mean) - p
 
         # Initial boundaries for bisection method
-        lower, upper = mu - 10 * sigma, mu + 10 * sigma
+        lower, upper = sd - 10 * mean, sd + 10 * mean
 
         # Bisection method
         while upper - lower > 1e-6:  # 1e-6 is the desired accuracy
@@ -391,25 +569,25 @@ if __name__ == '__main__':
 class HalfCauchy(DistFunc):
 
     @staticmethod
-    def _pdf(x, mu, sigma):
-        if x < mu:
-            return 0
-        else:
-            return (2 / (np.pi * sigma)) / (1 + ((x - mu) / sigma) ** 2)
-
-    @staticmethod
-    def _cdf(x, mean, std_dev):
+    def _pdf(x, mean, sd):
         if x < mean:
             return 0
         else:
-            return 2 / np.pi * np.arctan((x - mean) / std_dev)
+            return (2 / (np.pi * sd)) / (1 + ((x - mean) / sd) ** 2)
 
     @staticmethod
-    def _ppf(q, mean, std_dev):
+    def _cdf(x, mean, sd):
+        if x < mean:
+            return 0
+        else:
+            return 2 / np.pi * np.arctan((x - mean) / sd)
+
+    @staticmethod
+    def _ppf(q, mean, sd):
         """
         Returns the value of the percent point function (also called inverse cumulative function) for half-Cauchy distribution.
         """
-        return mean + std_dev * np.tan(np.pi / 2 * q)
+        return mean + sd * np.tan(np.pi / 2 * q)
 
     @staticmethod
     def test():
@@ -437,28 +615,28 @@ if __name__ == '__main__':
 
 class Logistic(DistFunc):
     @staticmethod
-    def _pdf(x, mu, sigma):
-        # Convert sigma to s
-        s = sigma * np.sqrt(3.) / np.pi
+    def _pdf(x, mean, sd):
+        # Convert sd to s
+        s = sd * np.sqrt(3.) / np.pi
 
         # Probability Density Function
-        return np.exp(-(x - mu) / s) / (s * (1 + np.exp(-(x - mu) / s)) ** 2)
+        return np.exp(-(x - mean) / s) / (s * (1 + np.exp(-(x - mean) / s)) ** 2)
 
     @staticmethod
-    def _cdf(x, mu, sigma):
-        # Convert sigma to s
-        s = sigma * np.sqrt(3.) / np.pi
+    def _cdf(x, mean, sd):
+        # Convert sd to s
+        s = sd * np.sqrt(3.) / np.pi
 
         # Cumulative Distribution Function
-        return 1 / (1 + np.exp(-(x - mu) / s))
+        return 1 / (1 + np.exp(-(x - mean) / s))
 
     @staticmethod
-    def _ppf(q, mu, sigma):
-        # Convert sigma to s
-        s = sigma * np.sqrt(3.) / np.pi
+    def _ppf(q, mean, sd):
+        # Convert sd to s
+        s = sd * np.sqrt(3.) / np.pi
 
         # Percent-Point Function (Quantile Function)
-        return mu - s * np.log((1 / q) - 1)
+        return mean - s * np.log((1 / q) - 1)
 
     @staticmethod
     def test():
@@ -486,26 +664,26 @@ if __name__ == '__main__':
 
 class Uniform(DistFunc):
     @staticmethod
-    def _pdf(x, mean, std):
+    def _pdf(x, mean, sd):
         """Probability density function"""
-        a = mean - np.sqrt(3) * std
-        b = mean + np.sqrt(3) * std
+        a = mean - np.sqrt(3) * sd
+        b = mean + np.sqrt(3) * sd
         return np.where((x >= a) & (x <= b), 1 / (b - a), 0)
 
     @staticmethod
-    def _cdf(x, mean, std):
+    def _cdf(x, mean, sd):
         """Cumulative distribution function"""
-        a = mean - np.sqrt(3) * std
-        b = mean + np.sqrt(3) * std
+        a = mean - np.sqrt(3) * sd
+        b = mean + np.sqrt(3) * sd
         return np.where(x < a, 0, np.where(x > b, 1, (x - a) / (b - a)))
 
     @staticmethod
-    def _ppf(p, mean, std):
+    def _ppf(p, mean, sd):
         """Percent-point function (Inverse of cdf)"""
         # Ensure p is in [0, 1]
         p = np.clip(p, 0, 1)
-        a = mean - np.sqrt(3) * std
-        b = mean + np.sqrt(3) * std
+        a = mean - np.sqrt(3) * sd
+        b = mean + np.sqrt(3) * sd
         return a + p * (b - a)
 
     @staticmethod

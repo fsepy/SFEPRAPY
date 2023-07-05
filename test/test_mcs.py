@@ -28,11 +28,15 @@ def test_input_parser_sampling():
     assert len(y["v"]) == 1000
     assert all([all(v == np.array([0.0, 1.0, 2.0])) for v in y["v"]])
 
-    y = InputParser(dict(v=dict(dist="uniform_", ubound=10, lbound=-1)), 1000).to_dict()
-    assert len(y["v"]) == 1000
-    assert np.max(y["v"]) == 10
-    assert np.min(y["v"]) == -1
-    assert abs(np.mean(y["v"]) - (10 - 1) / 2) <= 0.00001
+    y = InputParser(dict(v=dict(dist="uniform_", mean=4, sd=6)), 50000).to_dict()
+    mean = 4
+    sd = 6
+    a = mean - np.sqrt(3) * sd
+    b = mean + np.sqrt(3) * sd
+    assert len(y["v"]) == 50000
+    assert abs(np.max(y["v"]) - b) < 1e-3, f'{np.max(y["v"])} != {b}'
+    assert abs(np.min(y["v"]) - a) < 1e-3, f'{np.min(y["v"])} != {a}'
+    assert abs(np.mean(y["v"]) - (a + b) / 2) <= 1e-3
 
     y = InputParser(dict(v=dict(dist="norm_", ubound=5 + 1, lbound=5 - 1, mean=5, sd=1)), 1000).to_dict()
     assert len(y["v"]) == 1000
