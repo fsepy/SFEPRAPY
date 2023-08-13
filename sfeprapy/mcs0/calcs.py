@@ -407,11 +407,11 @@ def teq_main(
         window_width: float,
         window_open_fraction_permanent: float,
         phi_teq: float = 1.0,
-        timber_charring_rate=None,
+        timber_exposed_area: float = 0.,
         timber_charred_depth=None,
+        timber_charring_rate=None,
         timber_hc: float = None,
         timber_density: float = None,
-        timber_exposed_area: float = None,
         timber_depth: float = None,
         timber_solver_tol: float = None,
         timber_solver_ilim: float = None,
@@ -464,36 +464,46 @@ def teq_main(
     while True:
         timber_solver_iter_count += 1
         # the following `if` decide whether to calculate `timber_charred_depth_i` from `timber_charring_rate` or
-        # `timber_charred_depth`
-        if timber_charred_depth is None:
-            # calculate from timber charring rate
-            if isinstance(timber_charring_rate, (float, int)):
-                timber_charring_rate_i = timber_charring_rate
-            elif isinstance(timber_charring_rate, Callable):
-                timber_charring_rate_i = timber_charring_rate(timber_exposed_duration)
+        if (
+                timber_exposed_area is not None and
+                timber_exposed_area > 0 and
+                (timber_charred_depth is not None or timber_charring_rate is not None)
+        ):
+            if timber_charred_depth is None:
+                # calculate from timber charring rate
+                if isinstance(timber_charring_rate, (float, int)):
+                    timber_charring_rate_i = timber_charring_rate
+                elif isinstance(timber_charring_rate, Callable):
+                    timber_charring_rate_i = timber_charring_rate(timber_exposed_duration)
+                else:
+                    raise TypeError('`timber_charring_rate_i` is not numerical nor Callable type')
+                timber_charring_rate_i *= 1. / 1000.  # [mm/min] -> [m/min]
+                timber_charring_rate_i *= 1. / 60.  # [m/min] -> [m/s]
+                timber_charred_depth_i = timber_charring_rate_i * timber_exposed_duration
             else:
-                raise TypeError('`timber_charring_rate_i` is not numerical nor Callable type')
-            timber_charring_rate_i *= 1. / 1000.  # [mm/min] -> [m/min]
-            timber_charring_rate_i *= 1. / 60.  # [m/min] -> [m/s]
-            timber_charred_depth_i = timber_charring_rate_i * timber_exposed_duration
+                # calculate from timber charred depth
+                if isinstance(timber_charred_depth, (float, int)):
+                    timber_charred_depth_i = timber_charred_depth
+                elif isinstance(timber_charred_depth, Callable):
+                    timber_charred_depth_i = timber_charred_depth(timber_exposed_duration)
+                else:
+                    raise TypeError('`timber_charring_rate_i` is not numerical nor Callable type')
+                timber_charred_depth_i /= 1000.
+
+            # make sure the calculated charred depth does not exceed the available timber depth
+            if timber_depth is not None:
+                timber_charred_depth_i = min(timber_charred_depth_i, timber_depth)
+
+            timber_charred_volume = timber_charred_depth_i * timber_exposed_area
+            timber_charred_mass = timber_density * timber_charred_volume
+            timber_fire_load = timber_charred_mass * timber_hc
+            timber_fire_load_density = timber_fire_load / (room_breadth * room_depth)
         else:
-            # calculate from timber charred depth
-            if isinstance(timber_charred_depth, (float, int)):
-                timber_charred_depth_i = timber_charred_depth
-            elif isinstance(timber_charred_depth, Callable):
-                timber_charred_depth_i = timber_charred_depth(timber_exposed_duration)
-            else:
-                raise TypeError('`timber_charring_rate_i` is not numerical nor Callable type')
-            timber_charred_depth_i /= 1000.
-
-        # make sure the calculated charred depth does not exceed the available timber depth
-        if timber_depth is not None:
-            timber_charred_depth_i = min(timber_charred_depth_i, timber_depth)
-
-        timber_charred_volume = timber_charred_depth_i * timber_exposed_area
-        timber_charred_mass = timber_density * timber_charred_volume
-        timber_fire_load = timber_charred_mass * timber_hc
-        timber_fire_load_density = timber_fire_load / (room_breadth * room_depth)
+            timber_charred_volume = np.nan
+            timber_charred_depth_i = np.nan
+            timber_charred_mass = np.nan
+            timber_fire_load = np.nan
+            timber_fire_load_density = np.nan
 
         if np.isnan(timber_fire_load_density):
             fire_load_density = _fire_load_density_
@@ -572,8 +582,6 @@ def teq_main(
     timber_solver_iter_count = timber_solver_iter_count
     timber_fire_load = timber_fire_load
     timber_charred_depth = timber_charred_depth_i
-    timber_charred_mass = timber_charred_mass
-    timber_charred_volume = timber_charred_volume
 
     return (
         index, beam_position_horizontal, fire_combustion_efficiency, fire_hrr_density, fire_nft_limit,

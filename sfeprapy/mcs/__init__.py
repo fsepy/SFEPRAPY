@@ -1,15 +1,16 @@
 # Monte Carlo Simulation Multi-Process Implementation
 # Yan Fu, October 2017
 
-import concurrent.futures
-import io
 import multiprocessing as mp
-import os
+import random
 import shutil
+import time
 import zipfile
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from inspect import getfullargspec
-from io import StringIO
+from io import BytesIO, TextIOWrapper, StringIO
+from os import path, remove, makedirs
 from typing import Callable, Optional, Dict, Union, Any, Type
 
 import numpy as np
@@ -371,9 +372,8 @@ class MCSSingle(ABC):
         _ = getfullargspec(self.worker)
         return tuple(_.args), _.defaults
 
-    def run(self, p: mp.Pool, set_progress: Optional[Callable] = None, progress_0: int = 0):
-        output = list()
-
+    def run(self, p: mp.Pool = None, set_progress: Optional[Callable] = None, progress_0: int = 0, save: bool = False,
+            save_archive: bool = False):
         # ======================
         # prepare input iterable
         # ======================
@@ -388,37 +388,45 @@ class MCSSingle(ABC):
         for k in keys_from_worker_required:
             if k not in keys_from_worker:
                 missing_args.append(k)
-
         if len(missing_args) > 0:
             raise ValueError(f'Missing arguments: {missing_args}.')
 
-        nested_args = list()
-        for k in keys_from_worker_required:
-            if k not in kwargs_from_input:
-                missing_args.append(k)
-                continue
-            nested_args.append(kwargs_from_input[k])
-
-        if len(missing_args) > 0:
-            raise ValueError(f'Missing required arguments: {missing_args}.')
+        nested_args = list(kwargs_from_input[k] for k in keys_from_worker_required)
 
         for i, k in enumerate(keys_from_worker_optional):
-            if k in keys_from_worker:
+            if k in kwargs_from_input:
                 nested_args.append(kwargs_from_input[k])
             else:
-                nested_args.append(defaults_from_worker[i])
+                nested_args.append((defaults_from_worker[i] for __ in range(self.n_sim)))
 
-        futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
-
-        if set_progress is not None:
-            for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
-                output.append(future.result())
-                set_progress(progress_0 + i)
+        # ===============
+        # start processes
+        # ===============
+        output = list()
+        if p is None:
+            if set_progress is not None:
+                for i, arg in enumerate(zip(*nested_args)):
+                    output.append(self.worker(*arg))
+                    set_progress(progress_0 + i)
+            else:
+                for arg in zip(*nested_args):
+                    output.append(self.worker(*arg))
         else:
-            for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
-                output.append(future.result())
+            futures = {p.submit(self.worker, *arg) for arg in zip(*nested_args)}
+            if set_progress is not None:
+                for i, future in enumerate(as_completed(futures), start=1):
+                    output.append(future.result())
+                    set_progress(progress_0 + i)
+            else:
+                for i, future in enumerate(as_completed(futures), start=1):
+                    output.append(future.result())
 
         self.__output = np.array(output)
+
+        if save:
+            self.save_csv(dir_save=None, archive=save_archive)
+
+        return self.__output
 
     @property
     @abstractmethod
@@ -440,6 +448,10 @@ class MCSSingle(ABC):
     @property
     def output(self):
         return self.__output
+
+    @output.setter
+    def output(self, d: np.ndarray):
+        self.__output = d
 
     @staticmethod
     def make_pdf(data: np.ndarray, bin_width: float = 0.2) -> (np.ndarray, np.ndarray, np.ndarray):
@@ -473,12 +485,12 @@ class MCSSingle(ABC):
         if dir_save is None:
             dir_save = self.save_dir
         assert dir_save
-        assert os.path.exists(dir_save)
+        assert path.exists(dir_save), f'Directory does not exist {dir_save}'
         assert self.__output is not None
 
         # create byte object representing the save data/results
         if isinstance(self.__output, np.ndarray):
-            content = io.BytesIO()
+            content = BytesIO()
             np.savetxt(content, self.__output, delimiter=",", header=','.join(self.output_keys), fmt='%g', comments='')
             content.seek(0)
         elif self.__output is None:
@@ -489,24 +501,28 @@ class MCSSingle(ABC):
         # save result to file
         if archive:
             # in a zip file
-            with zipfile.ZipFile(dir_save, 'a', compression=zipfile.ZIP_DEFLATED) as f_zip:
-                f_zip.writestr(f'{self.name}.csv', content.read(), compress_type=zipfile.ZIP_DEFLATED)
-            return
+            for i in range(40):
+                try:
+                    with zipfile.ZipFile(dir_save, 'a', compression=zipfile.ZIP_DEFLATED) as f_zip:
+                        f_zip.writestr(f'{self.name}.csv', content.read(), compress_type=zipfile.ZIP_DEFLATED)
+                    return
+                except Exception:
+                    time.sleep(random.randint(1, 5))
         else:
             # in a folder
-            with open(os.path.join(dir_save, f'{self.name}.csv'), 'wb+') as f:
+            with open(path.join(dir_save, f'{self.name}.csv'), 'wb+') as f:
                 shutil.copyfileobj(content, f)
             return
 
     def load_output_from_file(self, fp: str):
-        fp = os.path.realpath(fp)
+        fp = path.realpath(fp)
 
         if zipfile.is_zipfile(fp):
             with zipfile.ZipFile(fp, 'r') as f_zip:
                 with f_zip.open(f'{self.name}.csv') as f:
-                    self.__output = np.genfromtxt(io.TextIOWrapper(f), delimiter=',', skip_header=1, )
+                    self.__output = np.genfromtxt(TextIOWrapper(f), delimiter=',', skip_header=1, )
         else:
-            fp = os.path.join(fp, f'{self.name}.csv')
+            fp = path.join(fp, f'{self.name}.csv')
             self.__output = np.genfromtxt(fp, delimiter=',', skip_header=1, )
 
         assert (self.n_sim, len(self.output_keys)) == tuple(self.__output.shape)
@@ -547,7 +563,7 @@ class MCS(ABC):
         self.mcs_cases: Dict[str, MCSSingle] = dict()
 
     def get_save_dir(self):
-        return os.path.join(os.path.dirname(self.__in_fp), f'{os.path.splitext(os.path.basename(self.__in_fp))[0]}.out')
+        return path.join(path.dirname(self.__in_fp), f'{path.splitext(path.basename(self.__in_fp))[0]}.out')
 
     def get_inputs_dict(self):
         return self.__in_dict
@@ -559,14 +575,14 @@ class MCS(ABC):
         for case_name_, kwargs_ in data.items():
             self.mcs_cases[case_name_] = self.new_mcs_case(
                 name=case_name_, n_simulations=kwargs_['n_simulations'], sim_kwargs=kwargs_,
-                save_dir=os.path.join(os.path.dirname(self.__in_fp), self.get_save_dir())
+                save_dir=path.join(path.dirname(self.__in_fp), self.get_save_dir())
             )
 
         self.__in_dict = data
 
     def set_inputs_file_path(self, fp):
-        fp = os.path.realpath(fp)
-        assert os.path.exists(fp)
+        fp = path.realpath(fp)
+        assert path.exists(fp)
 
         if fp.endswith(".xlsx"):
             from openpyxl import load_workbook
@@ -604,7 +620,7 @@ class MCS(ABC):
         elif fp.endswith(".csv"):
             raise NotImplementedError()
         else:
-            raise ValueError(f"Unknown input file format, {os.path.basename(fp)}")
+            raise ValueError(f"Unknown input file format, {path.basename(fp)}")
 
         if len(set((data.keys()))) != len(data.keys()):
             raise ValueError(f'case_name not unique')
@@ -618,7 +634,7 @@ class MCS(ABC):
     @property
     @abstractmethod
     def new_mcs_case(self) -> MCSSingle:
-        raise NotImplementedError()
+        raise NotImplementedError('This method should be implemented by the child class.')
 
     def run(
             self,
@@ -628,6 +644,7 @@ class MCS(ABC):
             save: bool = False,
             save_archive: bool = False,
             cases_to_run: Optional[list] = None,
+            concurrency_strategy: Optional[int] = 0,
     ):
         # check if all `cases_to_run` exist in `self.mcs_cases`
         if cases_to_run:
@@ -643,29 +660,157 @@ class MCS(ABC):
             else:
                 del undefined_case_name_by_user
 
-        if set_progress_max is not None:
-            if cases_to_run:
-                set_progress_max(sum([v.n_sim if k in cases_to_run else 0 for k, v in self.mcs_cases.items()]))
+        '''Concurrency Strategy
+
+        Procedure description:
+
+            1.  Go through each simulation case and to the following.
+                1.1 Task 1: Prepare arguments for simulation iterations.
+                1.2 Go through each simulation iteration in the simulation case, for each simulation iteration do the 
+                    following.
+                    1.2.1   Task 2: Perform the computation.
+                1.3 Write output to disk.
+
+        Terminology:
+
+            1.  Simulation iteration: This refers to a single run of the simulation. The computation-intensive task (task 
+                2) happens here. 
+            2.  Simulation case: This refers to a set of simulation iterations. It involves multiple iterations of 
+                task 2 but also includes the preparation/sampling of inputs (task 1) and the output saving operation 
+                (task 3).
+            3.  The E/W ratio, which reflects the balance of computational workloads across available processing units. 
+            4.  The overhead cost (O), which involves the expenses associated with managing multiple processes. 
+            5.  The blocking cost (B), which reflects the performance impact of I/O bound operations blocking CPU-bound 
+                tasks.
+
+        In the application of this class, many simulation cases are typically present. Each simulation case consists 
+        of multiple simulation iterations. To improve computation performance, multiprocessing is used to leverage 
+        the multi-core nature of modern CPUs. There are two possible strategies to apply multiprocessing, 
+        based on the level of parallelism:
+
+        Strategy 1: Case-level Parallelism
+
+            In this strategy, each simulation case is allocated to a separate process. This strategy is beneficial 
+            when the ratio of executions (simulation iterations) to available workers (E/W) is significant. It can 
+            efficiently utilise CPU resources when execution times within each case are roughly equal. However, 
+            if there's significant variation in execution times within each case, some CPU cores might be 
+            underutilized if they finish their tasks much earlier than others.
+
+        Strategy 2: Iteration-level Parallelism
+
+            In this strategy, each simulation iteration is allocated to a separate process. This can provide a more 
+            balanced workload across processes, especially when there's high variability in the execution times of 
+            iterations. However, there's additional overhead involved in managing more processes, and the main 
+            process could become a bottleneck if it's blocked by I/O operations.
+
+        Things to Consider:
+
+            Workload Distribution and Balance: Workload balance is a critical aspect in multiprocessing. A skewed 
+            workload can lead to idle CPU resources when some processes finish much earlier than others. For better 
+            load balancing, dynamic task scheduling strategies might be required and this is done through the
+            `ProcessPoolExecutor` but may raise cost in strategy 1.
+
+            Overhead of Multiprocessing: While multiprocessing can speed up computation, it also introduces overhead 
+            when perform `submit()` in `ProcessPoolExecutor`. 
+            It's crucial to ensure that the gain from multiprocessing outweighs the overhead costs. Otherwise, 
+            the overall performance might be worse than a single-process implementation.
+
+            I/O Bound Operations: Task 3 (saving output to disk) is I/O bound and could potentially block CPU-bound 
+            tasks. Consider moving the I/O operations to a separate process, or use asynchronous I/O if possible, 
+            to prevent blocking the CPU-bound tasks.
+
+            Execution Time Variation: The estimation of E/W seems to be based on the assumption that each execution 
+            takes roughly the same amount of time. If the execution times vary significantly, this estimation might 
+            not accurately reflect the workload.
+
+        Strategy Selection:
+
+        To assist in this decision-making process, it can be useful to represent these factors in a cost function, 
+        where the total cost is the sum of the E/W ratio, overhead cost, and blocking cost:
+
+        Cost = E/W + O + B
+
+        The strategy with the lowest computed cost could be selected as the optimal strategy for a given situation. 
+        However, keep in mind that quantifying costs like O and B can be challenging, and they may vary depending on 
+        factors such as hardware characteristics, operating system behavior, and the specific nature of the tasks.
+
+        As a temporary measure, an E/W ratio threshold of 1.5 is currently being used as the sole determinant of the 
+        strategy, with the understanding that this approach may not fully capture the complexities of the costs 
+        involved. Further research and testing are required to refine the cost function and its use in strategy 
+        selection.
+
+        Moreover, it can be beneficial to experiment with different strategies and configurations, as well as to 
+        perform benchmark tests under a variety of conditions, to find the optimal solution for your particular 
+        scenario. Remember that this cost function and threshold might not be optimal for all scenarios and may need 
+        to be adjusted based on empirical data.'''
+
+        if cases_to_run:
+            n_case = sum([1 if k in cases_to_run else 0 for k, v in self.mcs_cases.items()])
+            n_sim = sum([v.n_sim if k in cases_to_run else 0 for k, v in self.mcs_cases.items()])
+        else:
+            n_case = len(self.mcs_cases)
+            n_sim = sum([v.n_sim for k, v in self.mcs_cases.items()])
+
+        if concurrency_strategy == 0:
+            if 4 < n_proc < n_case:
+                concurrency_strategy = 1
             else:
-                set_progress_max(sum([v.n_sim for k, v in self.mcs_cases.items()]))
+                concurrency_strategy = 2
 
         if save:
             self.save_init(archive=save_archive)
 
         progress_0 = None
-        with concurrent.futures.ProcessPoolExecutor(max_workers=n_proc) as executor:
-            for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
-                if cases_to_run and mcs_case_name not in cases_to_run:
-                    continue
-                progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
-                mcs_case.run(executor, set_progress=set_progress, progress_0=progress_0)
-                if save:
-                    mcs_case.save_csv(archive=save_archive)
+        if concurrency_strategy == 1:
+            try:
+                set_progress_max(n_case)
+            except TypeError:
+                pass
+
+            output = dict()
+
+            with ThreadPoolExecutor(max_workers=1) as t_save_output:
+                with ProcessPoolExecutor(max_workers=min(n_proc, n_case)) as p_executor:
+                    futures = {
+                        p_executor.submit(mcs.run, save=False) for mcs in self.mcs_cases.values()
+                    }
+                    mcs_cases_list = list(self.mcs_cases.values())
+                    if set_progress is not None:
+                        for i, future in enumerate(as_completed(futures), start=1):
+                            output[i] = future.result()
+                            mcs_cases_list[i - 1].output = output[i]
+                            if save:
+                                t_save_output.submit(mcs_cases_list[i - 1].save_csv, None, save_archive)
+                            set_progress(i)
+                    else:
+                        for i, future in enumerate(as_completed(futures), start=1):
+                            output[i] = future.result()
+                            mcs_cases_list[i - 1].output = output[i]
+                            if save:
+                                t_save_output.submit(mcs_cases_list[i - 1].save_csv, None, save_archive)
+
+        elif concurrency_strategy == 2:
+            try:
+                set_progress_max(n_sim)
+            except TypeError:
+                pass
+
+            with ThreadPoolExecutor(max_workers=1) as t_executor:
+                with ProcessPoolExecutor(max_workers=n_proc) as p_executor:
+                    for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
+                        if cases_to_run and mcs_case_name not in cases_to_run:
+                            continue
+                        progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
+                        mcs_case.run(p_executor, set_progress=set_progress, progress_0=progress_0)
+                        if save:
+                            t_executor.submit(mcs_case.save_csv, None, save_archive)
+        else:
+            raise NotImplementedError(f'Unknown `concurrency_strategy` {concurrency_strategy}.')
 
     def save_init(self, archive: bool):
         # clean existing files
         try:
-            os.remove(self.get_save_dir())
+            remove(self.get_save_dir())
         except:
             pass
         try:
@@ -678,7 +823,7 @@ class MCS(ABC):
             with open(self.get_save_dir(), 'wb+') as f:
                 f.write(b'PK\x05\x06\x00l\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
         else:
-            os.makedirs(self.get_save_dir())
+            makedirs(self.get_save_dir())
 
     def save_all(self, archive: bool = True):
         self.save_init(archive=archive)
@@ -689,7 +834,7 @@ class MCS(ABC):
         return
 
     def load_from_file(self, fp_in: str, fp_out: str = None):
-        self.__in_fp: str = os.path.realpath(fp_in)
+        self.__in_fp: str = path.realpath(fp_in)
         self.set_inputs_file_path(fp_in)  # input parameters
         for name, mcs_case in self.mcs_cases.items():
             mcs_case.load_output_from_file(fp_out)
