@@ -105,7 +105,6 @@ def test_file_input():
 
     # save input as .xlsx
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as dir_work:
-        dir_work = r'C:\Users\IanFu\Desktop\pra-test\mcs0'
         print('A temporary folder has been created:', dir_work)
 
         time.sleep(0.5)

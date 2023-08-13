@@ -1,4 +1,4 @@
-# Monte Carlo Simulation Multiple Process Implementation
+# Monte Carlo Simulation Multi-Process Implementation
 # Yan Fu, October 2017
 
 import concurrent.futures
@@ -10,12 +10,11 @@ import zipfile
 from abc import ABC, abstractmethod
 from inspect import getfullargspec
 from io import StringIO
-from typing import Callable, Optional, Dict, Union, Any
+from typing import Callable, Optional, Dict, Union, Any, Type
 
 import numpy as np
-import scipy.stats as stats
-from scipy.interpolate import interp1d
 
+import sfeprapy.dists as dists
 from sfeprapy.func.xlsx import dict_to_xlsx
 
 
@@ -112,10 +111,11 @@ class InputParser:
                     if all(v_ == v_[0]):
                         f_interp = v_[0]
                     else:
-                        f_interp = interp1d(t_, v_, bounds_error=False, fill_value=0)
+                        def f_interp(x):
+                            return np.interp(x, t_, v_)
                     dict_out[k] = np.full((n,), f_interp)
                 else:
-                    raise ValueError("Unknown input data type for {}.".format(k))
+                    raise ValueError(f"Unknown input data type for {k}. {v}.")
             elif v is None:
                 dict_out[k] = np.full((n,), np.nan, dtype=float)
             else:
@@ -183,16 +183,42 @@ class InputParser:
                 InputParser.__flatten_dict(v, dict_out=dict_out, history=k if history is None else f'{history}:{k}')
             else:
                 dict_out[f'{k}' if history is None else f'{history}:{k}'] = v
-        # for k in list(dict_in.keys()):
-        #     if isinstance(dict_in[k], dict):
-        #         for kk, vv in dict_in[k].items():
-        #             dict_out[f"{k}:{kk}"] = vv
-        #     else:
-        #         dict_out[k] = dict_in[k]
-        # return dict_out
 
     @staticmethod
     def _sampling(dist_params: dict, num_samples: int, randomise: bool = True) -> Union[float, np.ndarray]:
+        """A reimplementation of _sampling_scipy but without scipy"""
+        dist_name = ''.join(dist_params.pop('dist').replace('_', ' ').strip().title().split())
+        if dist_name == 'Norm':
+            dist_name = 'Normal'
+        elif dist_name == 'GumbelR':
+            dist_name = 'Gumbel'
+        elif dist_name == 'Uniform':
+            if (
+                    'lbound' in dist_params and 'ubound' in dist_params and
+                    'mean' not in dist_params and 'sd' not in dist_params
+            ):
+                a = dist_params.pop('lbound')
+                b = dist_params.pop('ubound')
+                mean = (a + b) / 2
+                sd = (b - a) / (2 * np.sqrt(3))
+                dist_params['mean'] = mean
+                dist_params['sd'] = sd
+        elif dist_name == 'LognormMod':
+            dist_name = 'LognormalMod'
+        elif dist_name == 'Lognorm':
+            dist_name = 'Lognormal'
+        elif dist_name == 'Constant':
+            if 'ubound' in dist_params and 'lbound' in dist_params:
+                dist_params['value'] = (dist_params.pop('lbound') + dist_params.pop('ubound')) / 2.
+
+        dist_cls: Type[dists.DistFunc] = getattr(dists, dist_name)
+        dist_obj: dists.DistFunc = dist_cls(**dist_params)
+        lim_1 = None if 'lbound' not in dist_params else dist_params['lbound']
+        lim_2 = None if 'ubound' not in dist_params else dist_params['ubound']
+        return dist_obj.sampling(n=num_samples, lim_1=lim_1, lim_2=lim_2, shuffle=randomise)
+
+    @staticmethod
+    def _sampling_scipy(dist_params: dict, num_samples: int, randomise: bool = True) -> Union[float, np.ndarray]:
         """Evacuate sampled values based on a defined distribution. This is build upon `scipy.stats` library.
 
         :param dist_params: Distribution inputs, required keys are distribution dependent, should be aligned with inputs
@@ -203,6 +229,8 @@ class InputParser:
         :return samples:    Sampled values based upon `dist` in the range [`lbound`, `ubound`] with `num_samples` number
                             of values.
         """
+        import scipy.stats as stats
+
         if dist_params['dist'] == 'discrete_':
             v_ = dist_params['values']
             if isinstance(v_, str):
