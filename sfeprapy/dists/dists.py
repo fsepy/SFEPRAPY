@@ -85,7 +85,10 @@ def assert_func(r_, a_, tol=1e-1):
 
 
 def test_erf():
-    from scipy.special import erf as erf_
+    try:
+        from scipy.special import erf as erf_
+    except ImportError:
+        raise ImportError('SciPy is required for testing')
 
     i = np.linspace(-2, 2, 11)[1:-1]
     a = erf_(i)
@@ -95,7 +98,11 @@ def test_erf():
 
 
 def test_erfinv():
-    from scipy.special import erfinv as erfinv_
+    try:
+        from scipy.special import erfinv as erfinv_
+    except ImportError:
+        raise ImportError('SciPy is required for testing')
+
     i = np.linspace(-1, 1, 11)[1:-1]
     a = erfinv_(i)
     b = erfinv(i)
@@ -572,17 +579,25 @@ class HalfCauchy(DistFunc):
 
     @staticmethod
     def _pdf(x, mean, sd):
-        if x < mean:
-            return 0
-        else:
-            return (2 / (np.pi * sd)) / (1 + ((x - mean) / sd) ** 2)
+        if isinstance(x, (int, float)):
+            if x < mean:
+                return 0
+            else:
+                return (2 / (np.pi * sd)) / (1 + ((x - mean) / sd) ** 2)
+        elif isinstance(x, np.ndarray):
+            y = np.where(x < mean, 0, (2 / (np.pi * sd)) / (1 + ((x - mean) / sd) ** 2))
+            return y
 
     @staticmethod
     def _cdf(x, mean, sd):
-        if x < mean:
-            return 0
-        else:
-            return 2 / np.pi * np.arctan((x - mean) / sd)
+        if isinstance(x, (int, float)):
+            if x < mean:
+                return 0
+            else:
+                return 2 / np.pi * np.arctan((x - mean) / sd)
+        elif isinstance(x, np.ndarray):
+            y = np.where(x < mean, 0, 2 / np.pi * np.arctan((x - mean) / sd))
+            return y
 
     @staticmethod
     def _ppf(q, mean, sd):
