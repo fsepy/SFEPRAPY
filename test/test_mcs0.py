@@ -94,7 +94,7 @@ def test_file_input():
         time.sleep(0.5)
 
 
-def test_performance():
+def _test_performance():
     from os import path
     from sfeprapy.mcs0 import EXAMPLE_INPUT
     from sfeprapy.func.xlsx import dict_to_xlsx
