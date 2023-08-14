@@ -38,6 +38,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=[
         "sfeprapy",
+        "sfeprapy.dists",
         "sfeprapy.mcs",
         "sfeprapy.mcs0",
         "sfeprapy.mcs1",

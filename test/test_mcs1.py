@@ -1,11 +1,9 @@
-import numpy as np
 
-from sfeprapy.mcs import InputParser
-from sfeprapy.mcs1 import EXAMPLE_INPUT, MCS1
-from sfeprapy.mcs1.calcs import *
 
 
 def test_teq_phi():
+    from sfeprapy.mcs1.calcs import teq_main
+
     inputs = dict(
         index=0,
         fire_time_step=1.,
@@ -67,8 +65,12 @@ def test_teq_phi():
 
 
 def test_standard_case(skip_3: bool = False):
+    from sfeprapy.mcs1 import EXAMPLE_INPUT, MCS1
+    import numpy as np
+    import copy
+
     # increase the number of simulations so it gives sensible results
-    mcs_input = EXAMPLE_INPUT.copy()
+    mcs_input = copy.deepcopy(EXAMPLE_INPUT)
     mcs_input['CASE_1']['n_simulations'] = 10_000
 
     mcs = MCS1()
@@ -89,8 +91,10 @@ def test_file_input():
     import tempfile
     import time
     import os
+    import copy
 
-    from sfeprapy.mcs1 import EXAMPLE_INPUT
+    from sfeprapy.mcs1 import EXAMPLE_INPUT, MCS1
+    from sfeprapy.mcs import InputParser
     from sfeprapy.func.xlsx import dict_to_xlsx
 
     # save input as .xlsx
@@ -99,7 +103,7 @@ def test_file_input():
 
         time.sleep(0.5)
         fp_in = os.path.join(dir_work, 'input.xlsx')
-        dict_to_xlsx({k: InputParser.flatten_dict(v) for k, v in EXAMPLE_INPUT.items()}, fp_in)
+        dict_to_xlsx({k: InputParser.flatten_dict(v) for k, v in copy.deepcopy(EXAMPLE_INPUT).items()}, fp_in)
         print(f"A temporary input file has been created: {fp_in}")  # 4
         time.sleep(0.5)
 
