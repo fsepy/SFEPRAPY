@@ -41,7 +41,6 @@ EXAMPLE_INPUT['Office'].update(dict(
 ))
 
 # Retail
-
 EXAMPLE_INPUT['Retail'] = EXAMPLE_INPUT['Residential'].copy()
 EXAMPLE_INPUT['Retail'].update(dict(
     case_name='Retail',

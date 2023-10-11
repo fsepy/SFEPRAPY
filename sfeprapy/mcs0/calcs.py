@@ -450,7 +450,7 @@ def teq_main(
         window_height = room_height
 
     # Calculate fire time, this is used for all fire curves in the calculation
-    fire_time = np.arange(0, fire_time_duration + fire_time_step, fire_time_step)
+    fire_time = np.arange(0, fire_time_duration + fire_time_step, fire_time_step, dtype=float)
 
     # Calculate ISO 834 fire temperature
     # fire_time_iso834 = fire_time
@@ -584,8 +584,7 @@ def teq_main(
     timber_charred_depth = timber_charred_depth_i
 
     return (
-        index, beam_position_horizontal, fire_combustion_efficiency, fire_hrr_density, fire_nft_limit,
-        fire_spread_speed, window_open_fraction, fire_load_density, fire_type, t1, t2, t3,
+        index, fire_type, t1, t2, t3,
         solver_steel_temperature_solved, solver_time_critical_temp_solved, solver_protection_thickness,
         solver_iter_count, solver_time_equivalence_solved, timber_charring_rate, timber_exposed_duration,
         timber_solver_iter_count, timber_fire_load, timber_charred_depth, timber_charred_mass, timber_charred_volume,
