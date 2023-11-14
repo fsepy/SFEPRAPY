@@ -14,11 +14,10 @@ from sfeprapy.mcs import InputParser
 from sfeprapy.mcs0 import teq_main
 
 
-class InputFile:
-    @staticmethod
-    def make_simulation_files(fp_user_input: str):
-        data = InputFile._user_input_to_data(fp_user_input=fp_user_input)
-        dir_dest = path.join(path.dirname(fp_user_input), 'in')
+class InputFileToCaseFiles:
+    def __call__(self, fp_user_input: str, dir_dest: Optional[str] = None):
+        data = InputFileToCaseFiles._user_input_to_data(fp_user_input=fp_user_input)
+        dir_dest = path.join(path.dirname(fp_user_input), 'in') if dir_dest is None else dir_dest
 
         for case_name_, kwargs_ in data.items():
             stochastic = dict()
@@ -58,8 +57,9 @@ class InputFile:
             for row in rows:
                 for key_, row_ in zip(keys[1:], row[1:]):
                     data[key_][row[0]] = row_
+            return data
 
-        elif fp_user_input.endswith(".xls"):
+        if fp_user_input.endswith(".xls"):
             # Get the first worksheet
             worksheet = open_workbook(fp_user_input).sheet_by_index(0)
 
@@ -74,15 +74,12 @@ class InputFile:
                     data_[worksheet.cell_value(row_index, 0)] = worksheet.cell_value(row_index, col_index + 1)
                 data[case_name_] = data_
 
-        elif fp_user_input.endswith(".csv"):
+            return data
+
+        if fp_user_input.endswith(".csv"):
             raise NotImplementedError()
-        else:
-            raise ValueError(f"Unknown input file format, {path.basename(fp_user_input)}")
 
-        if len(set((data.keys()))) != len(data.keys()):
-            raise ValueError(f'case_name not unique')
-
-        return data
+        raise ValueError(f"Unknown input file format, {path.basename(fp_user_input)}")
 
 
 class MCS:
@@ -94,47 +91,42 @@ class MCS:
         'timber_charred_mass', 'timber_charred_volume',
     )
 
-    def __init__(self, csv_file_path, json_file_path):
-        self.csv_file_path = csv_file_path
-        self.json_parameters = self._load_json_parameters(json_file_path)
-        self.valid_params = self._get_valid_params_for_function()
+    @staticmethod
+    def run(fp_csv: str, fp_json: str):
+        data_json = MCS._load_json(fp_json)
+        data_csv = MCS._load_csv(fp_csv)
+        kwargs_valid = MCS._get_valid_params_for_function()
 
-    def _load_json_parameters(self, json_file_path):
+        kwargs_validated = {k: v for k, v in data_json.items() if k in kwargs_valid}
+
+        for kwargs in data_csv:
+            kwargs_ = {**kwargs_validated, **kwargs}
+            yield teq_main(**kwargs_)
+
+    @staticmethod
+    def _load_csv(fp_csv: str):
+        data = list()
+        with open(fp_csv, mode='r') as csv_file:
+            for row in csv.DictReader(csv_file):
+                # Convert all values in the CSV to float for demonstration.
+                # Adjust this if you have different data types.
+                csv_kwargs = {k: float(v) for k, v in row.items()}
+                data.append(csv_kwargs)
+        return data
+
+    @staticmethod
+    def _load_json(json_file_path):
         with open(json_file_path, 'r') as json_file:
             return json.load(json_file)
 
-    def _get_valid_params_for_function(self):
+    @staticmethod
+    def _get_valid_params_for_function():
         # Using introspection to get the names of the parameters that the function accepts
         sig = inspect.signature(teq_main)
         return set(sig.parameters.keys())
 
-    def run(self):
-        results = []
-        with open(self.csv_file_path, mode='r') as csv_file:
-            reader = csv.DictReader(csv_file)
-            for row in reader:
-                # Convert all values in the CSV to float for demonstration.
-                # Adjust this if you have different data types.
-                csv_kwargs = {k: float(v) for k, v in row.items()}
-
-                # Merge parameters from CSV and JSON
-                all_kwargs = {**self.json_parameters, **csv_kwargs}
-
-                # Filter out any parameters not accepted by the calculation function
-                valid_kwargs = {k: v for k, v in all_kwargs.items() if k in self.valid_params}
-
-                result = teq_main(**valid_kwargs)
-                results.append(result)
-
-            case_name = path.splitext(path.basename(self.csv_file_path))[0]
-            self.save_csv(
-                data=results,
-                fp_save=path.join(path.dirname(self.csv_file_path), f'{case_name}.out.csv'),
-            )
-
-        return results
-
-    def save_csv(self, data: List[List], fp_save: Optional[str] = None, archive: bool = True):
+    @staticmethod
+    def _save_csv(data: List[List], fp_save: Optional[str] = None, archive: bool = True):
         """Saves simulation output as a csv file, either in a folder (if `dir_name` is a folder) or in a zip file (if
         `dir_name` is a zip file path). `dir_name` should be cleaned properly before passing into this method."""
         assert fp_save
@@ -144,7 +136,7 @@ class MCS:
         # create byte object representing the save data/results
         if isinstance(data, (np.ndarray, tuple, list)):
             content = BytesIO()
-            np.savetxt(content, data, delimiter=",", header=','.join(self.OUTPUT_KEYS), fmt='%g', comments='')
+            np.savetxt(content, data, delimiter=",", header=','.join(MCS.OUTPUT_KEYS), fmt='%g', comments='')
             content.seek(0)
         elif data is None:
             raise ValueError('No results to save')
@@ -159,11 +151,14 @@ class MCS:
 
 
 if __name__ == '__main__':
-    InputFile.make_simulation_files(
-        fp_user_input=r'C:\Users\ian\Desktop\sfeprapy_test\test.xlsx',
-    )
+    converter_1 = InputFileToCaseFiles()
+    converter_1(fp_user_input=r'C:\Users\ian\Desktop\sfeprapy_test\test.xlsx', )
 
-    CalculationHelper(
-        r'C:\Users\ian\Desktop\sfeprapy_test\in\CASE_1.csv',
-        r'C:\Users\ian\Desktop\sfeprapy_test\in\CASE_1.json'
-    ).run()
+    data = list()
+    for i in MCS.run(
+            fp_csv=r'C:\Users\ian\Desktop\sfeprapy_test\in\CASE_1.csv',
+            fp_json=r'C:\Users\ian\Desktop\sfeprapy_test\in\CASE_1.json'
+
+    ):
+        data.append(i)
+    MCS._save_csv(data, rf'C:\Users\ian\Desktop\sfeprapy_test\in\CASE_1_.csv')

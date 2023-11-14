@@ -84,18 +84,24 @@ class InputParser:
         self.__in_raw = dist_params
         self.__in = InputParser.unflatten_dict(dist_params)
 
-    def to_dict(self):
+    def to_dict(self, suppress_constant: bool = False):
         n = self.__n
         dist_params = self.__in
         dict_out = dict()
 
+        def make_const_arr(v, dtype=float):
+            if suppress_constant:
+                return v
+            else:
+                return np.full((n,), v, dtype=dtype)
+
         for k, v in dist_params.items():
             if isinstance(v, float) or isinstance(v, int) or isinstance(v, float):
-                dict_out[k] = np.full((n,), v, dtype=float)
+                # dict_out[k] = np.full((n,), v, dtype=float)
+                dict_out[k] = make_const_arr(v)
             elif isinstance(v, str):
-                dict_out[k] = np.full(
-                    (n,), v, dtype=np.dtype("U{:d}".format(len(v)))
-                )
+                # dict_out[k] = np.full((n,), v, dtype=np.dtype("U{:d}".format(len(v))))
+                dict_out[k] = make_const_arr(v, np.dtype("U{:d}".format(len(v))))
             elif isinstance(v, np.ndarray) or isinstance(v, list):
                 dict_out[k] = list(np.full((n, len(v)), v, dtype=float))
             elif isinstance(v, dict):
@@ -115,10 +121,12 @@ class InputParser:
                         def f_interp(x):
                             return np.interp(x, t_, v_)
                     dict_out[k] = np.full((n,), f_interp)
+                    raise NotImplementedError('RAMP is currently not available')
                 else:
                     raise ValueError(f"Unknown input data type for {k}. {v}.")
             elif v is None:
-                dict_out[k] = np.full((n,), np.nan, dtype=float)
+                # dict_out[k] = np.full((n,), np.nan, dtype=float)
+                dict_out[k] = make_const_arr(np.nan)
             else:
                 raise TypeError(f"Unknown input data type for {k}.")
 
@@ -230,7 +238,10 @@ class InputParser:
         :return samples:    Sampled values based upon `dist` in the range [`lbound`, `ubound`] with `num_samples` number
                             of values.
         """
-        import scipy.stats as stats
+        try:
+            import scipy.stats as stats
+        except ImportError:
+            raise ImportError('scipy required')
 
         if dist_params['dist'] == 'discrete_':
             v_ = dist_params['values']
