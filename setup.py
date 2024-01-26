@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 from codecs import open  # To use a consistent encoding
 
@@ -44,7 +42,6 @@ setuptools.setup(
         "sfeprapy.mcs1",
         "sfeprapy.mcs2",
         "sfeprapy.func",
-        "sfeprapy.cli",
     ],
     install_requires=requirements,
     include_package_data=True,

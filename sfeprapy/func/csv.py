@@ -26,6 +26,35 @@ def csv_to_list_of_dicts(fp: str) -> List[dict]:
     return result
 
 
+def csv_to_dict_of_lists(file_path):
+    """
+    Convert a CSV file to a dictionary of lists.
+
+    Each column header in the CSV file becomes a key in the dictionary,
+    and the items in that column become the values in the list.
+
+    Args:
+    file_path (str): The path to the CSV file.
+
+    Returns:
+    dict: A dictionary where keys are column headers and values are lists of column data.
+    """
+    with open(file_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        result = {}
+
+        # Initialize lists for each header
+        for header in reader.fieldnames:
+            result[header] = []
+
+        # Populate the lists with column data
+        for row in reader:
+            for header in reader.fieldnames:
+                result[header].append(row[header])
+
+        return result
+
+
 def dict_of_ndarray_to_csv(fp: str, data: dict):
     # Assuming all arrays have the same length
     length = len(next(iter(data.values())))
