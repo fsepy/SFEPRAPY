@@ -6,8 +6,10 @@ import numpy as np
 
 from sfeprapy.func.erf import erf, erfinv
 
-__all__ = ('Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic',
-           'Uniform', 'DistFunc', 'Constant', 'LognormalMod', 'Discrete')
+__all__ = (
+    'Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic',
+    'Uniform', 'DistFunc', 'Constant', 'LognormalMod', 'Discrete'
+)
 
 
 class DistFunc(ABC):
@@ -265,10 +267,6 @@ class Gumbel(DistFunc):
         assert_func(d.ppf(0.80000), 510.650)
 
 
-if __name__ == '__main__':
-    Gumbel.test()
-
-
 class Normal(DistFunc):
     @staticmethod
     def _pdf(x, mean, sd):
@@ -300,10 +298,6 @@ class Normal(DistFunc):
         assert_func(d.ppf(0.50000), 420.000)
         assert_func(d.ppf(0.66305), 473.022)
         assert_func(d.ppf(0.80000), 526.044)
-
-
-if __name__ == '__main__':
-    Normal.test()
 
 
 class Lognormal(DistFunc):
@@ -354,10 +348,6 @@ class Lognormal(DistFunc):
         assert_func(d.ppf(0.54099), 414.628)
         assert_func(d.ppf(0.68873), 464.831)
         assert_func(d.ppf(0.80000), 515.034)
-
-
-if __name__ == '__main__':
-    Lognormal.test()
 
 
 # br187_fuel_load_density_
@@ -477,10 +467,6 @@ class Arcsine(DistFunc):
         assert_func(d.ppf(0.76027), 550)
 
 
-if __name__ == '__main__':
-    Arcsine.test()
-
-
 class Cauchy(DistFunc):
     @staticmethod
     def _pdf(x, mean, sd):
@@ -512,10 +498,6 @@ class Cauchy(DistFunc):
         assert_func(d.ppf(0.50000), 420.000)
         assert_func(d.ppf(0.69186), 506.712)
         assert_func(d.ppf(0.80000), 593.424)
-
-
-if __name__ == '__main__':
-    Cauchy.test()
 
 
 class HyperbolicSecant(DistFunc):
@@ -571,10 +553,6 @@ class HyperbolicSecant(DistFunc):
         assert_func(d.ppf(0.80000), 510.175)
 
 
-if __name__ == '__main__':
-    HyperbolicSecant.test()
-
-
 class HalfCauchy(DistFunc):
 
     @staticmethod
@@ -626,10 +604,6 @@ class HalfCauchy(DistFunc):
         assert_func(d.ppf(0.80000), 807.788)
 
 
-if __name__ == '__main__':
-    HalfCauchy.test()
-
-
 class Logistic(DistFunc):
     @staticmethod
     def _pdf(x, mean, sd):
@@ -675,10 +649,6 @@ class Logistic(DistFunc):
         assert_func(d.ppf(0.80000), 516.302)
 
 
-if __name__ == '__main__':
-    Logistic.test()
-
-
 class Uniform(DistFunc):
     @staticmethod
     def _pdf(x, mean, sd):
@@ -721,7 +691,3 @@ class Uniform(DistFunc):
         assert_func(d.ppf(0.50000), 420.000)
         assert_func(d.ppf(0.65000), 485.472)
         assert_func(d.ppf(0.80000), 550.943)
-
-
-if __name__ == '__main__':
-    Uniform.test()

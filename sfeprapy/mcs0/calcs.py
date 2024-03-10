@@ -228,7 +228,6 @@ def solve_time_equivalence_iso834(
         protection_protected_perimeter: float,
         solver_temperature_goal: float,
         solver_protection_thickness: float,
-        phi_teq: float,
 ) -> float:
     """
     Calculates equivalent time exposure for a protected steel element member in more realistic fire environment (i.e. travelling fire, parameteric fires)
@@ -287,7 +286,6 @@ def solve_time_equivalence_iso834(
             # func_teq = interp1d(steel_temperature, fire_time, kind="linear", bounds_error=False, fill_value=-1)
             # solver_time_equivalence_solved = func_teq(solver_temperature_goal)
             solver_time_equivalence_solved = np.interp(solver_temperature_goal, steel_temperature, fire_time)
-            solver_time_equivalence_solved = solver_time_equivalence_solved * phi_teq
 
     elif solver_d_p == np.inf:
         solver_time_equivalence_solved = np.inf
@@ -549,7 +547,6 @@ def teq_main(
             protection_k=protection_k, protection_rho=protection_rho, protection_c=protection_c,
             protection_protected_perimeter=protection_protected_perimeter,
             solver_temperature_goal=solver_temperature_goal, solver_protection_thickness=solver_protection_thickness,
-            phi_teq=phi_teq
         )
 
         # additional fuel contribution from timber
@@ -583,9 +580,12 @@ def teq_main(
     timber_fire_load = timber_fire_load
     timber_charred_depth = timber_charred_depth_i
 
+    solver_time_equivalence_solved_with_uncertainty = solver_time_equivalence_solved*phi_teq
+
     return (
         index, fire_type, t1, t2, t3,
         solver_steel_temperature_solved, solver_time_critical_temp_solved, solver_protection_thickness,
-        solver_iter_count, solver_time_equivalence_solved, timber_charring_rate, timber_exposed_duration,
-        timber_solver_iter_count, timber_fire_load, timber_charred_depth, timber_charred_mass, timber_charred_volume,
+        solver_iter_count, solver_time_equivalence_solved, solver_time_equivalence_solved_with_uncertainty,
+        timber_exposed_duration, timber_solver_iter_count, timber_fire_load, timber_charred_depth, timber_charred_mass,
+        timber_charred_volume,
     )
