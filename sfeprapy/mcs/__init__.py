@@ -406,6 +406,7 @@ class MCSSingle(ABC):
         if p is None:
             if set_progress is not None:
                 for i, arg in enumerate(zip(*nested_args)):
+                    print(i, arg)
                     output.append(self.worker(*arg))
                     set_progress(progress_0 + i)
             else:
@@ -761,7 +762,16 @@ class MCS(ABC):
             self.save_init(archive=save_archive)
 
         progress_0 = None
-        if concurrency_strategy == 1:
+        if n_proc == 0:
+            for mcs_case_name, mcs_case in self.mcs_cases.items():  # Reuse the executor for 3 sets of tasks
+                if cases_to_run and mcs_case_name not in cases_to_run:
+                    continue
+                progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
+                mcs_case.run()
+                if save:
+                    # t_executor.submit(mcs_case.save_csv, None, save_archive)
+                    mcs_case.save_csv(archive=save_archive)
+        elif concurrency_strategy == 1:
             try:
                 set_progress_max(n_case)
             except TypeError:

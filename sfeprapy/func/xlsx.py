@@ -43,8 +43,13 @@ def dict_to_xlsx(data: Dict[str, dict], fp: str):
     row_headers = None
     for k, v in data.items():
         if row_headers:
-            assert row_headers == v.keys()
+            if row_headers != v.keys():
+                missing_keys = list()
+                missing_keys.extend([_ for _ in row_headers if _ not in v.keys()])
+                missing_keys.extend([_ for _ in v.keys() if _ not in row_headers])
+                raise IndexError(f'keys do not match between dicts in the list: {missing_keys}')
         row_headers = v.keys()
+    row_headers = tuple(row_headers)
 
     # Create a new workbook and add a worksheet
     wb = openpyxl.Workbook()
@@ -61,7 +66,7 @@ def dict_to_xlsx(data: Dict[str, dict], fp: str):
     # Write the data to the worksheet
     for col, (column_name, data_) in enumerate(data.items(), start=1):
         for row, (row_name, value) in enumerate(data_.items(), start=2):
-            ws.cell(row=row, column=col + 1, value=value)
+            ws.cell(row=row_headers.index(row_name) + 2, column=col + 1, value=value)
 
     # Save the workbook to an XLSX file
     wb.save(fp)

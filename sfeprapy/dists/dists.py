@@ -7,7 +7,7 @@ import numpy as np
 from sfeprapy.func.erf import erf, erfinv
 
 __all__ = ('Normal', 'Gumbel', 'Lognormal', 'Arcsine', 'Cauchy', 'HyperbolicSecant', 'HalfCauchy', 'Logistic',
-           'Uniform', 'DistFunc', 'Constant', 'LognormalMod', 'Discrete')
+           'Uniform', 'DistFunc', 'Constant', 'LognormalMod', 'Discrete', 'Br187FuelLoadDensity', 'Br187HrrDensity')
 
 
 class DistFunc(ABC):
@@ -132,7 +132,15 @@ class Constant(DistFunc):
 
 
 class Discrete(DistFunc):
-    def __init__(self, values, weights):
+    def __init__(self, values, weights, lbound=None, ubound=None):
+        '''
+        lbound and ubound not used!
+        Args:
+            values:
+            weights:
+            lbound:
+            ubound:
+        '''
         if isinstance(values, str):
             assert ',' in values, f'`discrete_ distribution `values` parameter is not a list separated by comma.'
             values = [float(i.strip()) for i in values.split(',')]
@@ -378,7 +386,7 @@ class Br187FuelLoadDensity(DistFunc):
     def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
         samples_1 = Gumbel(mean=780, sd=234).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
         samples_2 = Gumbel(mean=420, sd=420).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
-        samples = np.random.choice(np.append((samples_1, samples_2)), n, replace=False)
+        samples = np.random.choice(np.append(samples_1, samples_2), n, replace=False)
         return samples
 
 
@@ -402,7 +410,7 @@ class Br187HrrDensity(DistFunc):
         a, b = 0.15, 0.65
         mean, sd = (a + b) / 2, (b - a) / (2 * np.sqrt(3))
         samples_2 = Uniform(mean=mean, sd=sd).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
-        samples = np.random.choice(np.append((samples_1, samples_2)), n, replace=False)
+        samples = np.random.choice(np.append(samples_1, samples_2), n, replace=False)
         return samples
 
 
