@@ -769,7 +769,6 @@ class MCS(ABC):
                 progress_0 = 0 if progress_0 is None else progress_0 + mcs_case.n_sim
                 mcs_case.run()
                 if save:
-                    # t_executor.submit(mcs_case.save_csv, None, save_archive)
                     mcs_case.save_csv(archive=save_archive)
         elif concurrency_strategy == 1:
             try:
@@ -777,27 +776,37 @@ class MCS(ABC):
             except TypeError:
                 pass
 
-            output = dict()
+            output = [None] * len(self.mcs_cases)  # Pre-allocate a list to hold results in order
+            futures_to_case = {}  # Map each future to its corresponding case name
 
             with ThreadPoolExecutor(max_workers=1) as t_save_output:
                 with ProcessPoolExecutor(max_workers=min(n_proc, n_case)) as p_executor:
-                    futures = {
-                        p_executor.submit(mcs.run, save=False) for mcs in self.mcs_cases.values()
-                    }
-                    mcs_cases_list = list(self.mcs_cases.values())
+                    # Submit all tasks and remember their order
+                    mcs_cases_keys = list(self.mcs_cases.keys())  # Get a list of all case names
+                    for i, case_name in enumerate(mcs_cases_keys):
+                        future = p_executor.submit(self.mcs_cases[case_name].run, save=False)
+                        futures_to_case[future] = case_name
+
                     if set_progress is not None:
-                        for i, future in enumerate(as_completed(futures), start=1):
-                            output[i] = future.result()
-                            mcs_cases_list[i - 1].output = output[i]
+                        # Wait for the futures to complete and collect their results in submission order
+                        for future in as_completed(futures_to_case):
+                            case_name = futures_to_case[future]
+                            index = mcs_cases_keys.index(case_name)  # Find the index of the case based on its name
+                            result = future.result()
+                            output[index] = result
+                            self.mcs_cases[case_name].output = result  # Directly access the case by its name
                             if save:
-                                t_save_output.submit(mcs_cases_list[i - 1].save_csv, None, save_archive)
-                            set_progress(i)
+                                t_save_output.submit(self.mcs_cases[case_name].save_csv, None, save_archive)
+                            set_progress(index + 1)
                     else:
-                        for i, future in enumerate(as_completed(futures), start=1):
-                            output[i] = future.result()
-                            mcs_cases_list[i - 1].output = output[i]
+                        for future in as_completed(futures_to_case):
+                            case_name = futures_to_case[future]
+                            index = mcs_cases_keys.index(case_name)
+                            result = future.result()
+                            output[index] = result
+                            self.mcs_cases[case_name].output = result  # Directly access the case by its name
                             if save:
-                                t_save_output.submit(mcs_cases_list[i - 1].save_csv, None, save_archive)
+                                t_save_output.submit(self.mcs_cases[case_name].save_csv, None, save_archive)
 
         elif concurrency_strategy == 2:
             try:
