@@ -7,7 +7,7 @@ from typing import Union, Callable
 
 import numpy as np
 from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
-from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness_2 as _protection_thickness
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
 from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
@@ -242,10 +242,6 @@ def solve_time_equivalence_iso834(
     :param protection_c:                        [], steel beam element protection material specific heat
     :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
     :param solver_temperature_goal:             [K], steel beam element expected failure temperature
-    :param solver_max_iter:                     [-], Maximum allowable iteration counts for seeking solution for time equivalence
-    :param solver_thickness_ubound:             [m], protection layer thickness upper bound initial condition for solving time equivalence
-    :param solver_thickness_lbound:             [m], protection layer thickness lower bound initial condition for solving time equivalence
-    :param solver_tol:                          [K], tolerance for solving time equivalence
     :param solver_protection_thickness:         [m], steel section protection layer thickness
     :param phi_teq:                             [-], model uncertainty factor
     :return results:                            A dict containing `solver_time_equivalence_solved` which is ,[s], solved equivalent time exposure
@@ -314,6 +310,7 @@ def solve_protection_thickness(
         solver_max_iter: int,
         solver_thickness_ubound: float,
         solver_thickness_lbound: float,
+        solver_thickness_step: float,
         solver_tol: float,
         *_,
         **__,
@@ -335,8 +332,8 @@ def solve_protection_thickness(
     :param solver_max_iter:                 Maximum allowable iteration counts for seeking solution for time equivalence
     :param solver_thickness_ubound:         [m], protection layer thickness upper bound initial condition for solving time equivalence
     :param solver_thickness_lbound:         [m], protection layer thickness lower bound initial condition for solving time equivalence
+    :param solver_thickness_step:           [m], protection layer thickness step for solving time equivalence
     :param solver_tol:                      [K], tolerance for solving time equivalence
-    :param phi_teq:                         [-], model uncertainty factor
     :return results:
         A dict containing the following items.
         solver_convergence_status:          [-], True if time equivalence has been successfully solved.
@@ -354,7 +351,7 @@ def solve_protection_thickness(
     # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
 
     # Solve protection properties for `solver_temperature_goal`
-    solver_d_p, solver_T_max_a, solver_t, solver_iter_count = _protection_thickness(
+    d_p, T_a_max, t, solver_iter_count, status = _protection_thickness(
         fire_time=fire_time,
         fire_temperature=fire_temperature,
         beam_rho=beam_rho,
@@ -368,8 +365,9 @@ def solve_protection_thickness(
         solver_max_iter=solver_max_iter,
         d_p_1=solver_thickness_lbound,
         d_p_2=solver_thickness_ubound,
+        d_p_i=solver_thickness_step,
     )
-    return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
+    return T_a_max, t, d_p, solver_iter_count, status
 
 
 def teq_main(
@@ -401,6 +399,7 @@ def teq_main(
         solver_max_iter: int,
         solver_thickness_lbound: float,
         solver_thickness_ubound: float,
+        solver_thickness_step: float,
         solver_tol: float,
         window_height: float,
         window_open_fraction: float,
@@ -530,16 +529,15 @@ def teq_main(
         )
 
         # To solve protection thickness at critical temperature
-        # inputs.update(solve_protection_thickness(**inputs))
-        (
-            solver_steel_temperature_solved, solver_time_critical_temp_solved, solver_protection_thickness,
-            solver_iter_count
-        ) = solve_protection_thickness(
-            fire_time=fire_time, fire_temperature=fire_temperature, beam_cross_section_area=beam_cross_section_area,
+        (solver_steel_temperature_solved, solver_time_critical_temp_solved, solver_protection_thickness,
+         solver_iter_count, solver_status) = solve_protection_thickness(
+            fire_time=fire_time, fire_temperature=fire_temperature,
+            beam_cross_section_area=beam_cross_section_area,
             beam_rho=beam_rho, protection_k=protection_k, protection_rho=protection_rho, protection_c=protection_c,
             protection_protected_perimeter=protection_protected_perimeter,
             solver_temperature_goal=solver_temperature_goal, solver_max_iter=solver_max_iter,
             solver_thickness_ubound=solver_thickness_ubound, solver_thickness_lbound=solver_thickness_lbound,
+            solver_thickness_step=solver_thickness_step,
             solver_tol=solver_tol
         )
 
@@ -584,9 +582,8 @@ def teq_main(
     timber_charred_depth = timber_charred_depth_i
 
     return (
-        index, beam_position_horizontal, fire_combustion_efficiency, fire_hrr_density, fire_nft_limit,
-        fire_spread_speed, window_open_fraction, fire_load_density, fire_type, t1, t2, t3,
-        solver_steel_temperature_solved, solver_time_critical_temp_solved, solver_protection_thickness,
+        index, fire_type, t1, t2, t3,
+        solver_status, solver_steel_temperature_solved, solver_time_critical_temp_solved, solver_protection_thickness,
         solver_iter_count, solver_time_equivalence_solved, timber_charring_rate, timber_exposed_duration,
         timber_solver_iter_count, timber_fire_load, timber_charred_depth, timber_charred_mass, timber_charred_volume,
     )

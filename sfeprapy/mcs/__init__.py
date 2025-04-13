@@ -230,7 +230,10 @@ class InputParser:
         :return samples:    Sampled values based upon `dist` in the range [`lbound`, `ubound`] with `num_samples` number
                             of values.
         """
-        import scipy.stats as stats
+        try:
+            import scipy.stats as stats
+        except ImportError:
+            raise ImportError(f'Distribution not supported by the built in module, `scipy.stats` not available.`')
 
         if dist_params['dist'] == 'discrete_':
             v_ = dist_params['values']

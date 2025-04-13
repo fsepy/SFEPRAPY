@@ -87,7 +87,7 @@ def test_file_input():
         mcs.set_inputs_file_path(fp_in)
         mcs.run(2)
         time.sleep(0.5)
-        mcs.save_all(False)
+        mcs.save_all(True)
         time.sleep(1)
         mcs['CASE_1'].load_output_from_file(mcs.get_save_dir())
         mcs.save_all(True)
@@ -173,4 +173,4 @@ def multiprocessing_strategy_research():
 
 
 if __name__ == '__main__':
-    pass
+    test_file_input()
