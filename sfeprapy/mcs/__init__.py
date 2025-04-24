@@ -125,6 +125,46 @@ class InputParser:
         dict_out["index"] = np.arange(0, n, 1)
         return dict_out
 
+    def to_dict2(self):
+        n = self.__n
+        dist_params = self.__in
+        dict_out = dict()
+        dict_out_2 = dict()
+
+        for k, v in dist_params.items():
+            if isinstance(v, float) or isinstance(v, int) or isinstance(v, float):
+                dict_out_2[k] = v
+            elif isinstance(v, str):
+                dict_out_2[k] = v
+            elif isinstance(v, np.ndarray) or isinstance(v, list):
+                dict_out_2[k] = v
+            elif isinstance(v, dict):
+                if "dist" in v:
+                    try:
+                        dict_out[k] = InputParser._sampling(v, n)
+                    except KeyError:
+                        raise KeyError(f"Missing parameters in input variable {k}.")
+                elif "ramp" in v:
+                    s_ = StringIO(v["ramp"])
+                    d_ = np.loadtxt(s_, delimiter=',')
+                    t_ = d_[:, 0]
+                    v_ = d_[:, 1]
+                    if all(v_ == v_[0]):
+                        f_interp = v_[0]
+                    else:
+                        def f_interp(x):
+                            return np.interp(x, t_, v_)
+                    dict_out[k] = np.full((n,), f_interp)
+                else:
+                    raise ValueError(f"Unknown input data type for {k}. {v}.")
+            elif v is None:
+                dict_out_2[k] = np.nan
+            else:
+                raise TypeError(f"Unknown input data type for {k}.")
+
+        dict_out["index"] = np.arange(0, n, 1)
+        return dict_out, dict_out_2
+
     def to_xlsx(self, fp: str):
         dict_to_xlsx({i: InputParser.flatten_dict(v) for i, v in self.to_dict().items()}, fp)
 
