@@ -156,6 +156,3 @@ EXAMPLE_INPUT = {
         general_room_floor_area=500,
     ),
 }
-
-if __name__ == "__main__":
-    print(EXAMPLE_INPUT, "\n")

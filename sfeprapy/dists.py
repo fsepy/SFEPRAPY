@@ -368,28 +368,6 @@ if __name__ == '__main__':
     Lognormal.test()
 
 
-# br187_fuel_load_density_
-# br187_hrr_density_
-class Br187FuelLoadDensity(DistFunc):
-    @staticmethod
-    def _pdf(*_, **__):
-        pass
-
-    @staticmethod
-    def _cdf(*_, **__):
-        pass
-
-    @staticmethod
-    def _ppf(*_, **__):
-        pass
-
-    def sampling(self, n: int, lim_1: float = None, lim_2: float = None, shuffle: bool = True):
-        samples_1 = Gumbel(mean=780, sd=234).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
-        samples_2 = Gumbel(mean=420, sd=420).sampling(n, lim_1=lim_1, lim_2=lim_2, shuffle=shuffle)
-        samples = np.random.choice(np.append(samples_1, samples_2), n, replace=False)
-        return samples
-
-
 class Br187HrrDensity(DistFunc):
     @staticmethod
     def _pdf(*_, **__):

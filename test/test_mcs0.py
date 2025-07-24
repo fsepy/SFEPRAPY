@@ -1,4 +1,4 @@
-from sfeprapy.mcs import InputParser
+from sfeprapy.input_parser import InputParser
 from sfeprapy.mcs0 import *
 
 
@@ -47,14 +47,18 @@ def test_standard_case():
     mcs_input['CASE_3_timber']['n_simulations'] = 2_500
 
     mcs = MCS0()
-    mcs.set_inputs_dict({'CASE_1': mcs_input.pop('CASE_1'), 'CASE_2_teq_phi': mcs_input.pop('CASE_2_teq_phi'),
-                         'CASE_3_timber': mcs_input.pop('CASE_3_timber'), })
+    mcs.set_inputs_dict({
+        'CASE_1': mcs_input.pop('CASE_1'),
+        'CASE_2_teq_phi': mcs_input.pop('CASE_2_teq_phi'),
+        'CASE_3_timber': mcs_input.pop('CASE_3_timber'),
+    })
     pbar = tqdm()
     mcs.run(1, set_progress=lambda _: pbar.update(1), set_progress_max=lambda _: setattr(pbar, 'total', _), save=True)
     pbar.close()
 
     # 60 minutes based on Kirby et al.
     x, y = mcs['CASE_1'].get_cdf()
+    print(np.amax(y[x < 60]))
     assert abs(np.amax(y[x < 60]) - 0.8) <= 0.5
 
     # # 63 minutes based on a test run on 16th Aug 2022
@@ -173,4 +177,4 @@ def multiprocessing_strategy_research():
 
 
 if __name__ == '__main__':
-    pass
+    test_standard_case()

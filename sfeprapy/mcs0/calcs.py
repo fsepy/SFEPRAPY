@@ -3,11 +3,14 @@ __all__ = (
     'teq_main'
 )
 
+from random import random
 from typing import Union, Callable
 
 import numpy as np
 from fsetools.lib.fse_bs_en_1991_1_2_parametric_fire import temperature as _fire_param
-from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import protection_thickness as _protection_thickness
+from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import (
+    protection_thickness_2 as _protection_thickness_2
+)
 from fsetools.lib.fse_bs_en_1993_1_2_heat_transfer_c import temperature as _steel_temperature
 from fsetools.lib.fse_din_en_1991_1_2_parametric_fire import temperature as _fire_param_ger
 from fsetools.lib.fse_travelling_fire import temperature as fire_travelling
@@ -242,10 +245,6 @@ def solve_time_equivalence_iso834(
     :param protection_c:                        [], steel beam element protection material specific heat
     :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
     :param solver_temperature_goal:             [K], steel beam element expected failure temperature
-    :param solver_max_iter:                     [-], Maximum allowable iteration counts for seeking solution for time equivalence
-    :param solver_thickness_ubound:             [m], protection layer thickness upper bound initial condition for solving time equivalence
-    :param solver_thickness_lbound:             [m], protection layer thickness lower bound initial condition for solving time equivalence
-    :param solver_tol:                          [K], tolerance for solving time equivalence
     :param solver_protection_thickness:         [m], steel section protection layer thickness
     :param phi_teq:                             [-], model uncertainty factor
     :return results:                            A dict containing `solver_time_equivalence_solved` which is ,[s], solved equivalent time exposure
@@ -354,7 +353,24 @@ def solve_protection_thickness(
     # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
 
     # Solve protection properties for `solver_temperature_goal`
-    solver_d_p, solver_T_max_a, solver_t, solver_iter_count = _protection_thickness(
+    # solver_d_p, solver_T_max_a, solver_t, solver_iter_count = _protection_thickness(
+    #     fire_time=fire_time,
+    #     fire_temperature=fire_temperature,
+    #     beam_rho=beam_rho,
+    #     beam_cross_section_area=beam_cross_section_area,
+    #     protection_k=protection_k,
+    #     protection_rho=protection_rho,
+    #     protection_c=protection_c,
+    #     protection_protected_perimeter=protection_protected_perimeter,
+    #     solver_temperature_goal=solver_temperature_goal,
+    #     solver_temperature_goal_tol=solver_tol,
+    #     solver_max_iter=solver_max_iter,
+    #     d_p_1=solver_thickness_lbound,
+    #     d_p_2=solver_thickness_ubound,
+    # )
+    # return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
+
+    solver_d_p, solver_T_max_a, solver_t, solver_iter_count, solver_status = _protection_thickness_2(
         fire_time=fire_time,
         fire_temperature=fire_temperature,
         beam_rho=beam_rho,
@@ -365,11 +381,21 @@ def solve_protection_thickness(
         protection_protected_perimeter=protection_protected_perimeter,
         solver_temperature_goal=solver_temperature_goal,
         solver_temperature_goal_tol=solver_tol,
-        solver_max_iter=solver_max_iter,
-        d_p_1=solver_thickness_lbound,
-        d_p_2=solver_thickness_ubound,
+        solver_max_iter=100,
+        d_p_1=0.0001,
+        d_p_2=0.0801,
+        d_p_i=0.0025 + random() * 0.0025,
     )
-    return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
+    # print(solver_d_p, solver_T_max_a, solver_t, solver_iter_count, solver_status)
+
+    if solver_status == 0:
+        return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
+    elif solver_status == 1:
+        return -np.inf, solver_t, solver_d_p, solver_iter_count
+    elif solver_status == 2:
+        return np.inf, solver_t, solver_d_p, solver_iter_count
+    elif solver_status == 3:
+        return np.nan, np.nan, np.nan, solver_iter_count
 
 
 def teq_main(
