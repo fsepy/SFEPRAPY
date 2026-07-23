@@ -21,12 +21,11 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.17.1",
-    "scipy>=1.6.0",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest>=7.0"]
+test = ["pytest>=7.0", "scipy>=1.6.0"]
 fast = ["numba>=0.55"]  # ~27x speedup on the steel-temperature solver; optional, falls back to pure Python
 
 [project.urls]

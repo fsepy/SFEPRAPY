@@ -44,10 +44,17 @@ sampling itself is left to the caller (see `test/test_mcs0.py::test_standard_cas
 
 ## Installation
 
-Python 3.8 or later.
+Python 3.8 or later. The runtime dependency is `numpy` only.
 
 ```sh
 pip install --upgrade "git+https://github.com/fsepy/SfePrapy.git@next-gen"
+```
+
+`scipy` is not a runtime dependency -- it's only used by the test suite for stochastic
+sampling. Install with `[test]` to run the tests, or `[fast]` for the numba speedup:
+
+```sh
+pip install -e ".[test,fast]"
 ```
 
 ### Development

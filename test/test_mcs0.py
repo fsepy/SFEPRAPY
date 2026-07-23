@@ -36,20 +36,22 @@ def test_teq_scalar():
 
     warnings.filterwarnings("ignore")
 
-    input_param = dict(fire_time_step=1., fire_time_duration=5. * 60 * 60, beam_cross_section_area=0.017,
-                       beam_position_vertical=2.5, beam_position_horizontal=18, beam_rho=7850.,
-                       fire_combustion_efficiency=0.8,
-                       fire_hrr_density=0.25, fire_load_density=420, fire_mode=0,
-                       fire_nft_limit=1050,
-                       fire_spread_speed=0.01, fire_tlim=0.333, protection_c=1700., protection_k=0.2,
-                       protection_protected_perimeter=2.14, protection_rho=800., room_breadth=16, room_depth=31.25,
-                       room_height=3,
-                       room_wall_thermal_inertia=720, solver_temperature_goal=620 + 273.15,
-                       solver_tol=0.01, window_height=2,
-                       window_width=57.6,
-                       timber_burning_rate=0,
-                       timber_solver_ilim=20,
-                       timber_solver_tol=1, )
+    input_param = dict(
+        fire_time_step=1., fire_time_duration=5. * 60 * 60, beam_cross_section_area=0.017,
+        beam_position_vertical=2.5, beam_position_horizontal=18, beam_rho=7850.,
+        fire_combustion_efficiency=0.8,
+        fire_hrr_density=0.25, fire_load_density=420, fire_mode=0,
+        fire_nft_limit=1050,
+        fire_spread_speed=0.01, fire_tlim=0.333, protection_c=1700., protection_k=0.2,
+        protection_protected_perimeter=2.14, protection_rho=800., room_breadth=16, room_depth=31.25,
+        room_height=3,
+        room_wall_thermal_inertia=720, solver_temperature_goal=620 + 273.15,
+        solver_tol=0.01, window_height=2,
+        window_width=57.6,
+        timber_burning_rate=0,
+        timber_solver_ilim=20,
+        timber_solver_tol=1,
+    )
 
     result = teq_main(**input_param)
     teq = result.solver_time_equivalence_solved
@@ -279,9 +281,9 @@ def test_standard_case():
 
     expectations = {
         # case_name: (x_threshold_minutes, cdf_at_that_x ~ 0.8 within +/- 0.5)
-        'CASE_1': (60.0, 0.8),         # ~60 min based on Kirby et al.
+        'CASE_1': (60.0, 0.8),  # ~60 min based on Kirby et al.
         'CASE_2_teq_phi': (64.5, 0.8),  # ~63 min based on a test run on 16th Aug 2022
-        'CASE_3_timber': (81.0, 0.8),   # ~78 min based on a test run on 16th Aug 2022
+        'CASE_3_timber': (81.0, 0.8),  # ~78 min based on a test run on 16th Aug 2022
     }
 
     for case_name, (x_thr, cdf_target) in expectations.items():
