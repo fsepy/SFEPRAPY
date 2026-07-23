@@ -311,8 +311,6 @@ def solve_protection_thickness(
         protection_protected_perimeter: float,
         solver_temperature_goal: float,
         solver_tol: float,
-        *_,
-        **__,
 ) -> tuple:
     """
     Calculates equivalent time exposure for a protected steel element member in more realistic fire environment

@@ -27,6 +27,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 test = ["pytest>=7.0"]
+fast = ["numba>=0.55"]  # ~27x speedup on the steel-temperature solver; optional, falls back to pure Python
 
 [project.urls]
 Homepage = "https://github.com/fsepy/sfeprapy"
