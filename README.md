@@ -40,24 +40,6 @@ time_equivalence = result.solver_time_equivalence_solved  # [s]
 there (`dict(dist=..., ...)`) describe how each parameter would be sampled in a Monte
 Carlo run, but are not consumed by `teq_main` itself.
 
-## Probabilistic analysis (Monte Carlo)
-
-For workloads of 1e6+ calls, `sfeprapy.mcs` provides an opt-in driver that samples the
-stochastic inputs and batches the calls across processes. It needs `scipy` (for sampling),
-so it's a separate import from the core:
-
-```python
-from sfeprapy import EXAMPLE_INPUT
-from sfeprapy.mcs import run_monte_carlo
-
-# Returns an (n_simulations,) array of solver_time_equivalence_solved [s]
-teq = run_monte_carlo(EXAMPLE_INPUT['CASE_1'], n_simulations=10_000, n_proc=8, seed=42)
-```
-
-`run_monte_carlo` collects only `solver_time_equivalence_solved` (the high-throughput
-path). If you need the full `TeqResult` per call, use `sfeprapy.mcs.sample_case` to get
-the resolved kwargs and call `teq_main` directly.
-
 ## Installation
 
 Python 3.8 or later. The runtime dependency is `numpy` only.

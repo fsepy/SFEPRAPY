@@ -302,38 +302,7 @@ def test_standard_case():
         assert abs(observed - cdf_target) <= 0.5
 
 
-# =====================================================================
-# 4. run_monte_carlo driver (sampling + parallel batch)
-# =====================================================================
-
-def test_run_monte_carlo():
-    from sfeprapy.mcs import run_monte_carlo
-    from sfeprapy import EXAMPLE_INPUT
-    import copy
-
-    case = copy.deepcopy(EXAMPLE_INPUT['CASE_1'])
-    N = 200
-
-    # single-process path
-    teq_single = run_monte_carlo(case, N, n_proc=1, seed=42)
-
-    assert teq_single.shape == (N,)
-    assert np.all(np.isfinite(teq_single))
-    assert np.all(teq_single > 0)
-    print(f'run_monte_carlo (n_proc=1, n={N}): mean teq = {np.mean(teq_single)/60:.1f} min')
-
-    # seed reproducibility (same seed -> identical samples -> identical results)
-    teq_repeat = run_monte_carlo(case, N, n_proc=1, seed=42)
-    assert np.allclose(teq_single, teq_repeat), 'same seed should give identical results'
-
-    # multi-process path: same seed, same shape, finite results
-    teq_parallel = run_monte_carlo(case, N, n_proc=2, seed=42)
-    assert teq_parallel.shape == (N,)
-    assert np.all(np.isfinite(teq_parallel))
-
-
 if __name__ == '__main__':
     test_teq_scalar()
     test_heat_transfer_fidelity()
     test_standard_case()
-    test_run_monte_carlo()
