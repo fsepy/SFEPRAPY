@@ -7,7 +7,7 @@
 /build
 
 # Python egg metadata, regenerated from source files by setuptools.
-/*.egg-info
+*.egg-info
 
 # Python virtual environment
 /venv
@@ -49,3 +49,5 @@
 /demo/fig
 /demo/mfput.log
 /demo/.ipynb_checkpoints
+# ZCode session files
+/.zcode/

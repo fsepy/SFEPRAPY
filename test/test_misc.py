@@ -1,3 +1,0 @@
-from sfeprapy import _test_version_canonical
-
-test_version_canonical = _test_version_canonical
