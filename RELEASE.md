@@ -17,12 +17,12 @@ Checklist before release of new versions:
   (`sfeprapy.cli`), file I/O helpers (`sfeprapy.func.xlsx`, `sfeprapy.func.csv`),
   the profiler, the demo notebooks, and stale CI config.
 - Removed: runtime dependency on `fsetools`. The fire and steel heat-transfer
-  physics used by `teq_main` have been vendored into `sfeprapy.mcs0._fsetools` as
+  physics used by `teq_main` have been vendored into `sfeprapy._fsetools` as
   pure Python (the former Cython heat-transfer module has been ported 1:1).
 - Removed: `xlrd` and `openpyxl` dependencies.
 - Added: `scipy` as a runtime dependency (used by the test suite for stochastic
   sampling; `teq_main` itself needs only `numpy`).
-- Kept: `sfeprapy.mcs0.teq_main` and its helpers (`decide_fire`,
+- Kept: `sfeprapy.teq_main` and its helpers (`decide_fire`,
   `evaluate_fire_temperature`, `solve_protection_thickness`,
   `solve_time_equivalence_iso834`) and `EXAMPLE_INPUT`, all behaviourally unchanged.
 

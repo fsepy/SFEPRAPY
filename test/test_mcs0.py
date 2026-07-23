@@ -1,4 +1,4 @@
-"""Tests for sfeprapy.mcs0.
+"""Tests for sfeprapy.
 
 next-gen: there is no Monte Carlo orchestration any more, so the dist-dependent
 tests sample stochastic inputs directly with ``scipy.stats`` and loop ``teq_main``.
@@ -17,11 +17,11 @@ import copy
 
 import numpy as np
 
-from sfeprapy.mcs0 import (
+from sfeprapy import (
     EXAMPLE_INPUT,
     teq_main,
 )
-from sfeprapy.mcs0._fsetools import protection_thickness_2, temperature
+from sfeprapy._fsetools import protection_thickness_2, temperature
 
 
 # =====================================================================
@@ -70,7 +70,7 @@ def test_teq_scalar():
 
 def _trav_fire(t: np.ndarray):
     """Travelling-fire gas curve used by the fsetools reference test."""
-    from sfeprapy.mcs0._fsetools import travelling_fire_temperature
+    from sfeprapy._fsetools import travelling_fire_temperature
     # temperature_si is not vendored; reproduce it inline (SI units).
     T_0 = 273.15
     q_f_d = 600e6

@@ -8,16 +8,16 @@ based methods.
 ## next-gen
 
 This branch is a massive simplification. The library is now a **single pure function** --
-`sfeprapy.mcs0.teq_main` -- plus its supporting helpers. All of the previous Monte Carlo
+`sfeprapy.teq_main` -- plus its supporting helpers. All of the previous Monte Carlo
 orchestration, parallel batching, custom distribution machinery, file I/O, and the CLI have
 been removed. The fire and steel heat-transfer physics (previously in
 [`fsetools`](https://github.com/fsepy/fsetools)) has been vendored into
-`sfeprapy.mcs0._fsetools` as pure Python, so there are **no compiled dependencies**.
+`sfeprapy._fsetools` as pure Python, so there are **no compiled dependencies**.
 
 Pass `teq_main` sampled parameters, get a result tuple back.
 
 ```python
-from sfeprapy.mcs0 import teq_main, EXAMPLE_INPUT
+from sfeprapy import teq_main, EXAMPLE_INPUT
 
 result = teq_main(**{
     'fire_time_step': 10.0, 'fire_time_duration': 18000,

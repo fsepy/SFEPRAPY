@@ -41,7 +41,7 @@
 </style>
 </head>
 <body>
-<h1>sfeprapy.mcs0 — equivalent time exposure</h1>
+<h1>sfeprapy — equivalent time exposure</h1>
 <p class="sub">
   Runs <code>teq_main</code> from the vendored pure-Python physics, in your browser, via
   <a href="https://pyodide.org">Pyodide</a> (CPython compiled to WebAssembly).
@@ -129,7 +129,7 @@ async function boot() {
     await pyodide.runPythonAsync(`
 import micropip
 await micropip.install("sfeprapy-0.9.0.dev0-py3-none-any.whl")
-from sfeprapy.mcs0 import teq_main
+from sfeprapy import teq_main
 `);
 
     setStatus('Ready — teq_main is loaded.', 'ready');

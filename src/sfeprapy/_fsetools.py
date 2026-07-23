@@ -1,7 +1,7 @@
 """Vendored fire/heat-transfer physics.
 
 This module replaces the ``fsetools`` dependency with self-contained, pure-Python
-implementations of the routines used by :mod:`sfeprapy.mcs0.calcs`.
+implementations of the routines used by :mod:`sfeprapy.calcs`.
 
 The parametric and travelling fire temperature functions are adapted from
 ``fsetools`` (pure Python, ``numpy`` only). The steel heat-transfer routines
