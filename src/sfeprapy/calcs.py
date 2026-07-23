@@ -544,6 +544,22 @@ def teq_main(
         # (``timber_exposed_duration`` == the solved time equivalence), capped at a total
         # ``timber_fire_load_max`` [MJ]. That extra energy raises the fire load density, which
         # changes the fire, which changes the solved duration -- hence the iteration.
+        #
+        # Modeling note (fire_type can re-decide per iteration): each iteration calls
+        # ``_solve_teq_once`` -> ``decide_fire`` with the updated (contents + timber) fire
+        # load density. With ``fire_mode=3`` (auto-select), the rising fuel load can push the
+        # compartment across the EC parametric/travelling validity boundary, so the fire TYPE
+        # itself may flip between iterations. This is intentional: more fuel genuinely can
+        # move a compartment from a ventilation-controlled to a fuel-controlled regime.
+        #
+        # The flip is a discontinuity in the feedback function the loop is converging, so in
+        # principle the loop could oscillate (parametric -> travelling -> parametric ...) and
+        # hit ``timber_solver_ilim`` without satisfying the tolerance, returning NaN. This is
+        # treated as a non-convergence outcome, not a crash. In practice the example timber
+        # case converges; edge cases near the validity boundary may not. An alternative model
+        # (decide fire type once from the contents-only load, then let timber only modulate
+        # severity within the chosen curve) would remove the discontinuity but changes the
+        # physics; it is not implemented here.
         timber_solver_iter_count = -1
         timber_exposed_duration = 0  # initial condition, timber exposed duration
         room_floor_area = room_breadth * room_depth
