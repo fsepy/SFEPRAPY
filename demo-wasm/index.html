@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sfeprapy · equivalent time exposure (Rust/WASM)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 820px; margin: 2rem auto; padding: 0 1rem;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  .sub { color: #666; margin: 0 0 1.5rem; font-size: 0.9rem; }
+  .status {
+    padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 1.5rem;
+    background: #f0f0f0; font-size: 0.85rem;
+  }
+  .status.ready { background: #e6f4ea; }
+  .status.error { background: #fce8e6; }
+  fieldset { border: 1px solid #ccc; border-radius: 6px; margin-bottom: 1rem; padding: 0.75rem 1rem; }
+  legend { font-weight: 600; padding: 0 0.4rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; }
+  label { display: flex; flex-direction: column; font-size: 0.8rem; color: #555; }
+  label span { margin-bottom: 0.15rem; }
+  input { font: inherit; padding: 0.2rem 0.4rem; border: 1px solid #bbb; border-radius: 4px; background: inherit; color: inherit; }
+  button {
+    font: inherit; font-weight: 600; padding: 0.5rem 1.2rem; border: 0;
+    border-radius: 6px; background: #1a73e8; color: #fff; cursor: pointer;
+  }
+  button:disabled { background: #999; cursor: not-allowed; }
+  pre {
+    background: #f6f8fa; padding: 0.75rem; border-radius: 6px; overflow: auto;
+    font-size: 0.8rem; margin-top: 1rem;
+  }
+  .key { color: #1a73e8; font-weight: 600; }
+  @media (prefers-color-scheme: dark) {
+    .status { background: #2a2a2a; } .status.ready { background: #1e3a2a; } .status.error { background: #3a1e1e; }
+    pre { background: #1e1e1e; } input { border-color: #555; }
+  }
+</style>
+</head>
+<body>
+<h1>sfeprapy — equivalent time exposure</h1>
+<p class="sub">
+  Runs <code>teq_main</code> in your browser via a
+  <a href="https://www.rust-lang.org/what/wasm">Rust → WebAssembly</a> port.
+  ~84 KB binary, instant startup, near-native speed. Same numerics as the Python
+  (verified against the <code>d_p = 0.01555 m</code> / <code>teq ≈ 1964 s</code> fidelity oracle).
+</p>
+
+<div id="status" class="status">Loading WASM module…</div>
+
+<form id="form" hidden>
+  <fieldset>
+    <legend>Compartment &amp; ventilation</legend>
+    <div class="grid">
+      <label><span>room_breadth [m]</span><input data-k="roomBreadth" value="16"></label>
+      <label><span>room_depth [m]</span><input data-k="roomDepth" value="31.25"></label>
+      <label><span>room_height [m]</span><input data-k="roomHeight" value="3.1"></label>
+      <label><span>room_wall_thermal_inertia [J/m²/K/s½]</span><input data-k="roomWallThermalInertia" value="720"></label>
+      <label><span>window_height [m]</span><input data-k="windowHeight" value="2.8"></label>
+      <label><span>window_width [m] (open area = height × width)</span><input data-k="windowWidth" value="14.4"></label>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Fire</legend>
+    <div class="grid">
+      <label><span>fire_load_density [MJ/m²]</span><input data-k="fireLoadDensity" value="420"></label>
+      <label><span>fire_combustion_efficiency [-]</span><input data-k="fireCombustionEfficiency" value="0.8"></label>
+      <label><span>fire_hrr_density [MW/m²]</span><input data-k="fireHrrDensity" value="0.25"></label>
+      <label><span>fire_spread_speed [m/s]</span><input data-k="fireSpreadSpeed" value="0.01"></label>
+      <label><span>fire_nft_limit [K]</span><input data-k="fireNftLimit" value="1323.15"></label>
+      <label><span>fire_mode (0 param, 1 travel, 3 auto)</span><input data-k="fireMode" value="3"></label>
+      <label><span>fire_tlim [hr]</span><input data-k="fireTlim" value="0.333"></label>
+      <label><span>fire_time_step [s]</span><input data-k="fireTimeStep" value="10"></label>
+      <label><span>fire_time_duration [s]</span><input data-k="fireTimeDuration" value="18000"></label>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Steel member &amp; protection</legend>
+    <div class="grid">
+      <label><span>beam_cross_section_area [m²]</span><input data-k="beamCrossSectionArea" value="0.017"></label>
+      <label><span>beam_rho [kg/m³]</span><input data-k="beamRho" value="7850"></label>
+      <label><span>beam_position_vertical [m]</span><input data-k="beamPositionVertical" value="3.1"></label>
+      <label><span>beam_position_horizontal [m]</span><input data-k="beamPositionHorizontal" value="18"></label>
+      <label><span>protection_k [W/m/K]</span><input data-k="protectionK" value="0.2"></label>
+      <label><span>protection_rho [kg/m³]</span><input data-k="protectionRho" value="800"></label>
+      <label><span>protection_c [J/kg/K]</span><input data-k="protectionC" value="1700"></label>
+      <label><span>protection_protected_perimeter [m]</span><input data-k="protectionProtectedPerimeter" value="2.14"></label>
+      <label><span>solver_temperature_goal [K]</span><input data-k="solverTemperatureGoal" value="823.15"></label>
+      <label><span>solver_tol [K]</span><input data-k="solverTol" value="1.0"></label>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Timber (optional)</legend>
+    <div class="grid">
+      <label><span>timber_burning_rate [MJ/s] (0 = none)</span><input data-k="timberBurningRate" value="0"></label>
+      <label><span>timber_fire_load_max [MJ] (blank = no cap)</span><input data-k="timberFireLoadMax" value=""></label>
+      <label><span>timber_solver_tol [s]</span><input data-k="timberSolverTol" value="1"></label>
+      <label><span>timber_solver_ilim [-]</span><input data-k="timberSolverIlim" value="20"></label>
+    </div>
+  </fieldset>
+  <button id="run" type="submit">Solve time equivalence</button>
+</form>
+
+<pre id="out" hidden></pre>
+
+<script type="module">
+import init, { teq_main_js } from "./pkg/sfeprapy_wasm.js";
+
+const statusEl = document.getElementById('status');
+const formEl   = document.getElementById('form');
+const outEl    = document.getElementById('out');
+
+function setStatus(text, cls) {
+  statusEl.textContent = text;
+  statusEl.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+async function boot() {
+  try {
+    await init();  // instantiates the 84 KB WASM module
+    setStatus('Ready — teq_main is loaded (Rust/WASM).', 'ready');
+    formEl.hidden = false;
+    document.getElementById('run').disabled = false;
+  } catch (err) {
+    setStatus('Failed to load WASM: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+function readForm() {
+  const kwargs = {};
+  for (const el of formEl.querySelectorAll('input[data-k]')) {
+    const raw = el.value.trim();
+    if (raw === '') continue;
+    const num = Number(raw);
+    kwargs[el.dataset.k] = Number.isInteger(num) ? num : num;
+  }
+  ['fireMode', 'timberSolverIlim'].forEach(k => { if (k in kwargs) kwargs[k] = Math.round(kwargs[k]); });
+  return kwargs;
+}
+
+formEl.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('run');
+  btn.disabled = true;
+  outEl.hidden = false;
+  outEl.textContent = 'Solving…';
+  try {
+    const kwargs = readForm();
+    const t0 = performance.now();
+    const r = teq_main_js(kwargs);
+    const dt = (performance.now() - t0);
+
+    const teq = r.solverTimeEquivalenceSolved;
+    const lines = [
+      `<span class="key">solver_time_equivalence_solved</span>: ${teq == null || Number.isNaN(teq) ? 'n/a' : teq.toFixed(3) + ' s  (' + (teq/60).toFixed(1) + ' min)'}`,
+      `fire_type: ${r.fireType}  (0=parametric, 1=travelling)`,
+      `solver_protection_thickness: ${r.solverProtectionThickness == null || Number.isNaN(r.solverProtectionThickness) ? 'n/a' : r.solverProtectionThickness.toFixed(5) + ' m'}`,
+      `solver_steel_temperature_solved: ${r.solverSteelTemperatureSolved == null || Number.isNaN(r.solverSteelTemperatureSolved) ? 'n/a' : r.solverSteelTemperatureSolved.toFixed(2) + ' K'}`,
+      `solver_iter_count: ${r.solverIterCount}`,
+      `timber_fire_load: ${r.timberFireLoad == null || Number.isNaN(r.timberFireLoad) ? 'n/a (no timber)' : r.timberFireLoad.toFixed(1) + ' MJ'}`,
+      ``,
+      `(computed in ${dt.toFixed(2)} ms)`,
+    ];
+    outEl.innerHTML = lines.join('\n');
+  } catch (err) {
+    outEl.textContent = 'Error: ' + err.message;
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+boot();
+</script>
+</body>
+</html>
