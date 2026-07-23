@@ -1,20 +1,19 @@
 # SFEPRAPY
 
-Structural fire engineering (Sfe) probabilistic reliability assessment (Pra) Python (py). It
-calculates the equivalent time exposure to the ISO 834 standard fire for a protected steel
-element, which can be used to assess an appropriate fire resistance rating using reliability
-based methods.
+SFEPRAPY provides a single routine, `teq_main`, that calculates the **equivalent time
+exposure** of a protected steel element to the ISO 834 standard fire. Given a set of
+physical input parameters (compartment geometry, ventilation, fire load, protection
+properties, and a target steel failure temperature), it returns the equivalent time in
+seconds.
 
-## next-gen
+This routine is the building block for probabilistic (Monte Carlo) structural fire
+reliability analysis: sample the input parameters from their distributions, call
+`teq_main` for each draw, and build a distribution of equivalent time exposures.
+**Random sampling is deliberately not part of this repository** — the library is the
+deterministic physics only. Callers sample inputs themselves (e.g. with `scipy.stats`);
+see `test/test_mcs0.py::test_standard_case` for a worked example.
 
-This branch is a massive simplification. The library is now a **single pure function** --
-`sfeprapy.teq_main` -- plus its supporting helpers. All of the previous Monte Carlo
-orchestration, parallel batching, custom distribution machinery, file I/O, and the CLI have
-been removed. The fire and steel heat-transfer physics (previously in
-[`fsetools`](https://github.com/fsepy/fsetools)) has been vendored into
-`sfeprapy._fsetools` as pure Python, so there are **no compiled dependencies**.
-
-Pass `teq_main` sampled parameters, get a result tuple back.
+## Usage
 
 ```python
 from sfeprapy import teq_main, EXAMPLE_INPUT
@@ -37,10 +36,9 @@ result = teq_main(**{
 time_equivalence = result.solver_time_equivalence_solved  # [s]
 ```
 
-`EXAMPLE_INPUT` documents every accepted parameter and its units; stochastic entries there
-(`dict(dist=..., ...)`) describe how each parameter would be sampled in a Monte Carlo run --
-sampling itself is left to the caller (see `test/test_mcs0.py::test_standard_case` for a
-`scipy.stats` example).
+`EXAMPLE_INPUT` documents every accepted parameter and its units; the stochastic entries
+there (`dict(dist=..., ...)`) describe how each parameter would be sampled in a Monte
+Carlo run, but are not consumed by `teq_main` itself.
 
 ## Installation
 
@@ -57,34 +55,25 @@ sampling. Install with `[test]` to run the tests, or `[fast]` for the numba spee
 pip install -e ".[test,fast]"
 ```
 
-### Development
+### Performance (`[fast]`)
 
-The package uses a `src/` layout, so install it editable (with test deps) to run the
-suite from a checkout:
-
-```sh
-pip install -e ".[test]"
-pytest
-```
+The steel-temperature solver is the hot path in Monte Carlo workloads. Installing the
+optional `[fast]` extra (`numba`) JIT-compiles that kernel and gives roughly a **25×
+speedup**; the package falls back to pure Python automatically if numba is unavailable
+(e.g. in Pyodide/WASM, or on a Python version numba does not yet support).
 
 ## Browser demo (Pyodide / WebAssembly)
 
 `demo/index.html` runs `teq_main` entirely in the browser via
 [Pyodide](https://pyodide.org) (CPython compiled to WASM). The same Python source is
-used -- nothing is ported. It loads `numpy`/`scipy` (built into Pyodide) and installs the
-pure-Python sfeprapy wheel via `micropip`. The result surfaces as a plain JS object.
-
-To try it locally, serve the `demo/` folder over HTTP (a `file://` URL won't fetch the
-wheel), then open it in a browser:
+used -- nothing is ported. To try it locally, serve the `demo/` folder over HTTP (a
+`file://` URL won't fetch the wheel), then open it in a browser:
 
 ```sh
-# rebuild the wheel first if the package changed
 python -m build --wheel --outdir demo/
 python -m http.server --directory demo 8000
 # open http://localhost:8000/
 ```
-
-First load downloads the Pyodide runtime (~10 MB); subsequent runs are instant.
 
 ## License
 
