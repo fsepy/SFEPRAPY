@@ -3,8 +3,7 @@ __all__ = (
     'teq_main', 'TeqResult',
 )
 
-from random import random
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 import numpy as np
 
@@ -25,8 +24,40 @@ OPENING_FACTOR_UBOUND_EC = 0.20   # [m^0.5*s^0.5], EC upper bound
 FIRE_LOAD_DENSITY_TOTAL_LBOUND_EC = 50.0    # [MJ/m^2] related to A_t
 FIRE_LOAD_DENSITY_TOTAL_UBOUND_EC = 1000.0  # [MJ/m^2] related to A_t
 # Minimum burnout time, below which the fuel is deemed to burn out before the
-# fire can spread across the whole compartment.
+# fire can spread across the whole compartment. (Travelling-fire modeling floor,
+# not an EC clause.)
 MIN_BURNOUT_TIME = 900.0  # [s]
+
+
+class _Compartment(NamedTuple):
+    """Derived geometric/ventilation quantities shared by fire-type selection and the
+    fire-curve evaluation. Computed once from the raw inputs to avoid recomputing
+    and diverging between :func:`decide_fire` and :func:`evaluate_fire_temperature`."""
+    window_area: float                  # [m2] ventilation opening area
+    room_floor_area: float              # [m2]
+    room_total_area: float              # [m2] internal surface area incl. openings
+    fire_load_density_deducted: float   # [MJ/m2] after combustion efficiency
+    fire_load_density_total: float      # [MJ/m2] related to A_t
+    opening_factor: float               # [m^0.5*s^0.5]
+
+
+def _compartment_params(
+        window_height: float, window_width: float,
+        room_breadth: float, room_depth: float, room_height: float,
+        fire_load_density: float, fire_combustion_efficiency: float,
+) -> _Compartment:
+    """Compute the shared compartment/ventilation derived quantities."""
+    room_floor_area = room_breadth * room_depth
+    room_total_area = 2 * room_floor_area + (room_breadth + room_depth) * 2 * room_height
+    window_area = window_height * window_width
+    fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
+    fire_load_density_total = fire_load_density_deducted * room_floor_area / room_total_area
+    opening_factor = window_area * np.sqrt(window_height) / room_total_area
+    return _Compartment(
+        window_area=window_area, room_floor_area=room_floor_area, room_total_area=room_total_area,
+        fire_load_density_deducted=fire_load_density_deducted,
+        fire_load_density_total=fire_load_density_total, opening_factor=opening_factor,
+    )
 
 
 class TeqResult(NamedTuple):
@@ -69,8 +100,9 @@ def decide_fire(
         fire_hrr_density: float,
         fire_spread_speed: float,
 ) -> int:
-    """Calculates equivalent time exposure for a protected steel element member in more realistic fire environment
-    opposing to the standard fire curve ISO 834.
+    """Decide which design fire type to use for the given compartment and fire parameters.
+
+    Returns an int fire type: 0 = EC parametric fire, 1 = travelling fire.
 
     PARAMETERS:
     :param window_height:               [m], weighted window opening height
@@ -78,39 +110,25 @@ def decide_fire(
     :param room_breadth:                [m], room breadth (shorter direction of the floor plan)
     :param room_depth:                  [m], room depth (longer direction of the floor plan)
     :param room_height:                 [m], room height from floor to soffit (structural), disregard any non fire resisting floors
-    :param fire_hrr_density:            [MW/m], fire maximum release rate per unit area
-    :param fire_load_density:
+    :param fire_hrr_density:            [MW/m2], fire maximum release rate per unit area
+    :param fire_load_density:           [MJ/m2], fire load density related to floor area
     :param fire_combustion_efficiency:  [-]
     :param fire_spread_speed:           [m/s], TRAVELLING FIRE, fire spread speed
     :param fire_mode:                   0 - parametric, 1 - travelling, 3 - (0 & 1) auto-selected
-    :return:
-    EXAMPLE:
+    :return:                            int fire type (0 or 1)
     """
 
     # PERMEABLE AND INPUT CHECKS
 
-    fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
-
-    # Total window opening area
-    window_area = window_height * window_width
-
-    # Room floor area
-    room_floor_area = room_breadth * room_depth
-
-    # Room internal surface area, total, including window openings
-    room_total_area = (2 * room_floor_area) + ((room_breadth + room_depth) * 2 * room_height)
-
-    # Fire load density related to the total surface area A_t
-    fire_load_density_total = (
-            fire_load_density_deducted * room_floor_area / room_total_area
+    p = _compartment_params(
+        window_height=window_height, window_width=window_width,
+        room_breadth=room_breadth, room_depth=room_depth, room_height=room_height,
+        fire_load_density=fire_load_density, fire_combustion_efficiency=fire_combustion_efficiency,
     )
-
-    # Opening factor
-    opening_factor = window_area * np.sqrt(window_height) / room_total_area
 
     # Spread speed - Does the fire spread to involve the full compartment?
     fire_spread_entire_room_time = room_depth / fire_spread_speed
-    burn_out_time = max([fire_load_density_deducted / fire_hrr_density, MIN_BURNOUT_TIME])
+    burn_out_time = max([p.fire_load_density_deducted / fire_hrr_density, MIN_BURNOUT_TIME])
 
     if fire_mode == 0 or fire_mode == 1:
         # enforced to selected fire, i.e. 0 is ec parametric; 1 is travelling
@@ -119,8 +137,8 @@ def decide_fire(
         # enforced to ec parametric + travelling
         if (
                 fire_spread_entire_room_time < burn_out_time
-                and OPENING_FACTOR_LBOUND_EC < opening_factor <= OPENING_FACTOR_UBOUND_EC
-                and FIRE_LOAD_DENSITY_TOTAL_LBOUND_EC <= fire_load_density_total <= FIRE_LOAD_DENSITY_TOTAL_UBOUND_EC
+                and OPENING_FACTOR_LBOUND_EC < p.opening_factor <= OPENING_FACTOR_UBOUND_EC
+                and FIRE_LOAD_DENSITY_TOTAL_LBOUND_EC <= p.fire_load_density_total <= FIRE_LOAD_DENSITY_TOTAL_UBOUND_EC
         ):
             fire_type = 0  # parametric fire
         else:  # Otherwise, it is a travelling fire
@@ -159,8 +177,8 @@ def evaluate_fire_temperature(
     :param room_height:                 [m], room height from floor to soffit (structural), disregard any non fire resisting floors
     :param room_wall_thermal_inertia:   [J/m2/K/s0.5], thermal inertia of room lining material
     :param fire_tlim:                   [s], PARAMETRIC FIRE, see parametric fire function for details
-    :param fire_type:                   [-],
-    :param fire_time:                   [K],
+    :param fire_type:                   [-], 0 = parametric, 1 = travelling
+    :param fire_time:                   [s], time array
     :param fire_load_density:
     :param fire_combustion_efficiency:
     :param beam_position_vertical:
@@ -172,25 +190,20 @@ def evaluate_fire_temperature(
     EXAMPLE:
     """
 
-    fire_load_density_deducted = fire_load_density * fire_combustion_efficiency
-
-    # Total window opening area
-    window_area = window_height * window_width
-
-    # Room floor area
-    room_floor_area = room_breadth * room_depth
-
-    # Room internal surface area, total, including window openings
-    room_total_area = 2 * room_floor_area + (room_breadth + room_depth) * 2 * room_height
+    p = _compartment_params(
+        window_height=window_height, window_width=window_width,
+        room_breadth=room_breadth, room_depth=room_depth, room_height=room_height,
+        fire_load_density=fire_load_density, fire_combustion_efficiency=fire_combustion_efficiency,
+    )
 
     if fire_type == 0:
         fire_temperature = _fire_param(
             t=fire_time,
-            A_t=room_total_area,
-            A_f=room_floor_area,
-            A_v=window_area,
+            A_t=p.room_total_area,
+            A_f=p.room_floor_area,
+            A_v=p.window_area,
             h_eq=window_height,
-            q_fd=fire_load_density_deducted * 1e6,
+            q_fd=p.fire_load_density_deducted * 1e6,
             lbd=room_wall_thermal_inertia ** 2,
             rho=1,
             c=1,
@@ -202,7 +215,7 @@ def evaluate_fire_temperature(
     elif fire_type == 1:
         kwargs_fire_1_travel = dict(
             t=fire_time,
-            fire_load_density_MJm2=fire_load_density_deducted,
+            fire_load_density_MJm2=p.fire_load_density_deducted,
             fire_hrr_density_MWm2=fire_hrr_density,
             room_length_m=room_depth,
             room_width_m=room_breadth,
@@ -213,8 +226,8 @@ def evaluate_fire_temperature(
         )
         fire_temperature = fire_travelling(**kwargs_fire_1_travel) + 273.15
 
-        t1 = min(room_depth / fire_spread_speed, fire_load_density_deducted / fire_hrr_density)
-        t2 = max(room_depth / fire_spread_speed, fire_load_density_deducted / fire_hrr_density)
+        t1 = min(room_depth / fire_spread_speed, p.fire_load_density_deducted / fire_hrr_density)
+        t2 = max(room_depth / fire_spread_speed, p.fire_load_density_deducted / fire_hrr_density)
         t3 = t1 + t2
 
     else:
@@ -236,20 +249,20 @@ def solve_time_equivalence_iso834(
         solver_protection_thickness: float,
 ) -> float:
     """
-    Calculates equivalent time exposure for a protected steel element member in more realistic fire environment (i.e. travelling fire, parameteric fires)
-    opposing to the standard fire curve ISO 834.
+    Solve the equivalent time exposure to the ISO 834 standard fire for a protected steel
+    element, given a solved protection thickness and target critical (failure) temperature.
 
     PARAMETERS:
+    :param fire_time:                           [s], time array
     :param beam_cross_section_area:             [m2], the steel beam element cross section area
     :param beam_rho:                            [kg/m3], steel beam element density
-    :param protection_k:                        [], steel beam element protection material thermal conductivity
-    :param protection_rho:                      [kg/m3], steel beam element protection material density
-    :param protection_c:                        [], steel beam element protection material specific heat
-    :param protection_protected_perimeter:      [m], steel beam element protection material perimeter
+    :param protection_k:                        [W/m/K], protection material thermal conductivity
+    :param protection_rho:                      [kg/m3], protection material density
+    :param protection_c:                        [J/kg/K], protection material specific heat
+    :param protection_protected_perimeter:      [m], protection material protected perimeter
     :param solver_temperature_goal:             [K], steel beam element expected failure temperature
     :param solver_protection_thickness:         [m], steel section protection layer thickness
-    :return results:                            A dict containing `solver_time_equivalence_solved` which is ,[s], solved equivalent time exposure
-    EXAMPLE:
+    :return:                                    [s], solved equivalent time exposure (np.nan/inf if unsolvable)
     """
 
     # ============================================
@@ -261,48 +274,44 @@ def solve_time_equivalence_iso834(
     # Solve equivalent time exposure in ISO 834
     solver_d_p = solver_protection_thickness
 
-    if -np.inf < solver_d_p < np.inf:
-        fire_temperature_iso834 = (345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0) + 273.15  # in [K]
-        steel_temperature = _steel_temperature(
-            fire_time=fire_time,
-            fire_temperature=fire_temperature_iso834,
-            beam_rho=beam_rho,
-            beam_cross_section_area=beam_cross_section_area,
-            protection_k=protection_k,
-            protection_rho=protection_rho,
-            protection_c=protection_c,
-            protection_thickness=solver_d_p,
-            protection_protected_perimeter=protection_protected_perimeter,
-        )
+    # Handle non-finite protection thickness first: NaN must be checked before inf
+    # (any equality test against NaN is False, so `== inf`/`== -inf` would miss it).
+    if np.isnan(solver_d_p):
+        return np.nan
+    if not np.isfinite(solver_d_p):
+        # +inf -> infinite time to reach critical temp; -inf -> not physically meaningful
+        return float(solver_d_p)
 
-        # Check whether steel temperature (when exposed to ISO 834 fire temperature) contains `solver_temperature_goal`
-        if solver_temperature_goal < np.amin(steel_temperature):
-            # critical temperature is lower than exposed steel temperature
-            # this shouldn't be theoretically possible unless the given critical temperature is less than ambient
-            # temperature
-            solver_time_equivalence_solved = np.nan
-        elif solver_temperature_goal > np.amax(steel_temperature):
-            solver_time_equivalence_solved = np.inf
-        else:
-            # func_teq = interp1d(steel_temperature, fire_time, kind="linear", bounds_error=False, fill_value=-1)
-            # solver_time_equivalence_solved = func_teq(solver_temperature_goal)
-            solver_time_equivalence_solved = np.interp(solver_temperature_goal, steel_temperature, fire_time)
+    fire_temperature_iso834 = (345.0 * np.log10((fire_time / 60.0) * 8.0 + 1.0) + 20.0) + 273.15  # in [K]
+    steel_temperature = _steel_temperature(
+        fire_time=fire_time,
+        fire_temperature=fire_temperature_iso834,
+        beam_rho=beam_rho,
+        beam_cross_section_area=beam_cross_section_area,
+        protection_k=protection_k,
+        protection_rho=protection_rho,
+        protection_c=protection_c,
+        protection_thickness=solver_d_p,
+        protection_protected_perimeter=protection_protected_perimeter,
+    )
 
-    elif solver_d_p == np.inf:
-        solver_time_equivalence_solved = np.inf
-    elif solver_d_p == -np.inf:
-        solver_time_equivalence_solved = -np.inf
-    elif solver_d_p is np.nan:
+    # Check whether steel temperature (when exposed to ISO 834 fire temperature) contains `solver_temperature_goal`
+    if solver_temperature_goal < np.amin(steel_temperature):
+        # critical temperature is lower than exposed steel temperature
+        # this shouldn't be theoretically possible unless the given critical temperature is less than ambient
+        # temperature
         solver_time_equivalence_solved = np.nan
+    elif solver_temperature_goal > np.amax(steel_temperature):
+        solver_time_equivalence_solved = np.inf
     else:
-        raise ValueError(f'This error should not occur, solver_d_p = {solver_d_p}')
+        solver_time_equivalence_solved = np.interp(solver_temperature_goal, steel_temperature, fire_time)
 
     return solver_time_equivalence_solved
 
 
 def solve_protection_thickness(
-        fire_time: Union[list, np.ndarray],
-        fire_temperature: Union[list, np.ndarray],
+        fire_time: np.ndarray,
+        fire_temperature: np.ndarray,
         beam_cross_section_area: float,
         beam_rho: float,
         protection_k: float,
@@ -343,24 +352,6 @@ def solve_protection_thickness(
 
     # MATCH PEAK STEEL TEMPERATURE BY ADJUSTING PROTECTION LAYER THICKNESS
 
-    # Solve protection properties for `solver_temperature_goal`
-    # solver_d_p, solver_T_max_a, solver_t, solver_iter_count = _protection_thickness(
-    #     fire_time=fire_time,
-    #     fire_temperature=fire_temperature,
-    #     beam_rho=beam_rho,
-    #     beam_cross_section_area=beam_cross_section_area,
-    #     protection_k=protection_k,
-    #     protection_rho=protection_rho,
-    #     protection_c=protection_c,
-    #     protection_protected_perimeter=protection_protected_perimeter,
-    #     solver_temperature_goal=solver_temperature_goal,
-    #     solver_temperature_goal_tol=solver_tol,
-    #     solver_max_iter=solver_max_iter,
-    #     d_p_1=solver_thickness_lbound,
-    #     d_p_2=solver_thickness_ubound,
-    # )
-    # return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
-
     solver_d_p, solver_T_max_a, solver_t, solver_iter_count, solver_status = _protection_thickness_2(
         fire_time=fire_time,
         fire_temperature=fire_temperature,
@@ -375,21 +366,20 @@ def solve_protection_thickness(
         solver_max_iter=100,
         d_p_1=0.0001,
         d_p_2=0.0801,
-        d_p_i=0.0025 + random() * 0.0025,
+        d_p_i=0.00375,  # fixed mid-range step (was random jitter; deterministic for reproducibility)
     )
 
-    if solver_status == 0:
-        return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
-    elif solver_status == 1:
+    if solver_status == 1:
+        # out of lower bound: temp at d_p_1 already too low -> infinite protection
         return -np.inf, solver_t, solver_d_p, solver_iter_count
     elif solver_status == 2:
+        # out of upper bound: temp at d_p_2 still too high -> no finite protection
         return np.inf, solver_t, solver_d_p, solver_iter_count
     elif solver_status == 3:
+        # max iterations reached without convergence
         return np.nan, np.nan, np.nan, solver_iter_count
-    elif solver_status == 4:
-        # Monotonicity failed: the solver returns the last valid point. Treat it as the best
-        # available solution so downstream time-equivalence solving can still proceed.
-        return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
+    # status 0 (success) or 4 (monotonicity failed -- last valid point): return best available
+    return solver_T_max_a, solver_t, solver_d_p, solver_iter_count
 
 
 def _solve_teq_once(
@@ -499,7 +489,7 @@ def teq_main(
         timber_fire_load_max: float = None,
         timber_solver_tol: float = None,
         timber_solver_ilim: float = None,
-) -> tuple:
+) -> TeqResult:
     # Make the longest dimension between (room_depth, room_breadth) as room_depth
     if room_depth < room_breadth:
         room_depth += room_breadth
@@ -510,8 +500,10 @@ def teq_main(
     if window_height > room_height:
         window_height = room_height
 
-    # Calculate fire time, this is used for all fire curves in the calculation
-    fire_time = np.arange(0, fire_time_duration + fire_time_step, fire_time_step)
+    # Calculate fire time, this is used for all fire curves in the calculation.
+    # Use linspace (not arange) to avoid float-step drift in the array length.
+    n_steps = int(round(fire_time_duration / fire_time_step))
+    fire_time = np.linspace(0.0, fire_time_duration, n_steps + 1)
 
     _fire_load_density_ = float(fire_load_density)  # preserve original fire load density
 

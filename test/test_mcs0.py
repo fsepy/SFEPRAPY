@@ -282,7 +282,7 @@ def test_standard_case():
     expectations = {
         # case_name: (x_threshold_minutes, cdf_at_that_x ~ 0.8 within +/- 0.5)
         'CASE_1': (60.0, 0.8),  # ~60 min based on Kirby et al.
-        'CASE_2_teq_phi': (64.5, 0.8),  # ~63 min based on a test run on 16th Aug 2022
+        'CASE_2': (60.0, 0.8),   # same config as CASE_1 (second independent sample)
         'CASE_3_timber': (81.0, 0.8),  # ~78 min based on a test run on 16th Aug 2022
     }
 
