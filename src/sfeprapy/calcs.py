@@ -551,7 +551,12 @@ def teq_main(
         while True:
             timber_solver_iter_count += 1
 
-            # timber energy released over the assumed exposed duration, capped at the max
+            # timber energy released over the assumed exposed duration, capped at the max.
+            # timber_fire_load is GROSS fuel energy [MJ] -- it is added to the base fire
+            # load *before* fire_combustion_efficiency is applied (that discounting happens
+            # inside _compartment_params, downstream). So a single efficiency factor scales
+            # the combined (contents + timber) fuel, consistent with both fuel sources
+            # burning incompletely.
             timber_fire_load = timber_burning_rate * timber_exposed_duration
             if timber_fire_load_max is not None:
                 timber_fire_load = min(timber_fire_load, timber_fire_load_max)
